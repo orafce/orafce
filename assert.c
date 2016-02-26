@@ -161,6 +161,9 @@ dbms_assert_enquote_name(PG_FUNCTION_ARGS)
 	bool loweralize = PG_GETARG_BOOL(1);
 	Oid collation = PG_GET_COLLATION();
 
+	if (PG_ARGISNULL(0))
+		PG_RETURN_NULL();
+
 	name = DirectFunctionCall1(quote_ident, name);
 
 	if (loweralize)
