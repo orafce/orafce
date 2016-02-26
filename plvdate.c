@@ -300,7 +300,7 @@ ora_diff_bizdays(DateADT day1, DateADT day2)
 		if (cycle_c == 1)
 			start_is_bizday = true;
 	}
-	if (include_start && start_is_bizday && days >= 1)
+	if (days > 0 && !(include_start && start_is_bizday))
 		days -= 1;
 
 	return days;

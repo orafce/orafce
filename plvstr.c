@@ -564,80 +564,80 @@ plvstr_is_prefix_int64 (PG_FUNCTION_ARGS)
 Datum
 plvstr_rvrs(PG_FUNCTION_ARGS)
 {
-	text *str = PG_GETARG_TEXT_PP(0);
-	int start = PG_GETARG_INT32(1);
-	int end = PG_GETARG_INT32(2);
-	int len;
-	int i;
-	int new_len;
-	text *result;
-	char *data;
+	text *str;
+	bool mb_encode;
 	char *sizes = NULL;
 	int *positions = NULL;
-	bool mb_encode;
+	int len;
+	int start;
+	int end;
+	int new_len;
+	char *str_p;
+	text *result;
+	char *data;
+	int i;
 
 	if (PG_ARGISNULL(0))
 		PG_RETURN_NULL();
+	str = PG_GETARG_TEXT_PP(0);
 
 	mb_encode = pg_database_encoding_max_length() > 1;
-
-	if (!mb_encode)
-		len = VARSIZE_ANY_EXHDR(str);
-	else
+	if (mb_encode)
 		len = ora_mb_strlen(str, &sizes, &positions);
+	else
+		len = VARSIZE_ANY_EXHDR(str);
 
+	start = PG_ARGISNULL(1) ? 1 : PG_GETARG_INT32(1);
+	if (start < 0)
+		start = len + start + 1;
+	if (start < 1 || start > len)
+		PARAMETER_ERROR("Second parameter is out of bound.");
 
+	end = PG_ARGISNULL(2) ? len : PG_GETARG_INT32(2);
+	if (end < 0)
+		end = len + end + 1;
+	if (end < 1 || end > len)
+		PARAMETER_ERROR("Third parameter is out of bound.");
 
-	start = PG_ARGISNULL(1) ? 1 : start;
-	end = PG_ARGISNULL(2) ? (start < 0 ? -len : len) : end;
-
-	if ((start > end && start > 0) || (start < end && start < 0))
+	if (start > end)
 		PARAMETER_ERROR("Second parameter is bigger than third.");
 
-	if (start < 0)
-	{
-		end = len + start + 1;
-		start = end;
-	}
-
+	start -= 1;
+	end -= 1;
 	new_len = end - start + 1;
-
+	str_p = VARDATA_ANY(str);
 	if (mb_encode)
 	{
+		int fz_size;
 		int max_size;
 		int cur_size;
-		char *p;
 		int j;
-		int fz_size;
 
 		fz_size = VARSIZE_ANY_EXHDR(str);
-
-		if ((max_size = (new_len*pg_database_encoding_max_length())) > fz_size)
+		max_size = new_len * pg_database_encoding_max_length();
+		if (fz_size > max_size)
 			result = palloc(fz_size + VARHDRSZ);
 		else
 			result = palloc(max_size + VARHDRSZ);
-		data = (char*) VARDATA(result);
+		data = (char *)VARDATA(result);
 
 		cur_size = 0;
-		p = VARDATA_ANY(str);
-		for (i = end - 1; i>= start - 1; i--)
+		for (i = end; i >= start; i--)
 		{
-			for (j=0; j<sizes[i]; j++)
-				*data++ = *(p+positions[i]+j);
+			for (j = 0; j < sizes[i]; j++)
+				*data++ = *(str_p + positions[i] + j);
 			cur_size += sizes[i];
 		}
 		SET_VARSIZE(result, cur_size + VARHDRSZ);
-
 	}
 	else
 	{
-		char *p = VARDATA_ANY(str);
 		result = palloc(new_len + VARHDRSZ);
-		data = (char*) VARDATA(result);
-		SET_VARSIZE(result, new_len + VARHDRSZ);
+		data = (char *)VARDATA(result);
 
-		for (i = end - 1; i >= start - 1; i--)
-			*data++ = p[i];
+		for (i = end; i >= start; i--)
+			*data++ = str_p[i];
+		SET_VARSIZE(result, new_len + VARHDRSZ);
 	}
 
 	PG_RETURN_TEXT_P(result);
