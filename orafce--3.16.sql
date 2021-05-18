@@ -1596,6 +1596,14 @@ AS 'MODULE_PATHNAME','dbms_utility_format_call_stack0'
 LANGUAGE C VOLATILE;
 COMMENT ON FUNCTION dbms_utility.format_call_stack() IS 'Return formated call stack';
 
+CREATE FUNCTION dbms_utility.get_time()
+RETURNS integer
+AS $$
+    SELECT substr((round(extract(epoch FROM clock_timestamp())::numeric, 2)*100)::bigint::text, 4)::integer;
+$$
+LANGUAGE sql VOLATILE;
+COMMENT ON FUNCTION dbms_utility.get_time() IS 'Returns the number of hundredths of seconds that have elapsed since a point in time in the past.';
+
 CREATE SCHEMA plvlex;
 
 CREATE FUNCTION plvlex.tokens(IN str text, IN skip_spaces bool, IN qualified_names bool,
