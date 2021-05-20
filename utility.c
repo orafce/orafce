@@ -12,6 +12,9 @@
 
 */
 
+#include <time.h>
+#include <stdio.h>
+
 #include "postgres.h"
 #include "utils/builtins.h"
 #include "utils/numeric.h"
@@ -34,6 +37,7 @@
 
 PG_FUNCTION_INFO_V1(dbms_utility_format_call_stack0);
 PG_FUNCTION_INFO_V1(dbms_utility_format_call_stack1);
+PG_FUNCTION_INFO_V1(dbms_utility_get_time);
 
 static char*
 dbms_utility_format_call_stack(char mode)
@@ -207,4 +211,24 @@ dbms_utility_format_call_stack1(PG_FUNCTION_ARGS)
 	}
 
 	PG_RETURN_TEXT_P(cstring_to_text(dbms_utility_format_call_stack(mode)));
+}
+
+/*
+ * Returns the number of hundredths of seconds that have elapsed
+ * since a point in time in the past.
+ */
+Datum
+dbms_utility_get_time(PG_FUNCTION_ARGS)
+{
+	struct timeval tv;
+	char epoch[13];
+	int i = 0;
+
+	gettimeofday(&tv,NULL);
+
+	snprintf(epoch, 13, "%ld", tv.tv_sec*1000000+tv.tv_usec);
+	for (i = 0; i < 3; i++)
+		epoch[i] = 48;
+
+	PG_RETURN_INT32(pg_atoi(epoch, 4, 0));
 }
