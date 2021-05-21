@@ -221,14 +221,10 @@ Datum
 dbms_utility_get_time(PG_FUNCTION_ARGS)
 {
 	struct timeval tv;
-	char epoch[13];
-	int i = 0;
+	long a;
 
 	gettimeofday(&tv,NULL);
+	a = (tv.tv_sec*1000000+tv.tv_usec)/10000;
 
-	snprintf(epoch, 13, "%ld", tv.tv_sec*1000000+tv.tv_usec);
-	for (i = 0; i < 3; i++)
-		epoch[i] = 48;
-
-	PG_RETURN_INT32(pg_atoi(epoch, 4, 0));
+	PG_RETURN_INT32((int32) (a+PG_INT32_MIN));
 }
