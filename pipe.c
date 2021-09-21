@@ -579,6 +579,11 @@ remove_pipe(text *pipe_name, bool purge)
 		{
 			ora_sfree(p->pipe_name);
 			p->is_valid = false;
+			if (NULL != p->creator)
+			{
+				ora_sfree(p->creator);
+				p->creator = NULL;
+			}
 		}
 	}
 }

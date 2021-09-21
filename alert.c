@@ -598,6 +598,7 @@ dbms_alert_removeall(PG_FUNCTION_ARGS)
 	int cycle = 0;
 	float8 endtime;
 	float8 timeout = 2;
+	alert_lock *alck;
 
 	WATCH_PRE(timeout, endtime, cycle);
 	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES,MAX_EVENTS,MAX_LOCKS,false))
@@ -608,7 +609,8 @@ dbms_alert_removeall(PG_FUNCTION_ARGS)
 				find_and_remove_message_item(i, sid,
 								 false, true, true, NULL, NULL);
 				unregister_event(i, sid);
-
+				alck = find_lock(sid, false);
+				alck->sid = NOT_USED;
 			}
 		LWLockRelease(shmem_lockid);
 		PG_RETURN_VOID();
