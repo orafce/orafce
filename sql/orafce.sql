@@ -1031,3 +1031,53 @@ SELECT oracle.unistr('wrong: \+2FFFFF');
 SELECT oracle.unistr('wrong: \udb99\u0061');
 SELECT oracle.unistr('wrong: \U0000db99\U00000061');
 SELECT oracle.unistr('wrong: \U002FFFFF');
+
+
+----
+-- Tests for the greatest/least scalar function
+----
+-- The PostgreSQL native function returns NULL only if all parameters are nulls
+SELECT greatest(2, 6, 8);
+SELECT greatest(2, NULL, 8);
+SELECT least(2, 6, 8);
+SELECT least(2, NULL, 8);
+
+-- The Oracle function returns NULL on NULL input, even a single parameter
+SELECT oracle.greatest(2, 6, 8);
+SELECT oracle.greatest(2, NULL, 8);
+SELECT oracle.least(2, 6, 8);
+SELECT oracle.least(2, NULL, 8);
+SELECT oracle.greatest('A', 'B', 'C');
+SELECT oracle.greatest('A', NULL, 'C');
+SELECT oracle.least('A', 'B', 'C');
+SELECT oracle.least('A', NULL, 'C');
+SELECT oracle.greatest(2.4, 2.5, 2.7);
+SELECT oracle.greatest(2.4, NULL, 2.7);
+SELECT oracle.least(2.4, 2.5, 2.7);
+SELECT oracle.least(2.4, NULL, 2.7);
+
+-- Both don't like data type mix
+SELECT greatest(2, 'A', 'B');
+SELECT oracle.greatest(2, 'A', 'B');
+SELECT greatest('A', 'B', '1');
+SELECT oracle.greatest('A', 'B', '1');
+SELECT greatest('A', 'B', 1);
+SELECT oracle.greatest('A', 'B', 1);
+
+-- Test different data type
+SELECT oracle.greatest('A'::text, 'B'::text);
+SELECT oracle.greatest('A'::bpchar, 'B'::bpchar);
+SELECT oracle.greatest(1::bigint,2::bigint);
+SELECT oracle.greatest(1::integer,2::integer);
+SELECT oracle.greatest(1::smallint,2::smallint);
+SELECT oracle.greatest(1.2::numeric,2.4::numeric);
+SELECT oracle.greatest(1.2::double precision,2.4::double precision);
+SELECT oracle.greatest(1.2::real,2.4::real);
+SELECT oracle.least('A'::text, 'B'::text);
+SELECT oracle.least('A'::bpchar, 'B'::bpchar);
+SELECT oracle.least(1::bigint,2::bigint);
+SELECT oracle.least(1::integer,2::integer);
+SELECT oracle.least(1::smallint,2::smallint);
+SELECT oracle.least(1.2::numeric,2.4::numeric);
+SELECT oracle.least(1.2::double precision,2.4::double precision);
+SELECT oracle.least(1.2::real,2.4::real);
