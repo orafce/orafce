@@ -338,6 +338,95 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION oracle.remainder(SMALLINT, SMALLINT)
+RETURNS SMALLINT AS $$
+BEGIN
+  IF $1 = 0 THEN
+    RAISE EXCEPTION 'First argument is 0';
+  END IF;
+
+  -- If $2 divides $1, REMAINDER = MOD = 0
+  IF oracle.mod($1, $2) = 0 THEN
+    RETURN 0;
+  ELSIF abs($1) > abs($2) THEN
+    RETURN oracle.mod($1, $2) - sign($1) * abs($2);    
+  ELSE
+    RETURN oracle.mod($1, $2);
+  END IF;
+END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION oracle.remainder(INT, INT)
+RETURNS INT AS $$
+BEGIN
+  IF $1 = 0 THEN
+    RAISE EXCEPTION 'First argument is 0';
+  END IF;
+
+  -- If $2 divides $1, REMAINDER = MOD = 0
+  IF oracle.mod($1, $2) = 0 THEN
+    RETURN 0;
+  ELSIF abs($1) > abs($2) THEN
+    RETURN oracle.mod($1, $2) - sign($1) * abs($2);    
+  ELSE
+    RETURN oracle.mod($1, $2);
+  END IF;
+END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION oracle.remainder(BIGINT, BIGINT)
+RETURNS BIGINT AS $$
+BEGIN
+  IF $1 = 0 THEN
+    RAISE EXCEPTION 'First argument is 0';
+  END IF;
+
+  -- If $2 divides $1, REMAINDER = MOD = 0
+  IF oracle.mod($1, $2) = 0 THEN
+    RETURN 0;
+  ELSIF abs($1) > abs($2) THEN
+    RETURN oracle.mod($1, $2) - sign($1) * abs($2);    
+  ELSE
+    RETURN oracle.mod($1, $2);
+  END IF;
+END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION oracle.remainder(NUMERIC, NUMERIC)
+RETURNS NUMERIC AS $$
+BEGIN
+  IF $1 = 0 THEN
+    RAISE EXCEPTION 'First argument is 0';
+  END IF;
+
+  -- If $2 divides $1, REMAINDER = MOD = 0
+  IF oracle.mod($1, $2) = 0 THEN
+    RETURN 0;
+  ELSIF abs($1) > abs($2) THEN
+    RETURN oracle.mod($1, $2) - sign($1) * abs($2);    
+  ELSE
+    RETURN oracle.mod($1, $2);
+  END IF;
+END;
+$$
+LANGUAGE plpgsql IMMUTABLE;
+
+DO $$
+BEGIN
+  IF EXISTS(SELECT * FROM pg_settings WHERE name = 'server_version_num' AND setting::int >= 90600) THEN
+    EXECUTE $_$ALTER FUNCTION oracle.remainder(SMALLINT, SMALLINT) PARALLEL SAFE$_$;
+    EXECUTE $_$ALTER FUNCTION oracle.remainder(INT, INT) PARALLEL SAFE$_$;
+    EXECUTE $_$ALTER FUNCTION oracle.remainder(BIGINT, BIGINT) PARALLEL SAFE$_$;
+    EXECUTE $_$ALTER FUNCTION oracle.remainder(NUMERIC, NUMERIC) PARALLEL SAFE$_$;
+  END IF;
+END;
+$$;
+
 --can't overwrite PostgreSQL DATE data type!!!
 
 CREATE DOMAIN oracle.date AS timestamp(0);
