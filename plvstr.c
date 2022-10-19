@@ -523,6 +523,11 @@ plvstr_is_prefix_int (PG_FUNCTION_ARGS)
 			result = true;
 			break;
 		}
+		if (prefix < 0)
+		{
+			result = false;
+			break;
+		}
 		n = n / 10;
 
 	} while (n >= prefix);
@@ -542,6 +547,11 @@ plvstr_is_prefix_int64 (PG_FUNCTION_ARGS)
 		if (n == prefix)
 		{
 			result = true;
+			break;
+		}
+		if (prefix < 0)
+		{
+			result = false;
 			break;
 		}
 		n = n / 10;
