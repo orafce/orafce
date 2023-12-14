@@ -330,11 +330,16 @@ dbms_sql_debug_cursor(PG_FUNCTION_ARGS)
 			Oid		typOutput;
 			bool	isVarlena;
 			char   *str;
-
-			getTypeOutputInfo(var->typoid, &typOutput, &isVarlena);
-			str = OidOutputFunctionCall(typOutput, var->value);
-
-			elog(NOTICE, "variable \"%s\" is assigned to \"%s\"", var->refname, str);
+			
+			/* is null ? */
+			if (var->value)	
+			{
+				getTypeOutputInfo(var->typoid, &typOutput, &isVarlena);
+				str = OidOutputFunctionCall(typOutput, var->value);
+				elog(NOTICE, "variable \"%s\" is assigned to \"%s\"", var->refname, str);
+			}
+			else 
+				elog(NOTICE, "variable \"%s\" is assigned to \"NULL\"", var->refname);
 		}
 		else
 			elog(NOTICE, "variable \"%s\" is not assigned", var->refname);
