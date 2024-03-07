@@ -1009,8 +1009,6 @@ ora_timestamp_round(PG_FUNCTION_ARGS)
  * Purpose:
  *
  * Returns statement_timestamp in server time zone 
- *   Note - server time zone doesn't exists on PostgreSQL - emulated
- *   by orafce_timezone
  *
  ********************************************************************/
 
@@ -1019,10 +1017,12 @@ orafce_sysdate(PG_FUNCTION_ARGS)
 {
 	Datum sysdate;
 	Datum sysdate_scaled;
+	const char* varname;
+	char* value;
 
-
+	value = GetConfigOptionByName("timezone", &varname, false);
 	sysdate = DirectFunctionCall2(timestamptz_zone,
-					CStringGetTextDatum(orafce_timezone),
+					CStringGetTextDatum(value),
 					TimestampTzGetDatum(GetCurrentStatementStartTimestamp()));
 
 	/* necessary to cast to timestamp(0) to emulate Oracle's date */
