@@ -775,15 +775,19 @@ utl_file_fclose(PG_FUNCTION_ARGS)
 	{
 		if (slots[i].id == d)
 		{
-			if (slots[i].file && fclose(slots[i].file) != 0)
+			FILE *f = slots[i].file;
+
+			slots[i].file = NULL;
+			slots[i].id = INVALID_SLOTID;
+
+			if (f && fclose(f) != 0)
 			{
 				if (errno == EBADF)
 					CUSTOM_EXCEPTION(INVALID_FILEHANDLE, "File is not an opened");
 				else
 					STRERROR_EXCEPTION(WRITE_ERROR);
 			}
-			slots[i].file = NULL;
-			slots[i].id = INVALID_SLOTID;
+
 			PG_RETURN_NULL();
 		}
 	}
