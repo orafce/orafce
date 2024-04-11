@@ -162,6 +162,15 @@ _PG_init(void)
 							 PGC_USERSET, 0,
 							 NULL, NULL, NULL);
 
+	DefineCustomStringVariable("orafce.umask",
+									"Specify umask used by utl_file.fopen.",
+									NULL,
+									&orafce_umask_str,
+									"0077",
+									PGC_USERSET,
+									0,
+									orafce_umask_check_hook,
+									orafce_umask_assign_hook, NULL);
 
 	EmitWarningsOnPlaceholders("orafce");
 

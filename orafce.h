@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include "utils/datetime.h"
 #include "utils/datum.h"
+#include "utils/guc.h"
 
 #define TextPCopy(t) \
 	DatumGetTextP(datumCopy(PointerGetDatum(t), false, -1))
@@ -41,12 +42,16 @@ extern int ora_mb_strlen1(text *str);
 
 extern char *nls_date_format;
 extern char *orafce_timezone;
+extern char *orafce_umask_str;
 
 extern bool orafce_varchar2_null_safe_concat;
 
 extern int orafce_substring_length_is_zero;
 
 extern void orafce_xact_cb(XactEvent event, void *arg);
+
+extern void orafce_umask_assign_hook(const char *newvalue, void *extra);
+extern bool orafce_umask_check_hook(char **newval, void **extra, GucSource source);
 
 
 /*

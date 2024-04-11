@@ -27,6 +27,7 @@
 #include "miscadmin.h"
 #include "port.h"
 #include "storage/fd.h"
+#include "utils/acl.h"
 #include "utils/builtins.h"
 #include "utils/memutils.h"
 
@@ -124,6 +125,79 @@ static void check_secure_locality(const char *path);
 static char *get_safe_path(text *location, text *filename);
 static int copy_text_file(FILE *srcfile, FILE *dstfile,
 						  int start_line, int end_line);
+
+static int orafce_umask = 077;
+char *orafce_umask_str = NULL;
+
+static Oid orafce_set_umask_roleid = InvalidOid;
+
+void
+orafce_umask_assign_hook(const char *newvalue, void *extra)
+{
+	orafce_umask = *((int *) extra);
+}
+
+bool
+orafce_umask_check_hook(char **newval, void **extra, GucSource source)
+{
+	int			digits = 0;
+	char	   *ptr = *newval;
+	int		   *myextra;
+
+	if (IsNormalProcessingMode())
+	{
+		if (!superuser())
+		{
+			if (!OidIsValid(orafce_set_umask_roleid))
+				orafce_set_umask_roleid = get_role_oid("orafce_set_umask", false);
+
+			if (!has_privs_of_role(GetUserId(), orafce_set_umask_roleid))
+			{
+				GUC_check_errcode(ERRCODE_INSUFFICIENT_PRIVILEGE);
+				GUC_check_errmsg("permission denied to set \"orafce.umask\"");
+				GUC_check_errdetail("Only roles with privileges of the \"orafce_set_umask\" can set \"orafce.umask\".");
+
+				return false;
+			}
+		}
+	}
+
+	while (*ptr)
+	{
+		if (*ptr < '0' || *ptr > '7')
+		{
+			GUC_check_errdetail("invalid octal digit");
+			return false;
+		}
+
+		if (digits > 3)
+		{
+			GUC_check_errdetail("number is too big (only four digits are allowed");
+			return false;
+		}
+
+		ptr++;
+	}
+
+#if PG_VERSION_NUM >=  160000
+
+	myextra = (int *) guc_malloc(LOG, sizeof(int));
+
+#else
+
+	myextra = (int *) malloc(sizeof(int));
+
+#endif
+
+	if (!myextra)
+		return false;
+
+	*myextra = (int) strtol(*newval, NULL, 10);
+	*extra = (void *) myextra;
+
+	return true;
+}
+
 
 /*
  * get_descriptor(FILE *file) find any free slot for FILE pointer.
@@ -249,6 +323,7 @@ utl_file_fopen(PG_FUNCTION_ARGS)
 	FILE	   *file;
 	char	   *fullname;
 	int			d;
+	mode_t		oldmask;
 
 	NOT_NULL_ARG(0);
 	NOT_NULL_ARG(1);
@@ -307,6 +382,8 @@ utl_file_fopen(PG_FUNCTION_ARGS)
 	 * for oracle compatibility.
 	 */
 
+	oldmask = umask((mode_t) orafce_umask);
+
 #ifndef WIN32
 
 	file = fopen(fullname, mode);
@@ -327,6 +404,8 @@ utl_file_fopen(PG_FUNCTION_ARGS)
 		file = fopen(fullname, mode);
 
 #endif
+
+	umask(oldmask);
 
 	if (!file)
 		IO_EXCEPTION();
