@@ -564,6 +564,8 @@ select dbms_assert.simple_sql_name('"Aaa dghh shsh"');
 select dbms_assert.simple_sql_name('ajajaj -- ajaj');
 select dbms_assert.object_name('pg_catalog.pg_class');
 select dbms_assert.object_name('dbms_assert.fooo');
+select dbms_assert.qualified_sql_name('1broken');
+select dbms_assert.simple_sql_name('1broken');
 
 select dbms_assert.enquote_literal(NULL);
 select dbms_assert.enquote_name(NULL);

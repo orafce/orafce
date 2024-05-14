@@ -2740,6 +2740,10 @@ select dbms_assert.object_name('pg_catalog.pg_class');
 
 select dbms_assert.object_name('dbms_assert.fooo');
 ERROR:  invalid object name
+select dbms_assert.qualified_sql_name('1broken');
+ERROR:  string is not qualified SQL name
+select dbms_assert.simple_sql_name('1broken');
+ERROR:  string is not simple SQL name
 select dbms_assert.enquote_literal(NULL);
  enquote_literal 
 -----------------
