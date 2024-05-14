@@ -50,6 +50,39 @@ static bool check_sql_name(char *cp, int len);
 static bool ParseIdentifierString(char *rawstring);
 
 /*
+ * Is character a valid identifier start?
+ * Must match scan.l's {ident_start} character class.
+ */
+static bool
+orafce_is_ident_start(unsigned char c)
+{
+	/* Underscores and ASCII letters are OK */
+	if (c == '_')
+		return true;
+	if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+		return true;
+	/* Any high-bit-set character is OK (might be part of a multibyte char) */
+	if (IS_HIGHBIT_SET(c))
+		return true;
+	return false;
+}
+
+/*
+ * Is character a valid identifier continuation?
+ * Must match scan.l's {ident_cont} character class.
+ */
+static bool
+orafce_is_ident_cont(unsigned char c)
+{
+	/* Can be digit or dollar sign ... */
+	if ((c >= '0' && c <= '9') || c == '$')
+		return true;
+	/* ... or an identifier start character */
+	return orafce_is_ident_start(c);
+}
+
+
+/*
  * Procedure ParseIdentifierString is based on SplitIdentifierString
  * from varlena.c. We need different behave of quote symbol evaluation.
  */
@@ -361,10 +394,20 @@ check_sql_name(char *cp, int len)
 	}
 	else
 	{
-		/* Doesn't allow national characters in sql name :( */
-		for (; len-- > 0; cp++)
-			if (!isalnum(*cp) && *cp != '_')
-				return false;
+		if (orafce_is_ident_start(*cp))
+		{
+			char	   *last = cp + len - 1;
+
+			cp += 1;
+
+			while (cp < last)
+			{
+				if (!orafce_is_ident_cont(*cp++))
+					return false;
+			}
+		}
+		else
+			return false;
 	}
 
 	return true;
