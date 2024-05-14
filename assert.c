@@ -81,7 +81,6 @@ orafce_is_ident_cont(unsigned char c)
 	return orafce_is_ident_start(c);
 }
 
-
 /*
  * Procedure ParseIdentifierString is based on SplitIdentifierString
  * from varlena.c. We need different behave of quote symbol evaluation.
@@ -126,20 +125,16 @@ ParseIdentifierString(char *rawstring)
 		}
 		else
 		{
-			char	   *curname;
-
 			/* Unquoted name --- extends to separator or whitespace */
-			curname = nextp;
-			while (*nextp && *nextp != '.' &&
-				   !isspace((unsigned char) *nextp))
+			if (orafce_is_ident_start(*nextp))
 			{
-				if (!isalnum(*nextp) && *nextp != '_')
-					return false;
 				nextp++;
-			}
 
-			if (curname == nextp)
-				return false;	/* empty unquoted name not allowed */
+				while (*nextp && orafce_is_ident_cont(*nextp))
+					nextp++;
+			}
+			else
+				return false;
 		}
 
 		while (isspace((unsigned char) *nextp))
