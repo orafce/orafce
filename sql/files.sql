@@ -121,7 +121,6 @@ SELECT checkFlushFile(utl_file.tmpdir());
 SELECT utl_file.fremove(utl_file.tmpdir(), 'regressflush_orafce.txt');
 
 SET ROLE TO DEFAULT;
-DROP ROLE test_role_files;
 
 DROP FUNCTION checkFlushFile(text);
 DELETE FROM utl_file.utl_file_dir;
@@ -136,3 +135,14 @@ DROP FUNCTION gen_file(text);
 DROP FUNCTION read_file(text);
 
 DELETE FROM utl_file.utl_file_dir;
+
+-- reconnect
+\c
+
+SET ROLE TO test_role_files;
+
+-- use any function from orafce, should not to fail
+SELECT oracle.add_months('2024-05-20', 1);
+
+SET ROLE TO DEFAULT;
+DROP ROLE test_role_files;

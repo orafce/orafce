@@ -131,6 +131,8 @@ char *orafce_umask_str = NULL;
 
 static Oid orafce_set_umask_roleid = InvalidOid;
 
+extern bool orafce_initialized;
+
 void
 orafce_umask_assign_hook(const char *newvalue, void *extra)
 {
@@ -144,7 +146,7 @@ orafce_umask_check_hook(char **newval, void **extra, GucSource source)
 	char	   *ptr = *newval;
 	int		   *myextra;
 
-	if (IsNormalProcessingMode())
+	if (orafce_initialized && IsNormalProcessingMode())
 	{
 		if (!superuser())
 		{

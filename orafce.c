@@ -29,6 +29,8 @@ char  *orafce_timezone = NULL;
 
 extern char *orafce_sys_guid_source;
 
+bool  orafce_initialized = false;
+
 static const struct config_enum_entry orafce_compatibility_options[] = {
 	{"warning_oracle", ORAFCE_COMPATIBILITY_WARNING_ORACLE, false},
 	{"warning_orafce", ORAFCE_COMPATIBILITY_WARNING_ORAFCE, false},
@@ -175,4 +177,6 @@ _PG_init(void)
 	EmitWarningsOnPlaceholders("orafce");
 
 	RegisterXactCallback(orafce_xact_cb, NULL);
+
+	orafce_initialized = true;
 }
