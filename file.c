@@ -146,7 +146,7 @@ orafce_umask_check_hook(char **newval, void **extra, GucSource source)
 	char	   *ptr = *newval;
 	int		   *myextra;
 
-	if (orafce_initialized && IsNormalProcessingMode())
+	if (orafce_initialized && IsNormalProcessingMode() && IsTransactionState())
 	{
 		if (!superuser())
 		{
