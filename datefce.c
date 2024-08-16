@@ -1106,7 +1106,16 @@ orafce_sys_extract_utc_oracle_date(PG_FUNCTION_ARGS)
 {
 	TimestampTz loc_ts;
 
+#if PG_VERSION_NUM >=  130000
+
 	loc_ts = timestamp2timestamptz_opt_overflow(PG_GETARG_TIMESTAMP(0), NULL);
+
+#else
+
+	loc_ts = DatumGetTimestampTz(DirectFunctionCall1(timestamptz_timestamp,
+								 PG_GETARG_TIMESTAMP(0)));
+
+#endif
 
 	PG_RETURN_DATUM(DirectFunctionCall2(timestamptz_zone,
 										CStringGetTextDatum("utc"),
