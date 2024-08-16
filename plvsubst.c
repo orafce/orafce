@@ -40,7 +40,7 @@ PG_FUNCTION_INFO_V1(plvsubst_subst);
 #define C_SUBST  "%s"
 
 
-text *c_subst = NULL;
+static text *c_subst = NULL;
 
 static void
 init_c_subst()

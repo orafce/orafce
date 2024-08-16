@@ -27,8 +27,6 @@
 char  *nls_date_format = NULL;
 char  *orafce_timezone = NULL;
 
-extern char *orafce_sys_guid_source;
-
 bool  orafce_initialized = false;
 
 static const struct config_enum_entry orafce_compatibility_options[] = {

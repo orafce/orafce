@@ -54,7 +54,7 @@
 static char *lc_collate_cache = NULL;
 static size_t multiplication = 1;
 
-text *def_locale = NULL;
+static text *def_locale = NULL;
 
 char *orafce_sys_guid_source;
 

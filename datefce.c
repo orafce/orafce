@@ -76,7 +76,7 @@ weekday_search(const WeekDays *weekdays, const char *str, size_t len)
 #define CASE_fmt_HH	case 27: case 28: case 29:
 #define CASE_fmt_MI	case 30:
 
-STRING_PTR_FIELD_TYPE date_fmt[] =
+static STRING_PTR_FIELD_TYPE date_fmt[] =
 {
 	"Y", "Yy", "Yyy", "Yyyy", "Year", "Syyyy", "syear",
 	"I", "Iy", "Iyy", "Iyyy",

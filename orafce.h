@@ -43,10 +43,12 @@ extern int ora_mb_strlen1(text *str);
 extern char *nls_date_format;
 extern char *orafce_timezone;
 extern char *orafce_umask_str;
-
+extern bool orafce_initialized;
 extern bool orafce_varchar2_null_safe_concat;
-
 extern int orafce_substring_length_is_zero;
+
+extern char *orafce_sys_guid_source;
+
 
 extern void orafce_xact_cb(XactEvent event, void *arg);
 

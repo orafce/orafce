@@ -21,7 +21,6 @@
 
 #define LIST_ITEMS  512
 
-int context;
 
 typedef struct {
 	size_t size;
@@ -46,12 +45,17 @@ static size_t asize[] = {
 	19520, 31584, 51104, 82688};
 
 
-int *list_c = NULL;
-list_item *list = NULL;
-size_t max_size;
+static int *list_c = NULL;
+static list_item *list = NULL;
+static size_t max_size;
 
-int cycle = 0;
+/*
+ * for debug
+ 
+static int cycle = 0;
+static int context;
 
+ */
 
 /* align requested size */
 

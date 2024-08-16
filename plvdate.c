@@ -148,7 +148,7 @@ static holiday_desc usa_holidays[] = {
 	{4,9},{9,10},{11,11},{23,11},{25,12}
 };
 
-cultural_info defaults_ci[] = {
+static cultural_info defaults_ci[] = {
 	{SUNDAY | SATURDAY, true, true, czech_holidays, 11},
 	{SUNDAY | SATURDAY, true, true, germany_holidays, 9},
 	{SUNDAY | SATURDAY, true, false, poland_holidays, 9},
@@ -159,7 +159,7 @@ cultural_info defaults_ci[] = {
 	{SUNDAY | SATURDAY, false, false, usa_holidays, 10}
 };
 
-STRING_PTR_FIELD_TYPE states[] = {
+static STRING_PTR_FIELD_TYPE states[] = {
 	"Czech", "Germany", "Poland",
 	"Austria", "Slovakia", "Russia",
 	"Gb", "Usa",
