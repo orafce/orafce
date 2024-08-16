@@ -48,3 +48,17 @@ bool ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, b
 	 errdetail("Failed exclusive locking of shared memory."), \
 	 errhint("Restart PostgreSQL server.")));
 #endif
+
+extern alert_event *events;
+extern alert_lock  *locks;
+
+extern int sid;
+extern LWLockId shmem_lockid;
+
+#if PG_VERSION_NUM >= 130000
+
+#include "storage/condition_variable.h"
+
+extern ConditionVariable *alert_cv;
+
+#endif

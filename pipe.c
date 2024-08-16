@@ -157,12 +157,12 @@ typedef struct
 
 #define sh_memory_size			(offsetof(sh_memory, data))
 
-message_buffer *output_buffer = NULL;
-message_buffer *input_buffer = NULL;
+static message_buffer *output_buffer = NULL;
+static message_buffer *input_buffer = NULL;
 
-orafce_pipe* pipes = NULL;
+static orafce_pipe* pipes = NULL;
 
-long	   *identity_seq = NULL;
+static long	   *identity_seq = NULL;
 
 #define NOT_INITIALIZED		NULL
 
@@ -170,12 +170,12 @@ LWLockId shmem_lockid = NOT_INITIALIZED;
 
 int sid;                                 /* session id */
 
-extern alert_event *events;
-extern alert_lock  *locks;
+alert_event *events;
+alert_lock  *locks;
 
 #if PG_VERSION_NUM >= 130000
 
-ConditionVariable *pipe_cv = NULL;
+static ConditionVariable *pipe_cv = NULL;
 ConditionVariable *alert_cv = NULL;
 
 #endif

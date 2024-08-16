@@ -39,9 +39,6 @@ PG_FUNCTION_INFO_V1(dbms_alert_waitone);
 PG_FUNCTION_INFO_V1(dbms_alert_waitany_maxwait);
 PG_FUNCTION_INFO_V1(dbms_alert_waitone_maxwait);
 
-extern int sid;
-extern LWLockId shmem_lockid;
-
 #if PG_VERSION_NUM >= 130000
 
 extern ConditionVariable *alert_cv;
@@ -55,9 +52,9 @@ typedef struct alert_signal_data
 	struct alert_signal_data *next;
 } alert_signal_data;
 
-MemoryContext local_buf_cxt;
-LocalTransactionId local_buf_lxid = InvalidTransactionId;
-alert_signal_data *signals;
+static MemoryContext local_buf_cxt;
+static LocalTransactionId local_buf_lxid = InvalidTransactionId;
+static alert_signal_data *signals;
 
 #ifndef _GetCurrentTimestamp
 #define _GetCurrentTimestamp()		GetCurrentTimestamp()
@@ -95,10 +92,7 @@ static char* find_and_remove_message_item(int message_id, int sid,
  * There are maximum 30 events and 255 collaborating sessions
  *
  */
-alert_event *events;
-alert_lock  *locks;
-
-alert_lock *session_lock = NULL;
+static alert_lock *session_lock = NULL;
 
 #define NOT_FOUND  -1
 #define NOT_USED -1

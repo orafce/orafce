@@ -49,7 +49,6 @@ extern int orafce_substring_length_is_zero;
 
 extern char *orafce_sys_guid_source;
 
-
 extern void orafce_xact_cb(XactEvent event, void *arg);
 
 extern void orafce_umask_assign_hook(const char *newvalue, void *extra);
