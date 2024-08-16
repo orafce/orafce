@@ -117,6 +117,8 @@ PG_FUNCTION_INFO_V1(ora_timestamp_round);
 PG_FUNCTION_INFO_V1(orafce_sysdate);
 PG_FUNCTION_INFO_V1(orafce_sessiontimezone);
 PG_FUNCTION_INFO_V1(orafce_dbtimezone);
+PG_FUNCTION_INFO_V1(orafce_sys_extract_utc);
+PG_FUNCTION_INFO_V1(orafce_sys_extract_utc_oracle_date);
 
 /*
  * Search const value in char array
@@ -1071,4 +1073,42 @@ Datum
 orafce_dbtimezone(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_TEXT_P(cstring_to_text(orafce_timezone));
+}
+
+
+/********************************************************************
+ *
+ * oracle.sys_extract_utc(timestamp with time zone
+ *
+ * Returns timestamp at utc time zone
+ *
+ ********************************************************************/
+
+Datum
+orafce_sys_extract_utc(PG_FUNCTION_ARGS)
+{
+	PG_RETURN_DATUM(DirectFunctionCall2(timestamptz_zone,
+										CStringGetTextDatum("utc"),
+										PG_GETARG_DATUM(0)));
+}
+
+/********************************************************************
+ *
+ * oracle.sys_extract_utc(oracle.date)
+ *
+ * Returns timestamp at utc time zone, session time zone is used
+ * as default time zone.
+ *
+ ********************************************************************/
+
+Datum
+orafce_sys_extract_utc_oracle_date(PG_FUNCTION_ARGS)
+{
+	TimestampTz loc_ts;
+
+	loc_ts = timestamp2timestamptz_opt_overflow(PG_GETARG_TIMESTAMP(0), NULL);
+
+	PG_RETURN_DATUM(DirectFunctionCall2(timestamptz_zone,
+										CStringGetTextDatum("utc"),
+										TimestampTzGetDatum(loc_ts)));
 }
