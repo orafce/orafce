@@ -102,6 +102,12 @@ SELECT months_between ('2008-02-29 10:11:13', '2008-03-31 10:12:11');
 SELECT months_between ('2008-02-29 111111', '2008-04-30 12:12:12');
 SELECT trunc(months_between('21-feb-2008 12:11:11', '2008-02-29 11:11:11'));
 
+SELECT sys_extract_utc(timestamptz '2024-08-17 00:41:26.655376+02');
+
+SET timezone to 'europe/prague';
+SELECT sys_extract_utc(oracle.date '2024-08-17 00:41:26.655376');
+SET timezone to default;
+
 select length('jmenuji se Pavel Stehule'),dbms_pipe.pack_message('jmenuji se Pavel Stehule');
 select length('a bydlim ve Skalici'),dbms_pipe.pack_message('a bydlim ve Skalici');
 select dbms_pipe.send_message('pavel',0,1);

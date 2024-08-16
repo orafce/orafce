@@ -497,6 +497,20 @@ SELECT trunc(months_between('21-feb-2008 12:11:11', '2008-02-29 11:11:11'));
      0
 (1 row)
 
+SELECT sys_extract_utc(timestamptz '2024-08-17 00:41:26.655376+02');
+      sys_extract_utc       
+----------------------------
+ 2024-08-16 22:41:26.655376
+(1 row)
+
+SET timezone to 'europe/prague';
+SELECT sys_extract_utc(oracle.date '2024-08-17 00:41:26.655376');
+   sys_extract_utc   
+---------------------
+ 2024-08-16 22:41:27
+(1 row)
+
+SET timezone to default;
 select length('jmenuji se Pavel Stehule'),dbms_pipe.pack_message('jmenuji se Pavel Stehule');
  length | pack_message 
 --------+--------------
