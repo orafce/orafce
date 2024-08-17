@@ -172,17 +172,8 @@ Example:
 +
 ----
 	orafce.nls_date_format='YY-MonDD HH24:MI:SS'
-----
-+
-----
 	oracle.to_char(to_date('14-Jan08 11:44:49+05:30')) -> 14-Jan08 11:44:49
-----
-+
-----
 	orafce.nls_date_format='YY-MonDD HH24:MI:SS'
-----
-+
-----
 	oracle.to_char(oracle.to_date('21052014 12:13:44+05:30','DDMMYYYY HH24:MI:SS')) -> 14-May21 12:13:44
 ----
 
