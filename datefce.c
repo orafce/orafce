@@ -1112,7 +1112,7 @@ orafce_sys_extract_utc_oracle_date(PG_FUNCTION_ARGS)
 
 #else
 
-	loc_ts = DatumGetTimestampTz(DirectFunctionCall1(timestamptz_timestamp,
+	loc_ts = DatumGetTimestampTz(DirectFunctionCall1(timestamp_timestamptz,
 								 PG_GETARG_TIMESTAMP(0)));
 
 #endif
