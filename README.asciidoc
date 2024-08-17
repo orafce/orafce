@@ -166,7 +166,7 @@ Example:
 * oracle.sys_extract_utc(oracle.date) - Returns timestamp in utc timezone, when time zone is not specified, session (current PostgreSQL) timezone is used
 +
 -----
-	oracle.sys_extract_utc(oracle.date '2005-05-24 11:21:12', 1) -> 2005-05-24 09:21:12)
+	oracle.sys_extract_utc(oracle.date '2005-05-24 11:21:12', 1) -> 2005-05-24 09:21:12
 -----
 * oracle.to_char(timestamp) - Returns timestamp in nls_date_format.
 +
