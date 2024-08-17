@@ -157,7 +157,7 @@ Example:
 +
 -----
 	oracle.sessiontimezone() -> Europe/Prague
-----
+-----
 * oracle.sys_extract_utc(timestamp with timezone) - Returns timestamp in utc timezone
 +
 -----
