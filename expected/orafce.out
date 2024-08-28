@@ -2614,6 +2614,12 @@ SELECT to_date('2009-01-02');
  2009-01-02 00:00:00
 (1 row)
 
+SELECT to_date('112012', 'J');
+    to_date    
+---------------
+ 4407-07-30 BC
+(1 row)
+
 SELECT bitand(5,1), bitand(5,2), bitand(5,4);
  bitand | bitand | bitand 
 --------+--------+--------
