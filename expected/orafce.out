@@ -2620,6 +2620,12 @@ SELECT to_date('112012', 'J');
  4407-07-30 BC
 (1 row)
 
+SELECT oracle.to_date('112012', 'J');
+       to_date       
+---------------------
+ 4406-09-03 00:00:00
+(1 row)
+
 SELECT bitand(5,1), bitand(5,2), bitand(5,4);
  bitand | bitand | bitand 
 --------+--------+--------
