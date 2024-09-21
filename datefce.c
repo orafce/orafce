@@ -20,6 +20,8 @@
 #include "orafce.h"
 #include "builtins.h"
 
+bool orafce_emit_error_on_date_bug = true;
+
 #define ENABLE_INTERNATIONALIZED_WEEKDAY
 
 #ifdef ENABLE_INTERNATIONALIZED_WEEKDAY
@@ -598,6 +600,51 @@ ora_to_date(PG_FUNCTION_ARGS)
 
 	if (VARSIZE_ANY_EXHDR(date_txt) == 0)
 		PG_RETURN_NULL();
+
+	/*
+	 * Du to an Oracle bug, when we have a format we emit an error
+	 * if the date is before 1582-10-04 with the J format or before
+	 * 1100-03-01 for the other formats.
+	 */
+	if (PG_NARGS() == 2)
+	{
+		text *fmt_txt = PG_GETARG_TEXT_PP(1);
+		Datum newDate;
+
+		/* it will return timestamp at GMT */
+		newDate = DirectFunctionCall2(to_timestamp,
+					      PointerGetDatum(date_txt),
+					      PointerGetDatum(fmt_txt));
+
+		/* convert to local timestamp */
+		result = DatumGetTimestamp(DirectFunctionCall1(timestamptz_timestamp, newDate));
+
+		if (orafce_emit_error_on_date_bug)
+		{
+			if (pg_strcasecmp(text_to_cstring(fmt_txt), "J") == 0)
+			{
+				if (atoi(text_to_cstring(date_txt)) <= 2299160)
+					elog(ERROR, "Dates before 1582-10-05 ('J2299159') cannot be verified due to a bug in Oracle.");
+			}
+			else
+			{
+				text *buglimit_txt = cstring_to_text("1100-03-01 00:00:00");
+				text *buglimit_fmt = cstring_to_text("YYYY-MM-DD H24:MI:SS");
+				Datum bugDate;
+				Timestamp bugResult;
+
+				bugDate = DirectFunctionCall2(to_timestamp,
+							      PointerGetDatum(buglimit_txt),
+							      PointerGetDatum(buglimit_fmt));
+
+				bugResult = DatumGetTimestamp(DirectFunctionCall1(timestamptz_timestamp, bugDate));
+
+				if (result < bugResult)
+					elog(ERROR, "Dates before 1100-03-01 cannot be verified due to a bug in Oracle.");
+			}
+		}
+		PG_RETURN_TIMESTAMP(result);
+	}
 
 	if(nls_date_format && strlen(nls_date_format))
 	{

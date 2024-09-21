@@ -2620,10 +2620,27 @@ SELECT to_date('112012', 'J');
  4407-07-30 BC
 (1 row)
 
+SELECT to_date('1003/03/15', 'yyyy/mm/dd');
+  to_date   
+------------
+ 1003-03-15
+(1 row)
+
 SELECT oracle.to_date('112012', 'J');
+ERROR:  with dates before 1582-10-05 ('J2299159') Oracle doesn't return the same date than PostgreSQL.
+SELECT oracle.to_date('1003-03-15', 'yyyy-mm-dd');
+ERROR:  Dates before 1100-03-01 cannot be verified due to a bug in Oracle.
+SET orafce.oracle_compatibility_date_limit TO off;
+SELECT oracle.to_date('112012', 'J');
+        to_date         
+------------------------
+ 4407-07-30 00:00:00 BC
+(1 row)
+
+SELECT oracle.to_date('1003/03/15', 'yyyy/mm/dd');
        to_date       
 ---------------------
- 4406-09-03 00:00:00
+ 1003-03-15 00:00:00
 (1 row)
 
 SELECT bitand(5,1), bitand(5,2), bitand(5,4);

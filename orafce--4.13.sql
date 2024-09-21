@@ -176,6 +176,11 @@ RETURNS timestamp
 AS 'MODULE_PATHNAME','ora_to_date'
 LANGUAGE C STABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION oracle.orafce__obsolete_to_date(str text, fmt text)
+RETURNS timestamp
+AS 'MODULE_PATHNAME','ora_to_date'
+LANGUAGE C STABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION oracle.to_multi_byte(str text)
 RETURNS text
 AS 'MODULE_PATHNAME','orafce_to_multi_byte'
@@ -486,14 +491,10 @@ RETURNS oracle.date
 AS $$ SELECT oracle.orafce__obsolete_to_date($1)::oracle.date; $$
 LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 
-CREATE OR REPLACE FUNCTION oracle.to_date (TEXT, TEXT) RETURNS oracle.date AS $$
-SELECT CASE WHEN upper($2) = 'J' THEN
-    substr((pg_catalog.to_date($1, $2) + '400 days'::interval)::text, 1, 19)::oracle.date
-  ELSE
-    TO_TIMESTAMP($1,$2)::oracle.date
-  END;
-$$ LANGUAGE SQL
-STRICT IMMUTABLE PARALLEL SAFE;
+CREATE FUNCTION oracle.to_date(TEXT, TEXT)
+RETURNS oracle.date
+AS $$ SELECT oracle.orafce__obsolete_to_date($1, $2)::oracle.date; $$
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.to_char(timestamp)
 RETURNS TEXT

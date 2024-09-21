@@ -172,6 +172,15 @@ _PG_init(void)
 									orafce_umask_check_hook,
 									orafce_umask_assign_hook, NULL);
 
+	DefineCustomBoolVariable("orafce.oracle_compatibility_date_limit",
+									"Specify if an error is raised when the Oracle to_date() bug is reached.",
+									NULL,
+									&orafce_emit_error_on_date_bug,
+									true,
+									PGC_USERSET,
+									0,
+									NULL, NULL, NULL);
+
 	EmitWarningsOnPlaceholders("orafce");
 
 	RegisterXactCallback(orafce_xact_cb, NULL);
