@@ -2627,7 +2627,7 @@ SELECT to_date('1003/03/15', 'yyyy/mm/dd');
 (1 row)
 
 SELECT oracle.to_date('112012', 'J');
-ERROR:  with dates before 1582-10-05 ('J2299159') Oracle doesn't return the same date than PostgreSQL.
+ERROR:  Dates before 1582-10-05 ('J2299159') cannot be verified due to a bug in Oracle.
 SELECT oracle.to_date('1003-03-15', 'yyyy-mm-dd');
 ERROR:  Dates before 1100-03-01 cannot be verified due to a bug in Oracle.
 SET orafce.oracle_compatibility_date_limit TO off;
