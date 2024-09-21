@@ -543,7 +543,12 @@ SELECT to_number(1210.73::numeric, 9999.99::numeric);
 
 SELECT to_date('2009-01-02');
 SELECT to_date('112012', 'J');
+SELECT to_date('1003/03/15', 'yyyy/mm/dd');
 SELECT oracle.to_date('112012', 'J');
+SELECT oracle.to_date('1003-03-15', 'yyyy-mm-dd');
+SET orafce.oracle_compatibility_date_limit TO off;
+SELECT oracle.to_date('112012', 'J');
+SELECT oracle.to_date('1003/03/15', 'yyyy/mm/dd');
 
 SELECT bitand(5,1), bitand(5,2), bitand(5,4);
 SELECT sinh(1.570796)::numeric(10, 8), cosh(1.570796)::numeric(10, 8), tanh(4)::numeric(10, 8);

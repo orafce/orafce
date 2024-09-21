@@ -46,6 +46,7 @@ extern char *orafce_umask_str;
 extern bool orafce_initialized;
 extern bool orafce_varchar2_null_safe_concat;
 extern int orafce_substring_length_is_zero;
+extern bool orafce_emit_error_on_date_bug;
 
 extern char *orafce_sys_guid_source;
 
