@@ -91,11 +91,12 @@ year. The 16th of July will be rounded to August.
 ----
 	to_date('2014-0519 17:23:53+5:30')  -> 2014-05-19 17:23:53
 ----
+
 * to_date(text, text) timestamp - will typecast input text with the specified format to timestamp.
- The GUC orafce.orafce_emit_error_on_date_bug is used to specify wether an error is reported
-when the date value hits the Oracle bug on dates. This bug appears with dates before 1582-10-05
-when the 'J' format is used ('J2299159') and before 1100-03-01 with other formats. An error is
-reported by default, to disable this behavior set orafce.orafce_emit_error_on_date_bug to off.
+ The GUC `orafce.orafce_emit_error_on_date_bug` is used to specify wether an error is reported
+when the date value hits the Oracle bug on dates. This bug appears with dates before `1582-10-05`
+when the `'J'` format is used (`'J2299159'`) and before `1100-03-01` with other formats. An error is
+reported by default, to disable this behavior `set orafce.orafce_emit_error_on_date_bug to off`.
 ----
 	SELECT oracle.to_date('112012', 'J');
 	ERROR:  Dates before 1582-10-05 ('J2299159') cannot be verified due to a bug in Oracle.
