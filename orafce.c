@@ -136,7 +136,7 @@ _PG_init(void)
 									check_timezone, NULL, NULL);
 
 	DefineCustomBoolVariable("orafce.varchar2_null_safe_concat",
-									"Specify wether empty string should be used instead of NULL in concat clauses.",
+									"Specify wether empty string should be used instead of NULL in concat clauses with varchar2 and nvarchar2 data type.",
 									NULL,
 									&orafce_varchar2_null_safe_concat,
 									false,
