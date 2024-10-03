@@ -192,7 +192,7 @@ orafce_umask_check_hook(char **newval, void **extra, GucSource source)
 	if (!myextra)
 		return false;
 
-	*myextra = (int) strtol(*newval, NULL, 10);
+	*myextra = (int) strtol(*newval, NULL, 8);
 	*extra = (void *) myextra;
 
 	return true;
