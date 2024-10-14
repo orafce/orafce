@@ -15,7 +15,7 @@ RETURNS timestamp
 AS 'MODULE_PATHNAME','ora_to_date'
 LANGUAGE C STABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION oracle.to_date(TEXT, TEXT)
+CREATE OR REPLACE FUNCTION oracle.to_date(TEXT, TEXT)
 RETURNS oracle.date
 AS $$ SELECT oracle.orafce__obsolete_to_date($1, $2)::oracle.date; $$
 LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
