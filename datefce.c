@@ -611,6 +611,13 @@ ora_to_date(PG_FUNCTION_ARGS)
 		text *fmt_txt = PG_GETARG_TEXT_PP(1);
 		Datum newDate;
 
+		/*
+		 * With Oracle passing en empty string to to_date(txt, fmt) returns
+		 * NULL, PostgreSQL returns 0001-01-01 BC whatever is the format.
+		 */
+		if (strlen(text_to_cstring(date_txt)) == 0)
+			PG_RETURN_NULL();
+
 		/* it will return timestamp at GMT */
 		newDate = DirectFunctionCall2(to_timestamp,
 					      PointerGetDatum(date_txt),
