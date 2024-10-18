@@ -2614,6 +2614,12 @@ SELECT to_date('2009-01-02');
  2009-01-02 00:00:00
 (1 row)
 
+SELECT to_date('', 'yyyy-mm-dd');
+    to_date    
+---------------
+ 0001-01-01 BC
+(1 row)
+
 SELECT to_date('112012', 'J');
     to_date    
 ---------------
@@ -2624,6 +2630,12 @@ SELECT to_date('1003/03/15', 'yyyy/mm/dd');
   to_date   
 ------------
  1003-03-15
+(1 row)
+
+SELECT oracle.to_date('', 'yyyy-mm-dd');
+ to_date 
+---------
+ 
 (1 row)
 
 SELECT oracle.to_date('112012', 'J');
