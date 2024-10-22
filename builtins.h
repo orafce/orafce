@@ -97,6 +97,8 @@ extern PGDLLEXPORT Datum ora_timestamp_round(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum orafce_sysdate(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum orafce_sessiontimezone(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum orafce_dbtimezone(PG_FUNCTION_ARGS);
+extern PGDLLEXPORT Datum orafce_sys_extract_utc(PG_FUNCTION_ARGS);
+extern PGDLLEXPORT Datum orafce_sys_extract_utc_oracle_date(PG_FUNCTION_ARGS);
 
 /* from file.c */
 extern PGDLLEXPORT Datum utl_file_fopen(PG_FUNCTION_ARGS);
