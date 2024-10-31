@@ -496,6 +496,11 @@ RETURNS oracle.date
 AS $$ SELECT oracle.orafce__obsolete_to_date($1, $2)::oracle.date; $$
 LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION oracle.to_date(integer, TEXT)
+RETURNS oracle.date
+AS $$ SELECT oracle.orafce__obsolete_to_date($1::text, $2)::oracle.date; $$
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION oracle.to_char(timestamp)
 RETURNS TEXT
 AS 'MODULE_PATHNAME','orafce_to_char_timestamp'
@@ -3608,6 +3613,11 @@ $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
 
 CREATE OR REPLACE FUNCTION oracle.nvl(int, int)
 RETURNS int AS $$
+SELECT coalesce($1, $2)
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.nvl(double precision, int)
+RETURNS bigint AS $$
 SELECT coalesce($1, $2)
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
 
