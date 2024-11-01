@@ -3617,7 +3617,7 @@ SELECT coalesce($1, $2)
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
 
 CREATE OR REPLACE FUNCTION oracle.nvl(double precision, int)
-RETURNS bigint AS $$
+RETURNS double precision AS $$
 SELECT coalesce($1, $2)
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
 
