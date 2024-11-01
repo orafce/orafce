@@ -1505,6 +1505,24 @@ select nvl(NULL::int, 2);
    2
 (1 row)
 
+select nvl(NULL::double precision, 1);
+ nvl 
+-----
+   1
+(1 row)
+
+select nvl(1.1::double precision, 1);
+ nvl 
+-----
+ 1.1
+(1 row)
+
+select nvl(1.1::numeric, 1);
+ nvl 
+-----
+ 1.1
+(1 row)
+
 select nvl2('A'::text, 'B', 'C');
  nvl2 
 ------
