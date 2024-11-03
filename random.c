@@ -293,14 +293,20 @@ dbms_random_value(PG_FUNCTION_ARGS)
 Datum
 dbms_random_value_range(PG_FUNCTION_ARGS)
 {
-	float8 low = PG_GETARG_FLOAT8(0);
-	float8 high = PG_GETARG_FLOAT8(1);
+	float8 arg_low = PG_GETARG_FLOAT8(0);
+	float8 arg_high = PG_GETARG_FLOAT8(1);
 	float8 result;
 
-	if (low > high)
-		PG_RETURN_NULL();
-
-	result = ((double) rand() / ((double) RAND_MAX + 1)) * ( high -  low) + low;
+	if (arg_low == arg_high)
+		result = arg_high;
+	else if (arg_low < arg_high)
+		result = ((double) rand() / ((double) RAND_MAX + 1)) * (arg_high -  arg_low) + arg_low;
+	else
+	{
+		float8 low = arg_high;
+		float8 high = arg_low;
+		result = ((double) rand() / ((double) RAND_MAX + 1)) * (high -  low) + low;
+	}
 
 	PG_RETURN_FLOAT8(result);
 }

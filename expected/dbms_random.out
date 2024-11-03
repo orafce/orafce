@@ -83,6 +83,18 @@ SELECT dbms_random.value(10,15)::numeric(10, 8);
  10.23233882
 (1 row)
 
+SELECT dbms_random.value(10,10)::numeric(10, 8);
+    value    
+-------------
+ 10.00000000
+(1 row)
+
+SELECT dbms_random.value(15,10)::numeric(10, 8);
+    value    
+-------------
+ 14.96377612
+(1 row)
+
 SELECT dbms_random.terminate();
  terminate 
 -----------
@@ -92,31 +104,31 @@ SELECT dbms_random.terminate();
 SELECT dbms_random.string('u', 10);
    string   
 ------------
- ZCDCHLMXAH
+ CDCHLMXAHZ
 (1 row)
 
 SELECT dbms_random.string('l', 10);
    string   
 ------------
- zfkgjhkghl
+ fkgjhkghll
 (1 row)
 
 SELECT dbms_random.string('a', 10);
    string   
 ------------
- xodQYutYyH
+ odQYutYyHa
 (1 row)
 
 SELECT dbms_random.string('x', 10);
    string   
 ------------
- 0GQ5J0M1WM
+ GQ5J0M1WMB
 (1 row)
 
 SELECT dbms_random.string('p', 10);
    string   
 ------------
- hX"|=i1&/h
+ X"|=i1&/h`
 (1 row)
 
 SELECT dbms_random.string('uu', 10); -- error
@@ -124,6 +136,6 @@ ERROR:  this first parameter value is more than 1 characters long
 SELECT dbms_random.string('w', 10);
    string   
 ------------
- AXPCTOMDNY
+ XPCTOMDNYT
 (1 row)
 

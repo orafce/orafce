@@ -13,6 +13,8 @@ SELECT dbms_random.string('l',3);
 SELECT dbms_random.seed(5);
 SELECT dbms_random.value()::numeric(10, 8);
 SELECT dbms_random.value(10,15)::numeric(10, 8);
+SELECT dbms_random.value(10,10)::numeric(10, 8);
+SELECT dbms_random.value(15,10)::numeric(10, 8);
 SELECT dbms_random.terminate();
 
 SELECT dbms_random.string('u', 10);
