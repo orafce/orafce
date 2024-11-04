@@ -298,8 +298,19 @@ dbms_random_value_range(PG_FUNCTION_ARGS)
 	float8 result;
 
 	if (low > high)
-		PG_RETURN_NULL();
+	{
+		float8 aux;
 
+		aux = low;
+		low = high; high = aux;
+	}
+
+	/*
+	 * in the case high == low, we don't need to calculate result, but then
+	 * we change order of calls rand() functions, and this should break
+	 * customer's regress tests. To minimize impact on regress tests, we use same formula
+	 * for this case too.
+	 */
 	result = ((double) rand() / ((double) RAND_MAX + 1)) * ( high -  low) + low;
 
 	PG_RETURN_FLOAT8(result);
