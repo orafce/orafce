@@ -311,11 +311,10 @@ dbms_random_value_range(PG_FUNCTION_ARGS)
 	 * customer's regress tests. To minimize impact on regress tests, we use same formula
 	 * for this case too.
 	 */
-	result = ((double) rand() / ((double) RAND_MAX + 1)) * ( high -  low) + low;
+	result = ((double) rand() / ((double) RAND_MAX + 1)) * (high -  low) + low;
 
 	PG_RETURN_FLOAT8(result);
 }
-
 
 /*
  * Lower tail quantile for standard normal distribution function.
