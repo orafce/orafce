@@ -114,6 +114,9 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 	{
 		Oid typid;
 
+		if (TupleDescAttr(tupdesc, attnum)->attisdropped)
+			continue;
+
 		/* simple cache - lot of time columns with same type is side by side */
 		typid = SPI_gettypeid(tupdesc, attnum);
 		if (typid != prev_typid)
@@ -223,6 +226,9 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 	for (attnum = 1; attnum <= tupdesc->natts; attnum++)
 	{
 		Oid typid;
+
+		if (TupleDescAttr(tupdesc, attnum)->attisdropped)
+			continue;
 
 		/* simple cache - lot of time columns with same type is side by side */
 		typid = SPI_gettypeid(tupdesc, attnum);
