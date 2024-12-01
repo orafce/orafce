@@ -4,8 +4,10 @@ pg_config = find_program('pg_config')
 
 bindir = run_command(pg_config, '--bindir', check: true).stdout().strip()
 includedir_server = run_command(pg_config, '--includedir-server', check: true).stdout().strip()
+includedir = run_command(pg_config, '--includedir', check: true).stdout().strip()
 pkglibdir = run_command(pg_config, '--pkglibdir', check: true).stdout().strip()
 sharedir = run_command(pg_config, '--sharedir', check: true).stdout().strip()
+libdir = run_command(pg_config, '--libdir', check: true).stdout().strip()
 
 orafce_sources = files(
   'aggregate.c',
@@ -39,13 +41,30 @@ orafce_sources = files(
   'varchar2.c',
 )
 
+compilerName = meson.get_compiler('c').get_id()
+
+if meson.get_compiler('c').get_id() == 'msvc'
+  incdir = [includedir_server / 'port/win32_msvc',
+            includedir_server / 'port/win32',
+            includedir_server,
+            includedir]
+  postgres_lib = meson.get_compiler('c').find_library('postgres',
+                                                       dirs: libdir,
+                                                       static: true,
+                                                       required: true)
+else
+  incdir = [includedir_server]
+  postgres_lib = ''
+endif
+
 shared_module(
   'orafce',
   orafce_sources,
-  include_directories: [includedir_server],
+  include_directories: incdir,
   install: true,
   install_dir: pkglibdir,
   name_prefix: '',
+  dependencies: postgres_lib,
 )
 
 install_data(
