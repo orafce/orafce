@@ -18,3 +18,11 @@ Build on Microsoft Windows with Microsoft Visual Studio and meson
    ninja
    sudo ninja install (on linux)
    ninja test (on linux)
+
+5. tests on MSWIN requires installation DiffUtils from gnuwin32
+
+   set PATH=%PATH%;C:\Program Files (x86)\GnuWin32\bin
+   set PGPORT=
+   set PGUSER=
+   set PGPASSWORD=
+   ninja test
