@@ -717,7 +717,7 @@ select plvsubst.string('My name is $$ $$.', 'Pavel|Stěhule','|','$$');
 
 == Package DBMS_utility
 
-* dms_utility.format_call_stack()  -- return a formatted string with content of call stack
+* dbms_utility.format_call_stack()  -- return a formatted string with content of call stack
 
 ----
 postgres=# select foo2();
