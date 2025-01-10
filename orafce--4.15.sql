@@ -1605,7 +1605,7 @@ COMMENT ON FUNCTION dbms_alert.set_defaults(float8) IS '';
 CREATE FUNCTION dbms_alert.signal(_event text, _message text)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_alert_signal'
-LANGUAGE C SECURITY DEFINER;
+LANGUAGE C;
 COMMENT ON FUNCTION dbms_alert.signal(text, text) IS 'Emit signal to all recipients';
 
 CREATE SCHEMA plvsubst;
