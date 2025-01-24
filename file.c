@@ -177,6 +177,7 @@ orafce_umask_check_hook(char **newval, void **extra, GucSource source)
 		}
 
 		ptr++;
+		digits++;
 	}
 
 #if PG_VERSION_NUM >=  160000
