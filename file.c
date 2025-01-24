@@ -169,7 +169,7 @@ orafce_umask_check_hook(char **newval, void **extra, GucSource source)
 			GUC_check_errdetail("invalid octal digit");
 			return false;
 		}
-
+		digits++;
 		if (digits > 3)
 		{
 			GUC_check_errdetail("number is too big (only four digits are allowed");
