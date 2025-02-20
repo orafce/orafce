@@ -2394,6 +2394,12 @@ select PLVstr.rvrs ('alphabet', 20, 200);
  
 (1 row)
 
+select PLVstr.rvrs ('l', -2, -5);
+ rvrs 
+------
+ 
+(1 row)
+
 select PLVstr.lstrip ('*val1|val2|val3|*', '*') = 'val1|val2|val3|*';
  ?column? 
 ----------

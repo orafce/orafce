@@ -500,6 +500,7 @@ select PLVstr.rvrs ('alphabet', -2, -5);
 select PLVstr.rvrs ('alphabet', -2);
 select PLVstr.rvrs ('alphabet', 2, 200);
 select PLVstr.rvrs ('alphabet', 20, 200);
+select PLVstr.rvrs ('l', -2, -5);
 select PLVstr.lstrip ('*val1|val2|val3|*', '*') = 'val1|val2|val3|*';
 select PLVstr.lstrip (',,,val1,val2,val3,', ',', 3)= 'val1,val2,val3,';
 select PLVstr.lstrip ('WHERE WHITE = ''FRONT'' AND COMP# = 1500', 'WHERE ') = 'WHITE = ''FRONT'' AND COMP# = 1500';

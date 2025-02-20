@@ -576,20 +576,31 @@ plvstr_is_prefix_int64 (PG_FUNCTION_ARGS)
  *
  ****************************************************************/
 
+static text *
+empty_string()
+{
+	text	   *result;
+
+	result = palloc(VARHDRSZ);
+	SET_VARSIZE(result, VARHDRSZ);
+
+	return result;
+}
+
 Datum
 plvstr_rvrs(PG_FUNCTION_ARGS)
 {
-	text *str;
-	int start;
-	int end;
-	int len;
-	int i;
-	int new_len;
-	text *result;
-	char *data;
-	char *sizes = NULL;
-	int *positions = NULL;
-	bool mb_encode;
+	text	   *str;
+	int			start;
+	int			end;
+	int			len;
+	int			i;
+	int			new_len;
+	text	   *result;
+	char	   *data;
+	char	   *sizes = NULL;
+	int		   *positions = NULL;
+	bool		mb_encode;
 
 	if (PG_ARGISNULL(0))
 		PG_RETURN_NULL();
@@ -614,7 +625,14 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 		int new_start, new_end;
 
 		new_start = len + start + 1;
+
+		if (new_start < 1)
+			PG_RETURN_TEXT_P(empty_string());
+
 		new_end = len + end + 1;
+		if (new_end < 1)
+			new_end = 1;
+
 		start = new_end;
 		end = new_start;
 	}
@@ -650,7 +668,6 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 			cur_size += sizes[i];
 		}
 		SET_VARSIZE(result, cur_size + VARHDRSZ);
-
 	}
 	else
 	{
