@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     container: pgxn/pgxn-tools
     steps:
-      - run: pg-start ${{ matrix.pg }}
+      - run: pg-start ${{ matrix.pg }} flex bison
       - uses: actions/checkout@v2
       - run: pg-build-test
 
