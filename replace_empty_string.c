@@ -114,7 +114,7 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 	{
 		Oid typid;
 
-		if (TupleDescAttr(tupdesc, attnum)->attisdropped)
+		if (TupleDescAttr(tupdesc, attnum - 1)->attisdropped)
 			continue;
 
 		/* simple cache - lot of time columns with same type is side by side */
@@ -227,7 +227,7 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 	{
 		Oid typid;
 
-		if (TupleDescAttr(tupdesc, attnum)->attisdropped)
+		if (TupleDescAttr(tupdesc, attnum - 1)->attisdropped)
 			continue;
 
 		/* simple cache - lot of time columns with same type is side by side */
