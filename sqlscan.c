@@ -2040,16 +2040,15 @@ YY_RULE_SETUP
 #line 752 "sqlscan.l"
 {
 					long val;
+
 					char* endptr;
 
 					SET_YYLLOC();
 					errno = 0;
 					val = strtol(yytext, &endptr, 10);
 					if (*endptr != '\0' || errno == ERANGE
-#ifdef HAVE_LONG_INT_64
 						/* if long > 32 bits, check for overflow of int4 */
 						|| val != (long) ((int32) val)
-#endif
 						)
 					{
 						/* integer too large, treat it as a float */
@@ -2068,7 +2067,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 779 "sqlscan.l"
+#line 778 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yylval.val.str = pstrdup(yytext);
@@ -2080,7 +2079,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 787 "sqlscan.l"
+#line 786 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yylval.val.str = pstrdup(yytext);
@@ -2092,7 +2091,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 795 "sqlscan.l"
+#line 794 "sqlscan.l"
 {
 					/*
 					 * throw back the [Ee], and treat as {decimal}.  Note
@@ -2111,7 +2110,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 810 "sqlscan.l"
+#line 809 "sqlscan.l"
 {
 					/* throw back the [Ee][+-], and proceed as above */
 					yyless(yyleng-2);
@@ -2125,7 +2124,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 822 "sqlscan.l"
+#line 821 "sqlscan.l"
 {
 					char		   *ident;
 					const char *keyword;
@@ -2161,7 +2160,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 855 "sqlscan.l"
+#line 854 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yylval.val.str = pstrdup(yytext);
@@ -2172,7 +2171,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 864 "sqlscan.l"
+#line 863 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yyterminate();
@@ -2180,10 +2179,10 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 869 "sqlscan.l"
+#line 868 "sqlscan.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 2186 "sqlscan.c"
+#line 2185 "sqlscan.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -3150,7 +3149,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 869 "sqlscan.l"
+#line 868 "sqlscan.l"
 
 
 /*
