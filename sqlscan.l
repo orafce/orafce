@@ -751,7 +751,6 @@ other			.
 
 {integer}		{
 					long val;
-
 					char* endptr;
 
 					SET_YYLLOC();
