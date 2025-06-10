@@ -2040,7 +2040,6 @@ YY_RULE_SETUP
 #line 752 "sqlscan.l"
 {
 					long val;
-
 					char* endptr;
 
 					SET_YYLLOC();
@@ -2067,7 +2066,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 778 "sqlscan.l"
+#line 777 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yylval.val.str = pstrdup(yytext);
@@ -2079,7 +2078,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 786 "sqlscan.l"
+#line 785 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yylval.val.str = pstrdup(yytext);
@@ -2091,7 +2090,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 794 "sqlscan.l"
+#line 793 "sqlscan.l"
 {
 					/*
 					 * throw back the [Ee], and treat as {decimal}.  Note
@@ -2110,7 +2109,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 809 "sqlscan.l"
+#line 808 "sqlscan.l"
 {
 					/* throw back the [Ee][+-], and proceed as above */
 					yyless(yyleng-2);
@@ -2124,7 +2123,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 821 "sqlscan.l"
+#line 820 "sqlscan.l"
 {
 					char		   *ident;
 					const char *keyword;
@@ -2160,7 +2159,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 854 "sqlscan.l"
+#line 853 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yylval.val.str = pstrdup(yytext);
@@ -2171,7 +2170,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 863 "sqlscan.l"
+#line 862 "sqlscan.l"
 {
 					SET_YYLLOC();
 					yyterminate();
@@ -2179,10 +2178,10 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 868 "sqlscan.l"
+#line 867 "sqlscan.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 2185 "sqlscan.c"
+#line 2184 "sqlscan.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -3149,7 +3148,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 868 "sqlscan.l"
+#line 867 "sqlscan.l"
 
 
 /*
