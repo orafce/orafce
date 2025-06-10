@@ -21,7 +21,7 @@ PipesFctx
 sh_memory
 VariableData
 ColumnData
-CastCacheDat
+CastCacheData
 CursorData
 orafceTokenType
 list_item

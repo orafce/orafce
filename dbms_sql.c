@@ -101,7 +101,7 @@ typedef struct
 	FmgrInfo	finfo_out;
 	FmgrInfo	finfo_in;
 	Oid			typIOParam;
-}			CastCacheData;
+} CastCacheData;
 
 /*
  * dbms_sql cursor definition
@@ -1482,7 +1482,7 @@ dbms_sql_last_row_count(PG_FUNCTION_ARGS)
  * Initialize cast case entry.
  */
 static void
-init_cast_cache_entry(CastCacheData * ccast,
+init_cast_cache_entry(CastCacheData *ccast,
 					  Oid targettypid,
 					  int32 targettypmod,
 					  Oid sourcetypid)
@@ -1549,7 +1549,7 @@ init_cast_cache_entry(CastCacheData * ccast,
  * Apply cast rules to a value
  */
 static Datum
-cast_value(CastCacheData * ccast, Datum value, bool isnull)
+cast_value(CastCacheData *ccast, Datum value, bool isnull)
 {
 	if (!isnull && !ccast->without_cast)
 	{
@@ -2226,9 +2226,9 @@ dbms_sql_describe_columns(PG_FUNCTION_ARGS)
 		 * VARCHAR2(32)   := '', 5. col_schema_name_len BINARY_INTEGER := 0,
 		 * 6. col_precision       BINARY_INTEGER := 0, 7. col_scale
 		 * BINARY_INTEGER := 0, 8. col_charsetid       BINARY_INTEGER := 0, 9.
-		 * col_charsetform     BINARY_INTEGER := 0, 10. col_null_ok
-		 * BOOLEAN        := TRUE 11. col_type_name      varchar2       := '',
-		 * 12. col_type_name_len  BINARY_INTEGER := 0 );
+		 * col_charsetform     BINARY_INTEGER := 0, 10. col_null_ok BOOLEAN
+		 * := TRUE 11. col_type_name      varchar2       := '', 12.
+		 * col_type_name_len  BINARY_INTEGER := 0 );
 		 */
 
 		values[0] = Int32GetDatum(attr->atttypid);
