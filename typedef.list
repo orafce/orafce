@@ -24,6 +24,7 @@ ColumnData
 CastCacheData
 CursorData
 orafceTokenType
+orafce_lexnode
 list_item
 mem_desc
 WeekDays

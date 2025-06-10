@@ -2226,8 +2226,8 @@ dbms_sql_describe_columns(PG_FUNCTION_ARGS)
 		 * VARCHAR2(32)   := '', 5. col_schema_name_len BINARY_INTEGER := 0,
 		 * 6. col_precision       BINARY_INTEGER := 0, 7. col_scale
 		 * BINARY_INTEGER := 0, 8. col_charsetid       BINARY_INTEGER := 0, 9.
-		 * col_charsetform     BINARY_INTEGER := 0, 10. col_null_ok BOOLEAN
-		 * := TRUE 11. col_type_name      varchar2       := '', 12.
+		 * col_charsetform     BINARY_INTEGER := 0, 10. col_null_ok BOOLEAN :=
+		 * TRUE 11. col_type_name      varchar2       := '', 12.
 		 * col_type_name_len  BINARY_INTEGER := 0 );
 		 */
 

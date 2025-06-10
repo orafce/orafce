@@ -7,4 +7,4 @@ typedef struct
 	char	   *sep;
 	char	   *modificator;
 	char	   *classname;
-}			orafce_lexnode;
+} orafce_lexnode;

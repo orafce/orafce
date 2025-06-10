@@ -40,7 +40,7 @@ extern void orafce_sql_yyerror(List **result, const char *message);
 extern void orafce_sql_scanner_init(const char *str);
 extern void orafce_sql_scanner_finish(void);
 
-static orafce_lexnode * __node;
+static orafce_lexnode *__node;
 
 #define COPY_TO_S(src,dest,col)	(dest->col = (src->col ? pstrdup(src->col) : NULL))
 #define COPY_TO(src,dest,col)	(dest->col = src->col)
@@ -89,7 +89,7 @@ static orafce_lexnode * __node;
 
 
 static orafce_lexnode *
-compose(orafce_lexnode * a, orafce_lexnode * b)
+compose(orafce_lexnode *a, orafce_lexnode *b)
 {
 	orafce_lexnode *result;
 	StringInfo	sinfo;
