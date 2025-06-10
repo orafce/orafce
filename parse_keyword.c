@@ -19,7 +19,7 @@
 const char *
 orafce_scan_keyword(const char *text, int *keycode)
 {
-	int		kwnum;
+	int			kwnum;
 
 	kwnum = ScanKeywordLookup(text, &ScanKeywords);
 	if (kwnum >= 0)
@@ -36,7 +36,7 @@ orafce_scan_keyword(const char *text, int *keycode)
 const char *
 orafce_scan_keyword(const char *text, int *keycode)
 {
-	const ScanKeyword *keyword;
+	const		ScanKeyword *keyword;
 
 	keyword = ScanKeywordLookup(text, ScanKeywords, NumScanKeywords);
 	if (keyword)

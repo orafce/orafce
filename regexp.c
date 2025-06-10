@@ -391,9 +391,9 @@ appendStringInfoRegexpSubstr(StringInfo str, text *replace_text,
  */
 static text *
 orafce_replace_text_regexp(text *src_text, text *pattern_text,
-					text *replace_text,
-					int cflags, Oid collation,
-					int search_start, int n)
+						   text *replace_text,
+						   int cflags, Oid collation,
+						   int search_start, int n)
 {
 	text	   *ret_text;
 	regex_t    *re;
@@ -1081,8 +1081,8 @@ orafce_textregexreplace_noopt(PG_FUNCTION_ARGS)
 	r = PG_GETARG_TEXT_PP(2);
 
 	PG_RETURN_TEXT_P(orafce_replace_text_regexp(s, p, r,
-										 REG_ADVANCED, PG_GET_COLLATION(),
-										 0, 0));
+												REG_ADVANCED, PG_GET_COLLATION(),
+												0, 0));
 }
 
 /*
@@ -1105,9 +1105,9 @@ orafce_textregexreplace(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 
 	/*
-	 * Special case for second parameter in REGEXP_REPLACE, when NULL
-	 * returns the original value unless the start position or occurrences
-	 * are NULL too. In this case, it returns NULL (see instruction above).
+	 * Special case for second parameter in REGEXP_REPLACE, when NULL returns
+	 * the original value unless the start position or occurrences are NULL
+	 * too. In this case, it returns NULL (see instruction above).
 	 */
 	if (PG_ARGISNULL(1) && !PG_ARGISNULL(0))
 		PG_RETURN_TEXT_P(PG_GETARG_TEXT_PP(0));
@@ -1144,8 +1144,8 @@ orafce_textregexreplace(PG_FUNCTION_ARGS)
 	parse_re_flags(&flags, opt);
 
 	PG_RETURN_TEXT_P(orafce_replace_text_regexp(s, p, r,
-										 flags.cflags, PG_GET_COLLATION(),
-										 0, 0));
+												flags.cflags, PG_GET_COLLATION(),
+												0, 0));
 }
 
 /*
@@ -1172,9 +1172,9 @@ orafce_textregexreplace_extended(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 
 	/*
-	 * Special case for second parameter in REGEXP_REPLACE, when NULL
-	 * returns the original value unless the start position or occurrences
-	 * are NULL too. In this case, it returns NULL (see instruction above).
+	 * Special case for second parameter in REGEXP_REPLACE, when NULL returns
+	 * the original value unless the start position or occurrences are NULL
+	 * too. In this case, it returns NULL (see instruction above).
 	 */
 	if (PG_ARGISNULL(1) && !PG_ARGISNULL(0))
 		PG_RETURN_TEXT_P(PG_GETARG_TEXT_PP(0));
@@ -1219,16 +1219,16 @@ orafce_textregexreplace_extended(PG_FUNCTION_ARGS)
 				 errmsg("modifier 'g' is not supported by this function")));
 
 	/*
-	 * If N was not specified, force the 'g' modifier. This is the
-	 * default in Oracle when no occurence is specified.
+	 * If N was not specified, force the 'g' modifier. This is the default in
+	 * Oracle when no occurence is specified.
 	 */
 	if (PG_NARGS() <= 4)
 		n = 0;
 
 	/* Do the replacement(s) */
 	PG_RETURN_TEXT_P(orafce_replace_text_regexp(s, p, r,
-										 re_flags.cflags, PG_GET_COLLATION(),
-										 start - 1, n));
+												re_flags.cflags, PG_GET_COLLATION(),
+												start - 1, n));
 }
 
 /* This is separate to keep the opr_sanity regression test from complaining */

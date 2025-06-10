@@ -83,16 +83,16 @@ static alert_signal_data *signals;
 
 
 static void unregister_event(int event_id, int sid);
-static char* find_and_remove_message_item(int message_id, int sid,
-							 bool all, bool remove_all,
-							 bool filter_message,
-							 int *sleep, char **event_name);
+static char *find_and_remove_message_item(int message_id, int sid,
+										  bool all, bool remove_all,
+										  bool filter_message,
+										  int *sleep, char **event_name);
 
 /*
  * There are maximum 30 events and 255 collaborating sessions
  *
  */
-static alert_lock *session_lock = NULL;
+static alert_lock * session_lock = NULL;
 
 #define NOT_FOUND  -1
 #define NOT_USED -1
@@ -149,15 +149,15 @@ purge_shared_alert_mem()
 
 		if (proc == NULL)
 		{
-			int		j;
-			int		invalid_sid = locks[i].sid;
+			int			j;
+			int			invalid_sid = locks[i].sid;
 
 			for (j = 0; j < MAX_EVENTS; j++)
 			{
 				if (events[j].event_name != NULL)
 				{
 					find_and_remove_message_item(j, invalid_sid,
-											false, true, true, NULL, NULL);
+												 false, true, true, NULL, NULL);
 					unregister_event(j, invalid_sid);
 				}
 			}
@@ -173,7 +173,7 @@ purge_shared_alert_mem()
  * find or create event rec
  *
  */
-static alert_lock*
+static alert_lock *
 find_lock(int sid, bool create)
 {
 	int			i;
@@ -216,24 +216,24 @@ find_lock(int sid, bool create)
 		}
 		else
 			ereport(ERROR,
-				(errcode(ERRCODE_ORA_PACKAGES_LOCK_REQUEST_ERROR),
-				 errmsg("lock request error"),
+					(errcode(ERRCODE_ORA_PACKAGES_LOCK_REQUEST_ERROR),
+					 errmsg("lock request error"),
 					 errdetail("Failed to create session lock."),
-				 errhint("There are too many collaborating sessions. Increase MAX_LOCKS in 'pipe.h'.")));
+					 errhint("There are too many collaborating sessions. Increase MAX_LOCKS in 'pipe.h'.")));
 	}
 
 	return NULL;
 }
 
 
-static alert_event*
+static alert_event *
 find_event(text *event_name, bool create, int *event_id)
 {
 	int			i;
 
-	for (i = 0; i < MAX_EVENTS;i++)
+	for (i = 0; i < MAX_EVENTS; i++)
 	{
-		if (events[i].event_name != NULL && textcmpm(event_name,events[i].event_name) == 0)
+		if (events[i].event_name != NULL && textcmpm(event_name, events[i].event_name) == 0)
 		{
 			if (event_id != NULL)
 				*event_id = i;
@@ -243,7 +243,7 @@ find_event(text *event_name, bool create, int *event_id)
 
 	if (create)
 	{
-		for (i=0; i < MAX_EVENTS; i++)
+		for (i = 0; i < MAX_EVENTS; i++)
 		{
 			if (events[i].event_name == NULL)
 			{
@@ -286,27 +286,27 @@ register_event(text *event_name)
 	for (i = 0; i < ev->max_receivers; i++)
 	{
 		if (ev->receivers[i] == sid)
-			return;   /* event is registered */
+			return;				/* event is registered */
 		if (ev->receivers[i] == NOT_USED && first_free == NOT_FOUND)
 			first_free = i;
 	}
 
 	/*
-	 * I can have a maximum of MAX_LOCKS receivers for one event.
-	 * Array receivers is increased for 16 fields
+	 * I can have a maximum of MAX_LOCKS receivers for one event. Array
+	 * receivers is increased for 16 fields
 	 */
 	if (first_free == NOT_FOUND)
 	{
 		if (ev->max_receivers + 16 > MAX_LOCKS)
 			ereport(ERROR,
-				(errcode(ERRCODE_ORA_PACKAGES_LOCK_REQUEST_ERROR),
-				 errmsg("lock request error"),
+					(errcode(ERRCODE_ORA_PACKAGES_LOCK_REQUEST_ERROR),
+					 errmsg("lock request error"),
 					 errdetail("Failed to create session lock."),
-				 errhint("There are too many collaborating sessions. Increase MAX_LOCKS in 'pipe.h'.")));
+					 errhint("There are too many collaborating sessions. Increase MAX_LOCKS in 'pipe.h'.")));
 
 		/* increase receiver's array */
 
-		new_receivers = (int*)salloc((ev->max_receivers + 16)*sizeof(int));
+		new_receivers = (int *) salloc((ev->max_receivers + 16) * sizeof(int));
 
 		for (i = 0; i < ev->max_receivers + 16; i++)
 		{
@@ -403,7 +403,7 @@ remove_receiver(message_item *msg, int sid)
  * all others messages than message_id.
  *
  */
-static char*
+static char *
 find_and_remove_message_item(int message_id, int sid,
 							 bool all, bool remove_all,
 							 bool filter_message,
@@ -411,7 +411,8 @@ find_and_remove_message_item(int message_id, int sid,
 {
 	alert_lock *alck;
 
-	char *result = NULL;
+	char	   *result = NULL;
+
 	if (sleep != NULL)
 		*sleep = 0;
 
@@ -423,7 +424,8 @@ find_and_remove_message_item(int message_id, int sid,
 	if (alck != NULL && alck->echo != NULL)
 	{
 		/* if I have registered and created item */
-		struct _message_echo *echo, *last_echo;
+		struct _message_echo *echo,
+				   *last_echo;
 
 		echo = alck->echo;
 		last_echo = NULL;
@@ -433,7 +435,7 @@ find_and_remove_message_item(int message_id, int sid,
 			char	   *message_text;
 			int			_message_id;
 
-			bool destroy_msg_item = false;
+			bool		destroy_msg_item = false;
 
 			if (filter_message && echo->message_id != message_id)
 			{
@@ -519,7 +521,9 @@ create_message(text *event_name, text *message)
 	{
 		if (ev->receivers_number > 0)
 		{
-			int			i,j,k;
+			int			i,
+						j,
+						k;
 
 			msg_item = ev->messages;
 			while (msg_item != NULL)
@@ -528,7 +532,7 @@ create_message(text *event_name, text *message)
 					return;
 
 				if (msg_item->message != NULL && message != NULL)
-					if (0 == textcmpm(message,msg_item->message))
+					if (0 == textcmpm(message, msg_item->message))
 						return;
 
 				msg_item = msg_item->next_message;
@@ -536,7 +540,7 @@ create_message(text *event_name, text *message)
 
 			msg_item = salloc(sizeof(message_item));
 
-			msg_item->receivers = salloc(ev->receivers_number*sizeof(int));
+			msg_item->receivers = salloc(ev->receivers_number * sizeof(int));
 			msg_item->receivers_number = ev->receivers_number;
 
 			if (message != NULL)
@@ -556,6 +560,7 @@ create_message(text *event_name, text *message)
 							/* create echo */
 
 							message_echo *echo = salloc(sizeof(message_echo));
+
 							echo->message = msg_item;
 							echo->message_id = event_id;
 							echo->next_echo = NULL;
@@ -565,6 +570,7 @@ create_message(text *event_name, text *message)
 							else
 							{
 								message_echo *p;
+
 								p = locks[k].echo;
 
 								while (p->next_echo != NULL)
@@ -656,7 +662,7 @@ dbms_alert_remove(PG_FUNCTION_ARGS)
 	float8		timeout = 2;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES,MAX_EVENTS,MAX_LOCKS,false))
+	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		alert_event *ev;
 
@@ -664,7 +670,7 @@ dbms_alert_remove(PG_FUNCTION_ARGS)
 		if (NULL != ev)
 		{
 			find_and_remove_message_item(ev_id, sid,
-							 false, true, true, NULL, NULL);
+										 false, true, true, NULL, NULL);
 			unregister_event(ev_id, sid);
 		}
 		LWLockRelease(shmem_lockid);
@@ -690,7 +696,7 @@ dbms_alert_removeall(PG_FUNCTION_ARGS)
 	float8		timeout = 2;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES,MAX_EVENTS,MAX_LOCKS,false))
+	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		alert_lock *alck;
 		int			i;
@@ -700,7 +706,7 @@ dbms_alert_removeall(PG_FUNCTION_ARGS)
 			if (events[i].event_name != NULL)
 			{
 				find_and_remove_message_item(i, sid,
-								 false, true, true, NULL, NULL);
+											 false, true, true, NULL, NULL);
 				unregister_event(i, sid);
 			}
 		}
@@ -854,8 +860,7 @@ dbms_alert_waitany(PG_FUNCTION_ARGS)
 	if (!PG_ARGISNULL(0))
 	{
 		/*
-		 * cannot to change SQL API now, so use not well choosed
-		 * float.
+		 * cannot to change SQL API now, so use not well choosed float.
 		 */
 		timeout = (int) PG_GETARG_FLOAT8(0);
 
@@ -893,7 +898,7 @@ _dbms_alert_waitone(text *name, int timeout, FunctionCallInfo fcinfo)
 	HeapTuple	tuple;
 	Datum		result;
 	int			message_id;
-	char	   *str[2] = {NULL,"1"};
+	char	   *str[2] = {NULL, "1"};
 	char	   *event_name;
 	instr_time	start_time;
 	TupleDesc	btupdesc;
@@ -1021,8 +1026,7 @@ dbms_alert_waitone(PG_FUNCTION_ARGS)
 	if (!PG_ARGISNULL(1))
 	{
 		/*
-		 * cannot to change SQL API now, so use not well choosed
-		 * float.
+		 * cannot to change SQL API now, so use not well choosed float.
 		 */
 		timeout = (int) PG_GETARG_FLOAT8(1);
 
@@ -1074,9 +1078,9 @@ Datum
 dbms_alert_set_defaults(PG_FUNCTION_ARGS)
 {
 	ereport(ERROR,
-		(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-		 errmsg("feature not supported"),
-		 errdetail("Sensitivity isn't supported.")));
+			(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+			 errmsg("feature not supported"),
+			 errdetail("Sensitivity isn't supported.")));
 
 	PG_RETURN_VOID();
 }
@@ -1123,8 +1127,8 @@ orafce_xact_cb(XactEvent event, void *arg)
 static bool
 text_eq(const text *p1, const text *p2)
 {
-	int		len1,
-			len2;
+	int			len1,
+				len2;
 
 	Assert(p1 && p2);
 
@@ -1159,9 +1163,9 @@ dbms_alert_signal(PG_FUNCTION_ARGS)
 
 	if (PG_ARGISNULL(0))
 		ereport(ERROR,
-			(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-			 errmsg("event name is NULL"),
-			 errdetail("Eventname may not be NULL.")));
+				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
+				 errmsg("event name is NULL"),
+				 errdetail("Eventname may not be NULL.")));
 
 	event = PG_GETARG_TEXT_P(0);
 	message = (!PG_ARGISNULL(1)) ? PG_GETARG_TEXT_P(1) : NULL;
@@ -1191,7 +1195,7 @@ dbms_alert_signal(PG_FUNCTION_ARGS)
 					PG_RETURN_VOID();
 
 				if (message && s->message &&
-					 text_eq(message, s->message) == 0)
+					text_eq(message, s->message) == 0)
 					PG_RETURN_VOID();
 			}
 

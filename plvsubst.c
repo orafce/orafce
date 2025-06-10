@@ -68,30 +68,31 @@ set_c_subst(text *sc)
 	MemoryContextSwitchTo(oldctx);
 }
 
-static text*
+static text *
 plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCallInfo fcinfo)
 {
-	ArrayType	   *v = vals_in;
-	int				nitems,
-					ndims;
-	char		   *p;
-	int16			typlen;
-	bool			typbyval;
-	char			typalign;
-	char			typdelim;
-	Oid				typelem;
-	Oid				typiofunc;
-	FmgrInfo		proc;
-	int				i = 0, items = 0;
-	StringInfo		sinfo;
-	const char	   *template_str;
-	int				template_len;
-	char		   *sizes;
-	int			   *positions;
-	int				subst_mb_len;
-	int				subst_len;
-	const bits8	   *bitmap;
-	int				bitmask;
+	ArrayType  *v = vals_in;
+	int			nitems,
+				ndims;
+	char	   *p;
+	int16		typlen;
+	bool		typbyval;
+	char		typalign;
+	char		typdelim;
+	Oid			typelem;
+	Oid			typiofunc;
+	FmgrInfo	proc;
+	int			i = 0,
+				items = 0;
+	StringInfo	sinfo;
+	const char *template_str;
+	int			template_len;
+	char	   *sizes;
+	int		   *positions;
+	int			subst_mb_len;
+	int			subst_len;
+	const bits8 *bitmap;
+	int			bitmask;
 
 	if (v != NULL && (ndims = ARR_NDIM(v)) > 0)
 	{
@@ -108,9 +109,9 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 		nitems = ArrayGetNItems(ndims, dims);
 		bitmap = ARR_NULLBITMAP(v);
 		get_type_io_data(ARR_ELEMTYPE(v), IOFunc_output,
-							&typlen, &typbyval,
-							&typalign, &typdelim,
-							&typelem, &typiofunc);
+						 &typlen, &typbyval,
+						 &typalign, &typdelim,
+						 &typelem, &typiofunc);
 		fmgr_info_cxt(typiofunc, &proc, fcinfo->flinfo->fn_mcxt);
 	}
 	else
@@ -133,19 +134,19 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 		{
 			if (items++ < nitems)
 			{
-				char     *value;
+				char	   *value;
 
 				if (bitmap && (*bitmap & bitmask) == 0)
 					value = pstrdup("NULL");
 				else
 				{
-					Datum    itemvalue;
+					Datum		itemvalue;
 
 					itemvalue = fetch_att(p, typbyval, typlen);
 					value = DatumGetCString(FunctionCall3(&proc,
-								itemvalue,
-								ObjectIdGetDatum(typelem),
-								Int32GetDatum(-1)));
+														  itemvalue,
+														  ObjectIdGetDatum(typelem),
+														  Int32GetDatum(-1)));
 
 					p = att_addlength_pointer(p, typlen, p);
 					p = (char *) att_align_nominal(p, typalign);
@@ -209,7 +210,7 @@ plvsubst_string_string(PG_FUNCTION_ARGS)
 
 #endif
 
-	Oid		collation = PG_GET_COLLATION();
+	Oid			collation = PG_GET_COLLATION();
 
 	init_c_subst();
 

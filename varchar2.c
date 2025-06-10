@@ -25,7 +25,7 @@ PG_FUNCTION_INFO_V1(varchar2recv);
 PG_FUNCTION_INFO_V1(orafce_concat2);
 PG_FUNCTION_INFO_V1(orafce_varchar_transform);
 
-bool orafce_varchar2_null_safe_concat = false;
+bool		orafce_varchar2_null_safe_concat = false;
 
 
 /*
@@ -43,7 +43,7 @@ bool orafce_varchar2_null_safe_concat = false;
 static VarChar *
 varchar2_input(const char *s, size_t len, int32 atttypmod)
 {
-	VarChar		*result;		/* input data */
+	VarChar    *result;			/* input data */
 	size_t		maxlen;
 
 	maxlen = atttypmod - VARHDRSZ;
@@ -54,10 +54,10 @@ varchar2_input(const char *s, size_t len, int32 atttypmod)
 	if (atttypmod >= (int32) VARHDRSZ && len > maxlen)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					errmsg("input value length is %zd; too long for type varchar2(%zd)", len , maxlen)));
+				 errmsg("input value length is %zd; too long for type varchar2(%zd)", len, maxlen)));
 
 	result = (VarChar *) cstring_to_text_with_len(s, size2int(len));
-	return  result;
+	return result;
 }
 
 /*
@@ -67,12 +67,12 @@ varchar2_input(const char *s, size_t len, int32 atttypmod)
 Datum
 varchar2in(PG_FUNCTION_ARGS)
 {
-	char	*s = PG_GETARG_CSTRING(0);
+	char	   *s = PG_GETARG_CSTRING(0);
 #ifdef NOT_USED
-	Oid		typelem = PG_GETARG_OID(1);
+	Oid			typelem = PG_GETARG_OID(1);
 #endif
-	int32	atttypmod = PG_GETARG_INT32(2);
-	VarChar	*result;
+	int32		atttypmod = PG_GETARG_INT32(2);
+	VarChar    *result;
 
 	result = varchar2_input(s, strlen(s), atttypmod);
 	PG_RETURN_VARCHAR_P(result);
@@ -88,7 +88,7 @@ varchar2in(PG_FUNCTION_ARGS)
 Datum
 varchar2out(PG_FUNCTION_ARGS)
 {
-	Datum   txt = PG_GETARG_DATUM(0);
+	Datum		txt = PG_GETARG_DATUM(0);
 
 	PG_RETURN_CSTRING(TextDatumGetCString(txt));
 }
@@ -104,10 +104,11 @@ varchar2recv(PG_FUNCTION_ARGS)
 #ifdef NOT_USED
 	Oid			typelem = PG_GETARG_OID(1);
 #endif
-	int32		atttypmod = PG_GETARG_INT32(2);	/* typmod of the receiving column */
-	VarChar		*result;
-	char		*str;							/* received data */
-	int			nbytes;							/* length in bytes of recived data */
+	int32		atttypmod = PG_GETARG_INT32(2); /* typmod of the receiving
+												 * column */
+	VarChar    *result;
+	char	   *str;			/* received data */
+	int			nbytes;			/* length in bytes of recived data */
 
 	str = pq_getmsgtext(buf, buf->len - buf->cursor, &nbytes);
 	result = varchar2_input(str, nbytes, atttypmod);
@@ -158,12 +159,12 @@ orafce_varchar_transform(PG_FUNCTION_ARGS)
 Datum
 varchar2(PG_FUNCTION_ARGS)
 {
-	VarChar		*source = PG_GETARG_VARCHAR_PP(0);
+	VarChar    *source = PG_GETARG_VARCHAR_PP(0);
 	int32		typmod = PG_GETARG_INT32(1);
 	bool		isExplicit = PG_GETARG_BOOL(2);
 	int32		len,
 				maxlen;
-	char		*s_data;
+	char	   *s_data;
 
 	len = VARSIZE_ANY_EXHDR(source);
 	s_data = VARDATA_ANY(source);
@@ -178,10 +179,10 @@ varchar2(PG_FUNCTION_ARGS)
 	{
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("input value length is %d; too long for type varchar2(%d)",len ,maxlen)));
+				 errmsg("input value length is %d; too long for type varchar2(%d)", len, maxlen)));
 	}
 
-	PG_RETURN_VARCHAR_P((VarChar *) cstring_to_text_with_len(s_data,maxlen));
+	PG_RETURN_VARCHAR_P((VarChar *) cstring_to_text_with_len(s_data, maxlen));
 }
 
 

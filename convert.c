@@ -36,7 +36,7 @@ PG_FUNCTION_INFO_V1(orafce_to_multi_byte);
 PG_FUNCTION_INFO_V1(orafce_to_single_byte);
 PG_FUNCTION_INFO_V1(orafce_unistr);
 
-static int getindex(const char **map, char *mbchar, int mblen);
+static int	getindex(const char **map, char *mbchar, int mblen);
 
 #if PG_VERSION_NUM < 130000
 
@@ -105,7 +105,7 @@ orafce_to_char_numeric(PG_FUNCTION_ARGS)
 	StringInfo	buf = makeStringInfo();
 	struct lconv *lconv = PGLC_localeconv();
 	char	   *p;
-	char       *decimal = NULL;
+	char	   *decimal = NULL;
 
 	appendStringInfoString(buf, DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(arg0))));
 
@@ -113,19 +113,21 @@ orafce_to_char_numeric(PG_FUNCTION_ARGS)
 		if (*p == '.')
 		{
 			*p = lconv->decimal_point[0];
-			decimal = p; /* save decimal point position for the next loop */
+			decimal = p;		/* save decimal point position for the next
+								 * loop */
 		}
 
-	/* Simulate the default Oracle to_char template (TM9 - Text Minimum)
-	   by removing unneeded digits after the decimal point;
-	   if no digits are left, then remove the decimal point too
-	*/
-	for (p = buf->data + buf->len - 1; decimal && p >= decimal; p--)
+	/*
+	 * Simulate the default Oracle to_char template (TM9 - Text Minimum) by
+	 * removing unneeded digits after the decimal point; if no digits are
+	 * left, then remove the decimal point too
+	 */
+	for (p = buf->data + buf->len - 1; decimal &&p >= decimal; p--)
 	{
 		if (*p == '0' || *p == lconv->decimal_point[0])
 			*p = 0;
 		else
-			break; /* non-zero digit found, exit the loop */
+			break;				/* non-zero digit found, exit the loop */
 	}
 
 	PG_RETURN_TEXT_P(cstring_to_text(buf->data));
@@ -148,12 +150,12 @@ orafce_to_char_numeric(PG_FUNCTION_ARGS)
 Datum
 orafce_to_char_timestamp(PG_FUNCTION_ARGS)
 {
-	Timestamp ts = PG_GETARG_TIMESTAMP(0);
-	text *result = NULL;
+	Timestamp	ts = PG_GETARG_TIMESTAMP(0);
+	text	   *result = NULL;
 
-	if(nls_date_format && strlen(nls_date_format) > 0)
+	if (nls_date_format && strlen(nls_date_format) > 0)
 	{
-		/* it will return the DATE in nls_date_format*/
+		/* it will return the DATE in nls_date_format */
 		result = DatumGetTextP(DirectFunctionCall2(timestamp_to_char,
 												   TimestampGetDatum(ts),
 												   CStringGetTextDatum(nls_date_format)));
@@ -161,7 +163,7 @@ orafce_to_char_timestamp(PG_FUNCTION_ARGS)
 	else
 	{
 		result = cstring_to_text(DatumGetCString(DirectFunctionCall1(timestamp_out,
-									TimestampGetDatum(ts))));
+																	 TimestampGetDatum(ts))));
 	}
 
 	PG_RETURN_TEXT_P(result);
@@ -208,8 +210,7 @@ orafce_to_number(PG_FUNCTION_ARGS)
  */
 #define JA_TO_FULL_WIDTH_TILDE	1
 
-static const char *
-TO_MULTI_BYTE_UTF8[95] =
+static const char *TO_MULTI_BYTE_UTF8[95] =
 {
 	"\343\200\200",
 	"\357\274\201",
@@ -312,8 +313,7 @@ TO_MULTI_BYTE_UTF8[95] =
 #endif
 };
 
-static const char *
-TO_MULTI_BYTE_EUCJP[95] =
+static const char *TO_MULTI_BYTE_EUCJP[95] =
 {
 	"\241\241",
 	"\241\252",
@@ -379,7 +379,7 @@ TO_MULTI_BYTE_EUCJP[95] =
 	"\241\317",
 	"\241\260",
 	"\241\262",
-	"\241\306",		/* Oracle returns different value \241\307 */
+	"\241\306",					/* Oracle returns different value \241\307 */
 	"\243\341",
 	"\243\342",
 	"\243\343",
@@ -416,8 +416,7 @@ TO_MULTI_BYTE_EUCJP[95] =
 #endif
 };
 
-static const char *
-TO_MULTI_BYTE__EUCCN[95] =
+static const char *TO_MULTI_BYTE__EUCCN[95] =
 {
 	"\241\241",
 	"\243\241",
@@ -527,13 +526,13 @@ orafce_to_multi_byte(PG_FUNCTION_ARGS)
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(__amd64__))
 
-	__int64			dstlen;
+	__int64		dstlen;
 
 #else
 
 	int			dstlen;
 
-	#endif
+#endif
 
 	int			i;
 	const char **map;
@@ -550,10 +549,11 @@ orafce_to_multi_byte(PG_FUNCTION_ARGS)
 		case PG_EUC_CN:
 			map = TO_MULTI_BYTE__EUCCN;
 			break;
-		/*
-		 * TODO: Add converter for encodings.
-		 */
-		default:	/* no need to convert */
+
+			/*
+			 * TODO: Add converter for encodings.
+			 */
+		default:				/* no need to convert */
 			PG_RETURN_DATUM(PG_GETARG_DATUM(0));
 	}
 
@@ -565,10 +565,12 @@ orafce_to_multi_byte(PG_FUNCTION_ARGS)
 
 	for (i = 0; i < srclen; i++)
 	{
-		unsigned char	u = (unsigned char) s[i];
+		unsigned char u = (unsigned char) s[i];
+
 		if (0x20 <= u && u <= 0x7e)
 		{
 			const char *m = map[u - 0x20];
+
 			while (*m)
 			{
 				*d++ = *m++;
@@ -589,7 +591,7 @@ orafce_to_multi_byte(PG_FUNCTION_ARGS)
 static int
 getindex(const char **map, char *mbchar, int mblen)
 {
-	int		i;
+	int			i;
 
 	for (i = 0; i < 95; i++)
 	{
@@ -611,10 +613,10 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(__amd64__))
 
-	__int64			dstlen;
+	__int64		dstlen;
 
 #else
-	
+
 	int			dstlen;
 
 #endif
@@ -633,10 +635,11 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 		case PG_EUC_CN:
 			map = TO_MULTI_BYTE__EUCCN;
 			break;
-		/*
-		 * TODO: Add converter for encodings.
-		 */
-		default:	/* no need to convert */
+
+			/*
+			 * TODO: Add converter for encodings.
+			 */
+		default:				/* no need to convert */
 			PG_RETURN_DATUM(PG_GETARG_DATUM(0));
 	}
 
@@ -650,9 +653,9 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 
 	while (s - VARDATA_ANY(src) < srclen)
 	{
-		char   *u = s;
-		int		clen;
-		int		mapindex;
+		char	   *u = s;
+		int			clen;
+		int			mapindex;
 
 		clen = pg_mblen(u);
 		s += clen;
@@ -661,7 +664,8 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 			*d++ = *u;
 		else if ((mapindex = getindex(map, u, clen)) >= 0)
 		{
-			const char m = 0x20 + mapindex;
+			const char	m = 0x20 + mapindex;
+
 			*d++ = m;
 		}
 		else
@@ -698,10 +702,10 @@ hexval(unsigned char c)
 static bool
 isxdigit_four(const char *instr)
 {
-	return isxdigit((unsigned char)  instr[0]) &&
-			isxdigit((unsigned char) instr[1]) &&
-			isxdigit((unsigned char) instr[2]) &&
-			isxdigit((unsigned char) instr[3]);
+	return isxdigit((unsigned char) instr[0]) &&
+		isxdigit((unsigned char) instr[1]) &&
+		isxdigit((unsigned char) instr[2]) &&
+		isxdigit((unsigned char) instr[3]);
 }
 
 /*
@@ -711,9 +715,9 @@ static long int
 hexval_four(const char *instr)
 {
 	return (hexval(instr[0]) << 12) +
-			(hexval(instr[1]) << 8) +
-			(hexval(instr[2]) << 4) +
-			 hexval(instr[3]);
+		(hexval(instr[1]) << 8) +
+		(hexval(instr[2]) << 4) +
+		hexval(instr[3]);
 }
 
 #if PG_VERSION_NUM < 130000
@@ -865,7 +869,7 @@ check_unicode_value(pg_wchar c)
 Datum
 orafce_unistr(PG_FUNCTION_ARGS)
 {
-	StringInfoData		str;
+	StringInfoData str;
 	text	   *input_text;
 	text	   *result;
 	pg_wchar	pair_first = 0;
@@ -945,8 +949,8 @@ orafce_unistr(PG_FUNCTION_ARGS)
 				pg_wchar	unicode;
 
 				unicode = (hexval_four(&instr[2]) << 8) +
-								(hexval(instr[6]) << 4) +
-								 hexval(instr[7]);
+					(hexval(instr[6]) << 4) +
+					hexval(instr[7]);
 
 				check_unicode_value(unicode);
 
