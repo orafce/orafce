@@ -271,10 +271,20 @@ ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, bool r
 		{
 			int			i;
 
+#if PG_VERSION_NUM >= 190000
+
+			sh_mem->tranche_id = LWLockNewTrancheId("orafce");
+			LWLockInitialize(&sh_mem->shmem_lock, sh_mem->tranche_id);
+
+#else
+
 			sh_mem->tranche_id = LWLockNewTrancheId();
 			LWLockInitialize(&sh_mem->shmem_lock, sh_mem->tranche_id);
 
 			LWLockRegisterTranche(sh_mem->tranche_id, "orafce");
+
+#endif
+
 			shmem_lockid = &sh_mem->shmem_lock;
 
 			sh_mem->identity_seq = 0;
@@ -317,7 +327,6 @@ ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, bool r
 		}
 		else
 		{
-			LWLockRegisterTranche(sh_mem->tranche_id, "orafce");
 			shmem_lockid = &sh_mem->shmem_lock;
 
 #if PG_VERSION_NUM >= 130000

@@ -156,7 +156,22 @@ orafce_reminder_numeric(PG_FUNCTION_ARGS)
 	if (orafce_numeric_is_inf(num2))
 		duplicate_numeric(num1);
 
-#if PG_VERSION_NUM >= 150000
+#if PG_VERSION_NUM >= 190000
+
+	result = numeric_sub_safe(
+							  num1,
+							  numeric_mul_safe(
+											   DatumGetNumeric(
+															   DirectFunctionCall2(
+																				   numeric_round,
+																				   NumericGetDatum(
+																								   numeric_div_safe(num1, num2, NULL)),
+																				   Int32GetDatum(0))),
+											   num2,
+											   NULL),
+							  NULL);
+
+#elif PG_VERSION_NUM >= 150000
 
 	result = numeric_sub_opt_error(
 								   num1,
