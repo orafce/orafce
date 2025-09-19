@@ -97,6 +97,7 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 	bool	   *nulls = NULL;
 	Oid			prev_typid = InvalidOid;
 	bool		is_string = false;
+	bool		is_bpchar = false;
 	int			nresetcols = 0;
 	int			attnum;
 	bool		raise_warning = false;
@@ -118,7 +119,7 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 			continue;
 
 		/* simple cache - lot of time columns with same type is side by side */
-		typid = SPI_gettypeid(tupdesc, attnum);
+		typid = TupleDescAttr(tupdesc, attnum - 1)->atttypid;
 		if (typid != prev_typid)
 		{
 			TYPCATEGORY category;
@@ -129,6 +130,7 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 			get_type_category_preferred(base_typid, &category, &ispreferred);
 
 			is_string = (category == TYPCATEGORY_STRING);
+			is_bpchar = (base_typid == BPCHAROID);
 			prev_typid = typid;
 		}
 
@@ -141,9 +143,29 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 			if (!isnull)
 			{
 				text	   *txt = DatumGetTextP(value);
+				int32		len;
+				bool		is_emptystr;
+
+				len = VARSIZE_ANY_EXHDR(txt);
+				is_emptystr = (len == 0);
+
+				if (is_bpchar && !is_emptystr)
+				{
+					char	   *s = VARDATA_ANY(txt);
+					int			i;
+
+					is_emptystr = true;
+
+					for (i = 0; i < len; i++)
+						if (s[i] != ' ')
+						{
+							is_emptystr = false;
+							break;
+						}
+				}
 
 				/* is it empty string (has zero length */
-				if (VARSIZE_ANY_EXHDR(txt) == 0)
+				if (is_emptystr)
 				{
 					if (!resetcols)
 					{
@@ -205,6 +227,7 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 	bool	   *nulls = NULL;
 	Oid			prev_typid = InvalidOid;
 	bool		is_string = false;
+	bool		is_bpchar = false;
 	int			nresetcols = 0;
 	int			attnum;
 	bool		raise_warning = false;
@@ -226,12 +249,15 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 	for (attnum = 1; attnum <= tupdesc->natts; attnum++)
 	{
 		Oid			typid;
+		int32		typmod;
 
 		if (TupleDescAttr(tupdesc, attnum - 1)->attisdropped)
 			continue;
 
 		/* simple cache - lot of time columns with same type is side by side */
-		typid = SPI_gettypeid(tupdesc, attnum);
+		typid = TupleDescAttr(tupdesc, attnum - 1)->atttypid;
+		typmod = TupleDescAttr(tupdesc, attnum - 1)->atttypmod;
+
 		if (typid != prev_typid)
 		{
 			TYPCATEGORY category;
@@ -242,6 +268,7 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 			get_type_category_preferred(base_typid, &category, &ispreferred);
 
 			is_string = (category == TYPCATEGORY_STRING);
+			is_bpchar = base_typid == BPCHAROID;
 			prev_typid = typid;
 		}
 
@@ -261,7 +288,21 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 				}
 
 				resetcols[nresetcols] = attnum;
-				values[nresetcols] = PointerGetDatum(cstring_to_text_with_len("", 0));
+
+				if (is_bpchar && typmod != -1)
+				{
+					BpChar	   *result;
+
+					/* code from bpcharin */
+					result = (BpChar *) palloc(typmod);
+					SET_VARSIZE(result, typmod);
+					memset(VARDATA(result), ' ', typmod - VARHDRSZ);
+
+					values[nresetcols] = PointerGetDatum(result);
+				}
+				else
+					values[nresetcols] = PointerGetDatum(cstring_to_text_with_len("", 0));
+
 				nulls[nresetcols++] = false;
 
 				if (raise_warning)
