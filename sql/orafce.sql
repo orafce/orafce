@@ -1035,15 +1035,15 @@ SELECT pos, token, class, mod FROM plvlex.tokens('select * from a.b.c join d on 
 -- trigger functions
 --
 
-CREATE TABLE trg_test(a varchar, b int, c varchar, d date, e int);
+CREATE TABLE trg_test(a varchar, b int, c varchar, d date, e int, f char(10));
 
 CREATE TRIGGER trg_test_xx BEFORE INSERT OR UPDATE
   ON trg_test FOR EACH ROW EXECUTE PROCEDURE oracle.replace_empty_strings(true);
 
 \pset null ***
 
-INSERT INTO trg_test VALUES('',10, 'AHOJ', NULL, NULL);
-INSERT INTO trg_test VALUES('AHOJ', NULL, '', '2020-01-01', 100);
+INSERT INTO trg_test VALUES('',10, 'AHOJ', NULL, NULL, '   ');
+INSERT INTO trg_test VALUES('AHOJ', NULL, '', '2020-01-01', 100, 'Ahoj');
 
 SELECT * FROM trg_test;
 
@@ -1054,10 +1054,11 @@ DROP TRIGGER trg_test_xx ON trg_test;
 CREATE TRIGGER trg_test_xx BEFORE INSERT OR UPDATE
   ON trg_test FOR EACH ROW EXECUTE PROCEDURE oracle.replace_null_strings();
 
-INSERT INTO trg_test VALUES(NULL, 10, 'AHOJ', NULL, NULL);
-INSERT INTO trg_test VALUES('AHOJ', NULL, NULL, '2020-01-01', 100);
+INSERT INTO trg_test VALUES(NULL, 10, 'AHOJ', NULL, NULL, NULL);
+INSERT INTO trg_test VALUES('AHOJ', NULL, NULL, '2020-01-01', 100, 'AHOJ');
 
 SELECT * FROM trg_test;
+SELECT f::bytea FROM trg_test;
 
 DROP TABLE trg_test;
 
