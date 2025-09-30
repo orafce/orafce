@@ -589,9 +589,7 @@ PG_FUNCTION_INFO_V1(orafce_dump);
 static void
 appendDatum(StringInfo str, const void *ptr, size_t length, int format)
 {
-	if (!PointerIsValid(ptr))
-		appendStringInfoChar(str, ':');
-	else
+	if (ptr)
 	{
 		const unsigned char *s = (const unsigned char *) ptr;
 		const char *formatstr;
@@ -629,6 +627,8 @@ appendDatum(StringInfo str, const void *ptr, size_t length, int format)
 				appendStringInfo(str, formatstr, s[i]);
 		}
 	}
+	else
+		appendStringInfoChar(str, ':');
 }
 
 
