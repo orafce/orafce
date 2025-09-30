@@ -1730,7 +1730,6 @@ dbms_sql_column_value(PG_FUNCTION_ARGS)
 	Oid			resultTypeId;
 	TupleDesc	resulttupdesc;
 	HeapTuple	resulttuple;
-	MemoryContext oldcxt;
 
 	if (SPI_connect() != SPI_OK_CONNECT)
 		elog(ERROR, "SPI_connact failed");
@@ -1748,9 +1747,6 @@ dbms_sql_column_value(PG_FUNCTION_ARGS)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_CURSOR_STATE),
 				 errmsg("cursor is not executed")));
-
-	oldcxt = MemoryContextSwitchTo(c->result_cxt);
-
 
 	/*
 	 * Setting of OUT field is little bit more complex, because although there
@@ -1776,9 +1772,6 @@ dbms_sql_column_value(PG_FUNCTION_ARGS)
 	result = PointerGetDatum(SPI_returntuple(resulttuple, CreateTupleDescCopy(resulttupdesc)));
 
 	SPI_finish();
-
-	MemoryContextSwitchTo(oldcxt);
-	MemoryContextReset(c->result_cxt);
 
 	PG_RETURN_DATUM(result);
 }
