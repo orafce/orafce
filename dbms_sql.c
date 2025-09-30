@@ -1789,7 +1789,6 @@ dbms_sql_column_value_f(PG_FUNCTION_ARGS)
 	int			pos;
 	bool		isnull;
 	Oid			targetTypeId;
-	MemoryContext oldcxt;
 
 	if (SPI_connect() != SPI_OK_CONNECT)
 		elog(ERROR, "SPI_connact failed");
@@ -1808,15 +1807,11 @@ dbms_sql_column_value_f(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_INVALID_CURSOR_STATE),
 				 errmsg("cursor is not executed")));
 
-	oldcxt = MemoryContextSwitchTo(c->result_cxt);
-
 	targetTypeId = get_fn_expr_argtype(fcinfo->flinfo, 2);
 
 	value = column_value(c, pos, targetTypeId, &isnull, true);
 
 	SPI_finish();
-
-	MemoryContextSwitchTo(oldcxt);
 
 	PG_RETURN_DATUM(value);
 }
