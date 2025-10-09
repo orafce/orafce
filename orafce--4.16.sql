@@ -473,8 +473,9 @@ LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.months_between(TIMESTAMP WITH TIME ZONE,TIMESTAMP WITH TIME ZONE)
 RETURNS NUMERIC
-AS $$ SELECT oracle.months_between($1::pg_catalog.date,$2::pg_catalog.date); $$
-LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+AS 'MODULE_PATHNAME', 'months_between_timestamptz'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+COMMENT ON FUNCTION oracle.months_between(TIMESTAMP WITH TIME ZONE, TIMESTAMP WITH TIME ZONE) IS 'returns the number of months between date1 and date2';
 
 CREATE FUNCTION oracle.next_day(TIMESTAMP WITH TIME ZONE,INTEGER)
 RETURNS TIMESTAMP
@@ -536,6 +537,12 @@ RETURNS oracle.date
 AS 'MODULE_PATHNAME','orafce_sys_extract_utc_oracle_date'
 LANGUAGE C STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.sysdate() IS 'Extract timestamp at utc time zone';
+
+CREATE FUNCTION oracle.months_between(date1 oracle.date, date2 oracle.date)
+RETURNS numeric
+AS 'MODULE_PATHNAME', 'months_between_timestamp'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+COMMENT ON FUNCTION oracle.months_between(oracle.date, oracle.date) IS 'returns the number of months between date1 and date2';
 
 -- emulation of dual table
 CREATE VIEW oracle.dual AS SELECT 'X'::varchar AS dummy;

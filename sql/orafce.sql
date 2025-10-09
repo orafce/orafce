@@ -1129,3 +1129,38 @@ SELECT v1, v2, oracle.remainder(v1::bigint, v2::bigint) FROM testorafce_remainde
 SELECT v1, v2, oracle.remainder(v1::numeric, v2::numeric) FROM testorafce_remainder;
 
 DROP TABLE testorafce_remainder;
+
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/01/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/01/2022 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/10/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/10/2022 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/01/2022 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/02/2025 12:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/01/2022 12:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/02/2025 10:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/01/2022 10:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/02/2025 10:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/01/2022 10:30:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/01/2022 10:30:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(oracle.TO_date('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), oracle.TO_date('01/01/2022 10:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+
+select oracle.MONTHS_BETWEEN(to_timestamp('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/01/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/01/2022 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/10/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/10/2022 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/01/2022 00:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/02/2025 12:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/01/2022 12:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/02/2025 10:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/01/2022 10:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/02/2025 10:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/01/2022 10:30:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/01/2022 10:30:00', 'mm/dd/yyyy HH24:MI:SS'));
+select oracle.MONTHS_BETWEEN(to_timestamp('10/02/2025 00:00:00', 'mm/dd/yyyy HH24:MI:SS'), to_timestamp('01/01/2022 10:00:00', 'mm/dd/yyyy HH24:MI:SS'));
+
+select oracle.months_between(oracle.to_date('2024-10-01 12:34:56', 'yyyy-mm-dd hh24:mi:ss'),
+                             oracle.to_date('2024-09-01 00:00:00', 'yyyy-mm-dd hh24:mi:ss')) same_day_diff_time,
+       oracle.months_between(oracle.to_date('2024-10-02 00:00:00', 'yyyy-mm-dd hh24:mi:ss'),
+                             oracle.to_date('2024-09-01 00:00:00', 'yyyy-mm-dd hh24:mi:ss')) diff_day_same_time,
+       oracle.months_between(oracle.to_date('2024-10-02 12:34:45', 'yyyy-mm-dd hh24:mi:ss'),
+                             oracle.to_date( '2024-09-01 00:00:00', 'yyyy-mm-dd hh24:mi:ss')) diff_day_diff_time;
+
+select oracle.months_between(to_timestamp('2024-10-01 12:34:56', 'yyyy-mm-dd hh24:mi:ss'),
+                             to_timestamp('2024-09-01 00:00:00', 'yyyy-mm-dd hh24:mi:ss')) same_day_diff_time,
+       oracle.months_between(to_timestamp('2024-10-02 00:00:00', 'yyyy-mm-dd hh24:mi:ss'),
+                             to_timestamp('2024-09-01 00:00:00', 'yyyy-mm-dd hh24:mi:ss')) diff_day_same_time,
+       oracle.months_between(to_timestamp('2024-10-02 12:34:45', 'yyyy-mm-dd hh24:mi:ss'),
+                             to_timestamp('2024-09-01 00:00:00', 'yyyy-mm-dd hh24:mi:ss')) diff_day_diff_time;
+

@@ -109,6 +109,8 @@ PG_FUNCTION_INFO_V1(next_day);
 PG_FUNCTION_INFO_V1(next_day_by_index);
 PG_FUNCTION_INFO_V1(last_day);
 PG_FUNCTION_INFO_V1(months_between);
+PG_FUNCTION_INFO_V1(months_between_timestamp);
+PG_FUNCTION_INFO_V1(months_between_timestamptz);
 PG_FUNCTION_INFO_V1(add_months);
 PG_FUNCTION_INFO_V1(ora_to_date);
 PG_FUNCTION_INFO_V1(ora_date_trunc);
@@ -320,6 +322,7 @@ days_of_month(int y, int m)
  *
  ********************************************************************/
 
+
 Datum
 months_between(PG_FUNCTION_ARGS)
 {
@@ -346,6 +349,98 @@ months_between(PG_FUNCTION_ARGS)
 
 	PG_RETURN_DATUM(DirectFunctionCall1(float8_numeric, Float8GetDatumFast(result)));
 }
+
+
+/********************************************************************
+ *
+ * months_between (timestamp, timestamptz variant)
+ *
+ * Syntax:
+ *
+ * numeric months_between(oracle.date date1, oracle.date date2)
+ *
+ * Purpose:
+ *
+ * Returns the number of months between date1 and date2. If
+ *      a fractional month is calculated, the months_between  function
+ *      calculates the fraction based on a 31-day month.
+ *
+ * For correct transformation to tm, we need to inform timestamp2tm
+ * if passed value is timestamp or timestamptz. Without this, the check
+ * day(d1) = day(d2) can be in accurate, and then result can be wrong.
+ *
+ ********************************************************************/
+
+static float8
+timestamp_months_between(Timestamp t1, Timestamp t2, int *tz)
+{
+	float8		months;
+	float8		seconds;
+	struct pg_tm tm1, tm2;
+	fsec_t		fsec1, fsec2;
+
+	if (TIMESTAMP_NOT_FINITE(t1))
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("timestamp out of range")));
+
+	if (TIMESTAMP_NOT_FINITE(t2))
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("timestamp out of range")));
+
+	if (timestamp2tm(t1, tz, &tm1, &fsec1, NULL, NULL) != 0)
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("timestamp out of range")));
+
+	if (timestamp2tm(t2, tz, &tm2, &fsec2, NULL, NULL) != 0)
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("timestamp out of range")));
+
+	months = ((tm1.tm_year - tm2.tm_year) * 12 + (tm1.tm_mon - tm2.tm_mon));
+
+	if (tm1.tm_mday == tm2.tm_mday)
+		return months;
+
+	if ((tm1.tm_mday == days_of_month(tm1.tm_year, tm1.tm_mon)) &&
+		(tm2.tm_mday == days_of_month(tm2.tm_year, tm2.tm_mon)))
+		return months;
+
+	seconds = (tm1.tm_sec - tm2.tm_sec) +
+			  (tm1.tm_min - tm2.tm_min) * 60.0 +
+			  (tm1.tm_hour - tm2.tm_hour) * 60.0 * 60.0 +
+			  (tm1.tm_mday - tm2.tm_mday) * 60.0 * 60.0 * 24.0;
+
+	return months + (seconds / 3600.0 / 24.0 / 31.0);
+}
+
+Datum
+months_between_timestamp(PG_FUNCTION_ARGS)
+{
+	Timestamp		t1 = PG_GETARG_TIMESTAMP(0);
+	Timestamp		t2 = PG_GETARG_TIMESTAMP(1);
+	float8			result;
+
+	result = timestamp_months_between(t1, t2, NULL);
+
+	PG_RETURN_DATUM(DirectFunctionCall1(float8_numeric, Float8GetDatumFast(result)));
+}
+
+Datum
+months_between_timestamptz(PG_FUNCTION_ARGS)
+{
+	TimestampTz		t1 = PG_GETARG_TIMESTAMPTZ(0);
+	TimestampTz		t2 = PG_GETARG_TIMESTAMPTZ(1);
+	int				tz;
+	float8			result;
+
+	result = timestamp_months_between(t1, t2, &tz);
+
+	PG_RETURN_DATUM(DirectFunctionCall1(float8_numeric, Float8GetDatumFast(result)));
+}
+
 
 /********************************************************************
  *

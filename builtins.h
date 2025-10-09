@@ -86,6 +86,7 @@ extern PGDLLEXPORT Datum next_day(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum next_day_by_index(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum last_day(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum months_between(PG_FUNCTION_ARGS);
+extern PGDLLEXPORT Datum months_between_timestamp(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum add_months(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum ora_to_date(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum ora_date_trunc(PG_FUNCTION_ARGS);
