@@ -965,10 +965,14 @@ orafce_regexp_instr(PG_FUNCTION_ARGS)
 			PG_RETURN_NULL();
 
 		endoption = PG_GETARG_INT32(4);
-		if (endoption != 0 && endoption != 1)
+		if (endoption < 0)
 			ereport(ERROR,
 					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					 errmsg("argument 'return_opt' must be 0 or 1")));
+					 errmsg("argument 'return_opt' is out of range")));
+
+		/* Reset value greater than 1 */
+		if (endoption > 0)
+			endoption = 1;
 	}
 	if (PG_NARGS() > 5)
 	{
