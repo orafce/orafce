@@ -11,6 +11,12 @@
 
 #endif
 
+#if PG_VERSION_NUM >= 190000
+
+#include "nodes/miscnodes.h"
+
+#endif
+
 #include "mb/pg_wchar.h"
 #include "utils/date.h"
 #include "utils/builtins.h"
@@ -1281,7 +1287,14 @@ orafce_sys_extract_utc_oracle_date(PG_FUNCTION_ARGS)
 {
 	TimestampTz loc_ts;
 
-#if PG_VERSION_NUM >=  130000
+#if PG_VERSION_NUM >= 190000
+
+	ErrorSaveContext escontext = {T_ErrorSaveContext};
+
+	loc_ts = timestamp2timestamptz_safe(PG_GETARG_TIMESTAMP(0),
+										 (Node *) &escontext);
+
+#elif PG_VERSION_NUM >=  130000
 
 	loc_ts = timestamp2timestamptz_opt_overflow(PG_GETARG_TIMESTAMP(0), NULL);
 
