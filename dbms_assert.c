@@ -1,6 +1,6 @@
 #include "postgres.h"
 #include "funcapi.h"
-#include "assert.h"
+#include "dbms_assert.h"
 #include "miscadmin.h"
 #include "utils/acl.h"
 #include "utils/builtins.h"

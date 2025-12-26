@@ -15,7 +15,7 @@ OBJS= regexp.o\
 		pipe.o\
 		sqlparse.o\
 		putline.o\
-		assert.o\
+		dbms_assert.o\
 		plunit.o\
 		random.o\
 		aggregate.o\
