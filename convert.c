@@ -12,13 +12,6 @@
 #include "orafce.h"
 #include "builtins.h"
 
-#if PG_VERSION_NUM < 130000
-
-#include "catalog/namespace.h"
-#include "utils/memutils.h"
-
-#endif
-
 #if PG_VERSION_NUM >= 160000
 
 #include "varatt.h"
@@ -37,12 +30,6 @@ PG_FUNCTION_INFO_V1(orafce_to_single_byte);
 PG_FUNCTION_INFO_V1(orafce_unistr);
 
 static int	getindex(const char **map, char *mbchar, int mblen);
-
-#if PG_VERSION_NUM < 130000
-
-static FmgrInfo *orafce_Utf8ToServerConvProc = NULL;
-
-#endif
 
 Datum
 orafce_to_char_int4(PG_FUNCTION_ARGS)
@@ -720,139 +707,6 @@ hexval_four(const char *instr)
 		hexval(instr[3]);
 }
 
-#if PG_VERSION_NUM < 130000
-
-
-static bool
-is_utf16_surrogate_first(pg_wchar c)
-{
-	return (c >= 0xD800 && c <= 0xDBFF);
-}
-
-static bool
-is_utf16_surrogate_second(pg_wchar c)
-{
-	return (c >= 0xDC00 && c <= 0xDFFF);
-}
-
-static pg_wchar
-surrogate_pair_to_codepoint(pg_wchar first, pg_wchar second)
-{
-	return ((first & 0x3FF) << 10) + 0x10000 + (second & 0x3FF);
-}
-
-static inline bool
-is_valid_unicode_codepoint(pg_wchar c)
-{
-	return (c > 0 && c <= 0x10FFFF);
-}
-
-#define MAX_UNICODE_EQUIVALENT_STRING	16
-
-/*
- * Convert a single Unicode code point into a string in the server encoding.
- *
- * The code point given by "c" is converted and stored at *s, which must
- * have at least MAX_UNICODE_EQUIVALENT_STRING+1 bytes available.
- * The output will have a trailing '\0'.  Throws error if the conversion
- * cannot be performed.
- *
- * Note that this relies on having previously looked up any required
- * conversion function.  That's partly for speed but mostly because the parser
- * may call this outside any transaction, or in an aborted transaction.
- */
-static void
-pg_unicode_to_server(pg_wchar c, unsigned char *s)
-{
-	unsigned char c_as_utf8[MAX_MULTIBYTE_CHAR_LEN + 1];
-	int			c_as_utf8_len;
-	int			server_encoding;
-
-	/*
-	 * Complain if invalid Unicode code point.  The choice of errcode here is
-	 * debatable, but really our caller should have checked this anyway.
-	 */
-	if (!is_valid_unicode_codepoint(c))
-		ereport(ERROR,
-				(errcode(ERRCODE_SYNTAX_ERROR),
-				 errmsg("invalid Unicode code point")));
-
-	/* Otherwise, if it's in ASCII range, conversion is trivial */
-	if (c <= 0x7F)
-	{
-		s[0] = (unsigned char) c;
-		s[1] = '\0';
-		return;
-	}
-
-	/* If the server encoding is UTF-8, we just need to reformat the code */
-	server_encoding = GetDatabaseEncoding();
-	if (server_encoding == PG_UTF8)
-	{
-		unicode_to_utf8(c, s);
-		s[pg_utf_mblen(s)] = '\0';
-		return;
-	}
-
-	/* For all other cases, we must have a conversion function available */
-	if (orafce_Utf8ToServerConvProc == NULL)
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("conversion between UTF8 and %s is not supported",
-						GetDatabaseEncodingName())));
-
-	/* Construct UTF-8 source string */
-	unicode_to_utf8(c, c_as_utf8);
-	c_as_utf8_len = pg_utf_mblen(c_as_utf8);
-	c_as_utf8[c_as_utf8_len] = '\0';
-
-	/* Convert, or throw error if we can't */
-	FunctionCall5(orafce_Utf8ToServerConvProc,
-				  Int32GetDatum(PG_UTF8),
-				  Int32GetDatum(server_encoding),
-				  CStringGetDatum(c_as_utf8),
-				  CStringGetDatum(s),
-				  Int32GetDatum(c_as_utf8_len));
-}
-
-static void
-initializeUtf8ToServerConvProc(void)
-{
-	int			current_server_encoding;
-
-	orafce_Utf8ToServerConvProc = NULL;
-
-	/*
-	 * Also look up the UTF8-to-server conversion function if needed.  Since
-	 * the server encoding is fixed within any one backend process, we don't
-	 * have to do this more than once.
-	 */
-	current_server_encoding = GetDatabaseEncoding();
-	if (current_server_encoding != PG_UTF8 &&
-		current_server_encoding != PG_SQL_ASCII)
-	{
-		Oid			utf8_to_server_proc;
-
-		utf8_to_server_proc =
-			FindDefaultConversionProc(PG_UTF8,
-									  current_server_encoding);
-		/* If there's no such conversion, just leave the pointer as NULL */
-		if (OidIsValid(utf8_to_server_proc))
-		{
-			FmgrInfo   *finfo;
-
-			finfo = (FmgrInfo *) MemoryContextAlloc(TopMemoryContext,
-													sizeof(FmgrInfo));
-			fmgr_info_cxt(utf8_to_server_proc, finfo,
-						  TopMemoryContext);
-			/* Set Utf8ToServerConvProc only after data is fully valid */
-			orafce_Utf8ToServerConvProc = finfo;
-		}
-	}
-}
-
-#endif
-
 /* is Unicode code point acceptable? */
 static void
 check_unicode_value(pg_wchar c)
@@ -886,12 +740,6 @@ orafce_unistr(PG_FUNCTION_ARGS)
 	len = VARSIZE_ANY_EXHDR(input_text);
 
 	initStringInfo(&str);
-
-#if PG_VERSION_NUM < 130000
-
-	initializeUtf8ToServerConvProc();
-
-#endif
 
 	while (len > 0)
 	{

@@ -17,7 +17,7 @@
 
 #include "utils/wait_event.h"
 
-#elif PG_VERSION_NUM >= 130000
+#else
 
 #include "pgstat.h"
 
@@ -39,11 +39,7 @@ PG_FUNCTION_INFO_V1(dbms_alert_waitone);
 PG_FUNCTION_INFO_V1(dbms_alert_waitany_maxwait);
 PG_FUNCTION_INFO_V1(dbms_alert_waitone_maxwait);
 
-#if PG_VERSION_NUM >= 130000
-
 extern ConditionVariable *alert_cv;
-
-#endif
 
 typedef struct alert_signal_data
 {
@@ -743,13 +739,6 @@ _dbms_alert_waitany(int timeout, FunctionCallInfo fcinfo)
 	instr_time	start_time;
 	TupleDesc	btupdesc;
 
-#if PG_VERSION_NUM < 130000
-
-	long		cycle = 0;
-
-#endif
-
-
 	INSTR_TIME_SET_CURRENT(start_time);
 
 	for (;;)
@@ -780,8 +769,6 @@ _dbms_alert_waitany(int timeout, FunctionCallInfo fcinfo)
 			if (cur_timeout <= 0)
 				break;
 
-#if PG_VERSION_NUM >= 130000
-
 			if (cur_timeout > 1000)
 				cur_timeout = 1000;
 
@@ -795,34 +782,12 @@ _dbms_alert_waitany(int timeout, FunctionCallInfo fcinfo)
 				if (cur_timeout <= 0)
 					break;
 			}
-
-#else
-
-			if (cycle++ % 10)
-				CHECK_FOR_INTERRUPTS();
-
-			pg_usleep(10000L);
-
-			/* exit on timeout */
-			INSTR_TIME_SET_CURRENT(cur_time);
-			INSTR_TIME_SUBTRACT(cur_time, start_time);
-
-			cur_timeout = timeout * 1000L - (long) INSTR_TIME_GET_MILLISEC(cur_time);
-			if (cur_timeout <= 0)
-				break;
-
-#endif
-
 		}
 		else
 			break;
 	}
 
-#if PG_VERSION_NUM >= 130000
-
 	ConditionVariableCancelSleep();
-
-#endif
 
 	get_call_result_type(fcinfo, NULL, &tupdesc);
 
@@ -903,12 +868,6 @@ _dbms_alert_waitone(text *name, int timeout, FunctionCallInfo fcinfo)
 	instr_time	start_time;
 	TupleDesc	btupdesc;
 
-#if PG_VERSION_NUM < 130000
-
-	long		cycle = 0;
-
-#endif
-
 	INSTR_TIME_SET_CURRENT(start_time);
 
 	for (;;)
@@ -943,8 +902,6 @@ _dbms_alert_waitone(text *name, int timeout, FunctionCallInfo fcinfo)
 			if (cur_timeout <= 0)
 				break;
 
-#if PG_VERSION_NUM >= 130000
-
 			if (cur_timeout > 1000)
 				cur_timeout = 1000;
 
@@ -958,34 +915,12 @@ _dbms_alert_waitone(text *name, int timeout, FunctionCallInfo fcinfo)
 				if (cur_timeout <= 0)
 					break;
 			}
-
-#else
-
-			if (cycle++ % 10)
-				CHECK_FOR_INTERRUPTS();
-
-			pg_usleep(10000L);
-
-			/* exit on timeout */
-			INSTR_TIME_SET_CURRENT(cur_time);
-			INSTR_TIME_SUBTRACT(cur_time, start_time);
-
-			cur_timeout = timeout * 1000L - (long) INSTR_TIME_GET_MILLISEC(cur_time);
-			if (cur_timeout <= 0)
-				break;
-
-#endif
-
 		}
 		else
 			break;
 	}
 
-#if PG_VERSION_NUM >= 130000
-
 	ConditionVariableCancelSleep();
-
-#endif
 
 	get_call_result_type(fcinfo, NULL, &tupdesc);
 
@@ -1114,12 +1049,7 @@ orafce_xact_cb(XactEvent event, void *arg)
 
 			LWLockRelease(shmem_lockid);
 
-#if PG_VERSION_NUM >= 130000
-
 			ConditionVariableBroadcast(alert_cv);
-
-#endif
-
 		}
 	}
 }

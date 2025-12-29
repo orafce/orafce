@@ -17,7 +17,7 @@
 
 #include "utils/wait_event.h"
 
-#elif PG_VERSION_NUM >= 130000
+#else
 
 #include "pgstat.h"
 
@@ -148,12 +148,8 @@ typedef struct
 	alert_event *events;
 	alert_lock *locks;
 
-#if PG_VERSION_NUM >= 130000
-
 	ConditionVariable pipe_cv;
 	ConditionVariable alert_cv;
-
-#endif
 
 	size_t		size;
 	int			sid;
@@ -313,15 +309,11 @@ ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, bool r
 				locks[i].echo = NULL;
 			}
 
-#if PG_VERSION_NUM >= 130000
-
 			ConditionVariableInit(&sh_mem->pipe_cv);
 			ConditionVariableInit(&sh_mem->alert_cv);
 
 			pipe_cv = &sh_mem->pipe_cv;
 			alert_cv = &sh_mem->alert_cv;
-
-#endif
 
 			identity_seq = &sh_mem->identity_seq;
 		}
@@ -329,12 +321,8 @@ ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, bool r
 		{
 			shmem_lockid = &sh_mem->shmem_lock;
 
-#if PG_VERSION_NUM >= 130000
-
 			pipe_cv = &sh_mem->pipe_cv;
 			alert_cv = &sh_mem->alert_cv;
-
-#endif
 
 			pipes = sh_mem->pipes;
 			ora_sinit(sh_mem->data, sh_mem->size, false);
@@ -736,25 +724,12 @@ dbms_pipe_pack_message_bytea(PG_FUNCTION_ARGS)
 static void
 init_args_3(FunctionCallInfo info, Datum arg0, Datum arg1, Datum arg2)
 {
-#if PG_VERSION_NUM >= 120000
-
 	info->args[0].value = arg0;
 	info->args[1].value = arg1;
 	info->args[2].value = arg2;
 	info->args[0].isnull = false;
 	info->args[1].isnull = false;
 	info->args[2].isnull = false;
-
-#else
-
-	info->arg[0] = arg0;
-	info->arg[1] = arg1;
-	info->arg[2] = arg2;
-	info->argnull[0] = false;
-	info->argnull[1] = false;
-	info->argnull[2] = false;
-
-#endif
 }
 
 /*
@@ -766,17 +741,7 @@ dbms_pipe_pack_message_record(PG_FUNCTION_ARGS)
 	HeapTupleHeader rec = PG_GETARG_HEAPTUPLEHEADER(0);
 	Oid			tupType;
 	bytea	   *data;
-
-#if PG_VERSION_NUM >= 120000
-
 	LOCAL_FCINFO(info, 3);
-
-#else
-
-	FunctionCallInfoData info_data;
-	FunctionCallInfo info = &info_data;
-
-#endif
 
 	tupType = HeapTupleHeaderGetTypeId(rec);
 
@@ -839,17 +804,7 @@ dbms_pipe_unpack_message(PG_FUNCTION_ARGS, message_data_type dtype)
 			break;
 		case IT_RECORD:
 			{
-#if PG_VERSION_NUM >= 120000
-
 				LOCAL_FCINFO(info, 3);
-
-#else
-
-				FunctionCallInfoData info_data;
-				FunctionCallInfo info = &info_data;
-
-#endif
-
 				StringInfoData buf;
 				text	   *data = cstring_to_text_with_len(ptr, size);
 
@@ -1012,8 +967,6 @@ dbms_pipe_receive_message(PG_FUNCTION_ARGS)
 			if (cur_timeout <= 0)
 				break;
 
-#if PG_VERSION_NUM >= 130000
-
 			/*
 			 * Timeout should be less than INT_MAX, but we set 1 sec as
 			 * protection against deadlocks.
@@ -1031,37 +984,15 @@ dbms_pipe_receive_message(PG_FUNCTION_ARGS)
 				if (cur_timeout <= 0)
 					break;
 			}
-
-#else
-
-			if (cycle++ % 10)
-				CHECK_FOR_INTERRUPTS();
-
-			pg_usleep(10000L);
-
-			/* exit on timeout */
-			INSTR_TIME_SET_CURRENT(cur_time);
-			INSTR_TIME_SUBTRACT(cur_time, start_time);
-
-			cur_timeout = timeout * 1000L - (long) INSTR_TIME_GET_MILLISEC(cur_time);
-			if (cur_timeout <= 0)
-				break;
-
-#endif
-
 		}
 		else
 			break;
 	}
 
-#if PG_VERSION_NUM >= 130000
-
 	ConditionVariableCancelSleep();
 
 	if (result == RESULT_DATA)
 		ConditionVariableBroadcast(pipe_cv);
-
-#endif
 
 	PG_RETURN_INT32(result);
 }
@@ -1077,12 +1008,6 @@ dbms_pipe_send_message(PG_FUNCTION_ARGS)
 	int32		result = RESULT_TIMEOUT;
 	long		identity = NOT_ASSIGNED_IDENTITY;
 	bool		identity_alarm;
-
-#if PG_VERSION_NUM < 130000
-
-	long		cycle = 0;
-
-#endif
 
 	if (PG_ARGISNULL(0))
 		ereport(ERROR,
@@ -1145,8 +1070,6 @@ dbms_pipe_send_message(PG_FUNCTION_ARGS)
 			if (cur_timeout <= 0)
 				break;
 
-#if PG_VERSION_NUM >= 130000
-
 			if (cur_timeout > 1000)
 				cur_timeout = 1000;
 
@@ -1160,37 +1083,15 @@ dbms_pipe_send_message(PG_FUNCTION_ARGS)
 				if (cur_timeout <= 0)
 					break;
 			}
-
-#else
-
-			if (cycle++ % 10)
-				CHECK_FOR_INTERRUPTS();
-
-			pg_usleep(10000L);
-
-			/* exit on timeout */
-			INSTR_TIME_SET_CURRENT(cur_time);
-			INSTR_TIME_SUBTRACT(cur_time, start_time);
-
-			cur_timeout = timeout * 1000L - (long) INSTR_TIME_GET_MILLISEC(cur_time);
-			if (cur_timeout <= 0)
-				break;
-
-#endif
-
 		}
 		else
 			break;
 	}
 
-#if PG_VERSION_NUM >= 130000
-
 	ConditionVariableCancelSleep();
 
 	if (result == RESULT_DATA)
 		ConditionVariableBroadcast(pipe_cv);
-
-#endif
 
 	reset_buffer(output_buffer, LOCALMSGSZ);
 
@@ -1261,15 +1162,7 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 		funcctx->user_fctx = fctx;
 		fctx->pipe_nth = 0;
 
-#if PG_VERSION_NUM >= 120000
-
 		tupdesc = CreateTemplateTupleDesc(DB_PIPES_COLS);
-
-#else
-
-		tupdesc = CreateTemplateTupleDesc(DB_PIPES_COLS, false);
-
-#endif
 
 		i = 0;
 		TupleDescInitEntry(tupdesc, ++i, "name", VARCHAROID, -1, 0);
@@ -1454,11 +1347,7 @@ dbms_pipe_purge(PG_FUNCTION_ARGS)
 	WATCH_TM_POST(timeout, endtime, cycle);
 	LOCK_ERROR();
 
-#if PG_VERSION_NUM >= 130000
-
 	ConditionVariableBroadcast(pipe_cv);
-
-#endif
 
 	PG_RETURN_VOID();
 }
@@ -1485,11 +1374,7 @@ dbms_pipe_remove_pipe(PG_FUNCTION_ARGS)
 	WATCH_TM_POST(timeout, endtime, cycle);
 	LOCK_ERROR();
 
-#if PG_VERSION_NUM >= 130000
-
 	ConditionVariableBroadcast(pipe_cv);
-
-#endif
 
 	PG_RETURN_VOID();
 }

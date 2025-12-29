@@ -1294,14 +1294,9 @@ orafce_sys_extract_utc_oracle_date(PG_FUNCTION_ARGS)
 	loc_ts = timestamp2timestamptz_safe(PG_GETARG_TIMESTAMP(0),
 										 (Node *) &escontext);
 
-#elif PG_VERSION_NUM >=  130000
-
-	loc_ts = timestamp2timestamptz_opt_overflow(PG_GETARG_TIMESTAMP(0), NULL);
-
 #else
 
-	loc_ts = DatumGetTimestampTz(DirectFunctionCall1(timestamp_timestamptz,
-													 PG_GETARG_TIMESTAMP(0)));
+	loc_ts = timestamp2timestamptz_opt_overflow(PG_GETARG_TIMESTAMP(0), NULL);
 
 #endif
 

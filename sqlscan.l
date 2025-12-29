@@ -8,12 +8,7 @@
 /* Not needed now that this file is compiled as part of gram.y */
 /* #include "parser/parse.h" */
 #include "parser/scansup.h"
-
-#if PG_VERSION_NUM >= 130000
-
 #include "port/pg_bitutils.h"
-
-#endif
 
 #include "mb/pg_wchar.h"
 

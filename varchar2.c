@@ -135,15 +135,7 @@ varchar2recv(PG_FUNCTION_ARGS)
 Datum
 orafce_varchar_transform(PG_FUNCTION_ARGS)
 {
-#if PG_VERSION_NUM < 120000
-
-	return varchar_transform(fcinfo);
-
-#else
-
 	return varchar_support(fcinfo);
-
-#endif
 }
 
 

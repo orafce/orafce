@@ -8,12 +8,7 @@
 #include "access/heapam.h"
 #include "access/htup_details.h"
 #include "access/sysattr.h"
-
-#if PG_VERSION_NUM >= 120000
-
 #include "access/table.h"
-
-#endif
 
 #endif
 
@@ -89,25 +84,12 @@ get_extension_schema(Oid ext_oid)
 	HeapTuple	tuple;
 	ScanKeyData entry[1];
 
-#if PG_VERSION_NUM >= 120000
-
 	rel = table_open(ExtensionRelationId, AccessShareLock);
 
 	ScanKeyInit(&entry[0],
 				Anum_pg_extension_oid,
 				BTEqualStrategyNumber, F_OIDEQ,
 				ObjectIdGetDatum(ext_oid));
-
-#else
-
-	rel = heap_open(ExtensionRelationId, AccessShareLock);
-
-	ScanKeyInit(&entry[0],
-				ObjectIdAttributeNumber,
-				BTEqualStrategyNumber, F_OIDEQ,
-				ObjectIdGetDatum(ext_oid));
-
-#endif
 
 	scandesc = systable_beginscan(rel, ExtensionOidIndexId, true,
 								  NULL, 1, entry);
@@ -121,16 +103,7 @@ get_extension_schema(Oid ext_oid)
 		result = InvalidOid;
 
 	systable_endscan(scandesc);
-
-#if PG_VERSION_NUM >= 120000
-
 	table_close(rel, AccessShareLock);
-
-#else
-
-	heap_close(rel, AccessShareLock);
-
-#endif
 
 	return result;
 }
@@ -188,15 +161,7 @@ get_uuid_generate_func_oid(bool *reset_fmgr)
 					procform->pronargs != 0 || procform->prorettype != UUIDOID)
 					continue;
 
-#if PG_VERSION_NUM >= 120000
-
 				result = procform->oid;
-
-#else
-
-				result = HeapTupleGetOid(proctup);
-
-#endif
 
 				break;
 			}
@@ -859,29 +824,6 @@ ora_greatest_least(FunctionCallInfo fcinfo, bool greater)
 
 	PG_RETURN_DATUM(result);
 }
-
-#if PG_VERSION_NUM < 120000
-
-static Datum
-FunctionCall0Coll(FmgrInfo *flinfo, Oid collation)
-{
-	FunctionCallInfoData fcinfo_data;
-	FunctionCallInfo fcinfo = &fcinfo_data;
-	Datum		result;
-
-	InitFunctionCallInfoData(*fcinfo, flinfo, 0, collation, NULL, NULL);
-
-	result = FunctionCallInvoke(fcinfo);
-
-	/* Check for null result, since caller is clearly not expecting one */
-	if (fcinfo->isnull)
-		elog(ERROR, "function %u returned NULL", flinfo->fn_oid);
-
-	return result;
-}
-
-#endif
-
 
 PG_FUNCTION_INFO_V1(orafce_sys_guid);
 
