@@ -175,12 +175,8 @@ int			sid;				/* session id */
 alert_event *events;
 alert_lock *locks;
 
-#if PG_VERSION_NUM >= 130000
-
 static ConditionVariable *pipe_cv = NULL;
 ConditionVariable *alert_cv = NULL;
-
-#endif
 
 /*
  * write on writer size bytes from ptr
@@ -901,12 +897,6 @@ dbms_pipe_receive_message(PG_FUNCTION_ARGS)
 	int32		result = RESULT_TIMEOUT;
 	long		identity = NOT_ASSIGNED_IDENTITY;
 	bool		identity_alarm;
-
-#if PG_VERSION_NUM < 130000
-
-	long		cycle = 0;
-
-#endif
 
 	if (PG_ARGISNULL(0))
 		ereport(ERROR,
