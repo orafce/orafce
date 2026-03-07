@@ -34,7 +34,7 @@ module_name = meson.project_name()
 sources = files(
   'aggregate.c',
   'alert.c',
-  'assert.c',
+  'dbms_assert.c',
   'convert.c',
   'datefce.c',
   'dbms_sql.c',
