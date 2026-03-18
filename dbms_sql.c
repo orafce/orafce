@@ -1048,6 +1048,13 @@ execute(CursorData *c)
 			TupleDescInitEntry(c->coltupdesc, (AttrNumber) i, genname, col->typoid, col->typmod, 0);
 		}
 
+#if PG_VERSION_NUM >= 190000
+
+			TupleDescFinalize(c->coltupdesc);
+
+#endif
+
+
 		c->batch_rows = batch_rows;
 		Assert(c->coltupdesc->natts >= 0);
 		c->casts = palloc0(sizeof(CastCacheData) * ((unsigned int) c->coltupdesc->natts));

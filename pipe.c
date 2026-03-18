@@ -23,6 +23,12 @@
 
 #endif
 
+#if PG_VERSION_NUM >= 190000
+
+#include "portability/instr_time.h"
+
+#endif
+
 #include "shmmc.h"
 #include "pipe.h"
 #include "orafce.h"
@@ -1162,6 +1168,12 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 		TupleDescInitEntry(tupdesc, ++i, "private", BOOLOID, -1, 0);
 		TupleDescInitEntry(tupdesc, ++i, "owner", VARCHAROID, -1, 0);
 		Assert(i == DB_PIPES_COLS);
+
+#if PG_VERSION_NUM >= 190000
+
+			TupleDescFinalize(tupdesc);
+
+#endif
 
 		attinmeta = TupleDescGetAttInMetadata(tupdesc);
 		funcctx->attinmeta = attinmeta;

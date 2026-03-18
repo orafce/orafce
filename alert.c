@@ -23,6 +23,12 @@
 
 #endif
 
+#if PG_VERSION_NUM >= 190000
+
+#include "portability/instr_time.h"
+
+#endif
+
 #include "orafce.h"
 #include "builtins.h"
 #include "pipe.h"

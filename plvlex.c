@@ -224,6 +224,12 @@ plvlex_tokens(PG_FUNCTION_ARGS)
 		TupleDescInitEntry(tupdesc, 5, "separator", TEXTOID, -1, 0);
 		TupleDescInitEntry(tupdesc, 6, "mod", TEXTOID, -1, 0);
 
+#if PG_VERSION_NUM >= 190000
+
+		TupleDescFinalize(tupdesc);
+
+#endif
+
 		attinmeta = TupleDescGetAttInMetadata(tupdesc);
 		funcctx->attinmeta = attinmeta;
 
