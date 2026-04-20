@@ -12,6 +12,7 @@
 #include "storage/procarray.h"
 #include "utils/builtins.h"
 #include "utils/timestamp.h"
+#include "portability/instr_time.h"
 
 #if PG_VERSION_NUM >= 140000
 

@@ -98,7 +98,7 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 
 #else
 
-	const bits8 *bitmap;
+	const uint8 *bitmap;
 
 #endif
 
