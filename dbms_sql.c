@@ -1718,10 +1718,10 @@ dbms_sql_column_value(PG_FUNCTION_ARGS)
 	Datum		result;
 	int			pos;
 	bool		isnull;
-	Oid			targetTypeId;
-	Oid			resultTypeId;
-	TupleDesc	resulttupdesc;
-	HeapTuple	resulttuple;
+	Oid			targetTypeId = InvalidOid;
+	Oid			resultTypeId = InvalidOid;
+	TupleDesc	resulttupdesc = NULL;
+	HeapTuple	resulttuple = NULL;
 
 	if (SPI_connect() != SPI_OK_CONNECT)
 		elog(ERROR, "SPI_connact failed");

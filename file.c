@@ -252,7 +252,14 @@ get_stream(int d, size_t *max_linesize, int *encoding)
 	return NULL;				/* keep compiler quiet */
 }
 
-static void
+/*
+ * Postgres 13 doesn't support pg_noreturn
+ */
+#ifndef pg_noreturn
+#define pg_noreturn
+#endif
+
+pg_noreturn static void
 IO_EXCEPTION(void)
 {
 	switch (errno)
@@ -1281,6 +1288,7 @@ utl_file_fcopy(PG_FUNCTION_ARGS)
 	{
 		/* failed to open src file. */
 		IO_EXCEPTION();
+		return (Datum) 0;		/* keep cppcheck quiet */
 	}
 
 #ifndef WIN32
@@ -1309,6 +1317,7 @@ utl_file_fcopy(PG_FUNCTION_ARGS)
 		/* failed to open dst file. */
 		fclose(srcfile);
 		IO_EXCEPTION();
+		return (Datum) 0;		/* keep cppcheck quiet */
 	}
 
 	if (copy_text_file(srcfile, dstfile, start_line, end_line))
