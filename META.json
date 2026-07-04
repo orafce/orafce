@@ -7,9 +7,7 @@
       "Pavel Stehule <pavel.stehule@gmail.com>",
       "Takahiro Itagaki <itagaki.takahiro@gmail.com>"
    ],
-   "license": {
-      "PostgreSQL": "http://www.postgresql.org/about/licence"
-   },
+   "license": "bsd",
    "prereqs": {
       "runtime": {
          "requires": {
