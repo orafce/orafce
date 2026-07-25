@@ -1,16 +1,16 @@
 /*
-  This code implements one part of functonality of
-  free available library PL/Vision. Please look www.quest.com
-
-  Original author: Steven Feuerstein, 1996 - 2002
-  PostgreSQL implementation author: Pavel Stehule, 2006-2026
-
-  This module is under BSD Licence
-
-  History:
-    1.0. first public version 22. September 2006
-
-*/
+ * This code implements one part of functonality of
+ * free available library PL/Vision. Please look www.quest.com
+ *
+ * Original author: Steven Feuerstein, 1996 - 2002
+ * PostgreSQL implementation author: Pavel Stehule, 2006-2026
+ *
+ * This module is under BSD Licence
+ *
+ * History:
+ * 1.0. first public version 22. September 2006
+ *
+ */
 
 #include <time.h>
 #include <stdio.h>
