@@ -100,7 +100,7 @@ typedef struct _queue_item
 {
 	void	   *ptr;
 	struct _queue_item *next_item;
-}			queue_item;
+} queue_item;
 
 typedef struct
 {
@@ -743,6 +743,7 @@ dbms_pipe_pack_message_record(PG_FUNCTION_ARGS)
 	HeapTupleHeader rec = PG_GETARG_HEAPTUPLEHEADER(0);
 	Oid			tupType;
 	bytea	   *data;
+
 	LOCAL_FCINFO(info, 3);
 
 	tupType = HeapTupleHeaderGetTypeId(rec);
@@ -1171,7 +1172,7 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 
 #if PG_VERSION_NUM >= 190000
 
-			TupleDescFinalize(tupdesc);
+		TupleDescFinalize(tupdesc);
 
 #endif
 

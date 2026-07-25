@@ -39,7 +39,7 @@ typedef struct
 	int			sid;
 	int			pid;
 	message_echo *echo;
-}			alert_lock;
+} alert_lock;
 
 bool		ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, bool reset);
 
@@ -54,7 +54,7 @@ bool		ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, 
 #endif
 
 extern alert_event *events;
-extern alert_lock * locks;
+extern alert_lock *locks;
 
 extern int	sid;
 extern LWLockId shmem_lockid;
