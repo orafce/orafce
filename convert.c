@@ -110,7 +110,7 @@ orafce_to_char_numeric(PG_FUNCTION_ARGS)
 	 * removing unneeded digits after the decimal point; if no digits are
 	 * left, then remove the decimal point too
 	 */
-	for (p = buf->data + buf->len - 1; decimal &&p >= decimal; p--)
+	for (p = buf->data + buf->len - 1; decimal && p >= decimal; p--)
 	{
 		if (*p == '0' || *p == lconv->decimal_point[0])
 			*p = 0;

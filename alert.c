@@ -94,7 +94,7 @@ static char *find_and_remove_message_item(int message_id, int sid,
  * There are maximum 30 events and 255 collaborating sessions
  *
  */
-static alert_lock * session_lock = NULL;
+static alert_lock *session_lock = NULL;
 
 #define NOT_FOUND  -1
 #define NOT_USED -1
