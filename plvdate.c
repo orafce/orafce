@@ -1,15 +1,15 @@
 /*
-  This code implements one part of functonality of
-  free available library PL/Vision. Please look www.quest.com
-
-  This library isn't optimalized for big numbers, for working
-  with n days (n > 10000), can be slow (on my P4 31ms).
-
-  Original author: Steven Feuerstein, 1996 - 2002
-  PostgreSQL implementation author: Pavel Stehule, 2006-2026
-
-  This module is under BSD Licence
-*/
+ * This code implements one part of functonality of
+ * free available library PL/Vision. Please look www.quest.com
+ *
+ * This library isn't optimalized for big numbers, for working
+ * with n days (n > 10000), can be slow (on my P4 31ms).
+ *
+ * Original author: Steven Feuerstein, 1996 - 2002
+ * PostgreSQL implementation author: Pavel Stehule, 2006-2026
+ *
+ * This module is under BSD Licence
+ */
 
 #define PLVDATE_VERSION  "PostgreSQL PLVdate, version 3.7, October 2018"
 
