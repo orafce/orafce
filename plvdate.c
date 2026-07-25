@@ -97,68 +97,317 @@ static DateADT exceptions[MAX_EXCEPTIONS];	/* sorted array */
 static int	holidays_c = 0;
 static int	exceptions_c = 0;
 
-static holiday_desc czech_holidays[] = {
-	{1, 1}, //Novy rok
-	{1, 5}, //Svatek prace
-	{8, 5}, //Den osvobozeni
-	{5, 7}, //Den slovanskych verozvestu
-	{6, 7}, //Den upaleni mistra Jana Husa
-	{28, 9}, //Den ceske statnosti
-	{28, 10}, //Den vzniku samostatneho ceskoslovenskeho statu
-	{17, 11}, //Den boje za svobodu a demokracii
-	{24, 12}, //Stedry den
-	{25, 12}, //1. svatek vanocni
-	{26, 12} //2. svatek vanocni
+static holiday_desc czech_holidays[] =
+{
+	{
+		1, 1
+	}, //Novy rok
+	{
+		1, 5
+	}, //Svatek prace
+	{
+		8, 5
+	}, //Den osvobozeni
+	{
+		5, 7
+	}, //Den slovanskych verozvestu
+	{
+		6, 7
+	}, //Den upaleni mistra Jana Husa
+	{
+		28, 9
+	}, //Den ceske statnosti
+	{
+		28, 10
+	}, //Den vzniku samostatneho ceskoslovenskeho statu
+	{
+		17, 11
+	}, //Den boje za svobodu a demokracii
+	{
+		24, 12
+	}, //Stedry den
+	{
+		25, 12
+	}, //1. svatek vanocni
+	{
+		26, 12
+	} //2. svatek vanocni
 };
 
 
-static holiday_desc germany_holidays[] = {
-	{1, 1}, {1, 5}, {25, 5}, {4, 6}, {5, 6},
-	{15, 8}, {3, 10}, {25, 12}, {26, 12}
+static holiday_desc germany_holidays[] =
+{
+	{
+		1, 1
+	},
+	{
+		1, 5
+	},
+	{
+		25, 5
+	},
+	{
+		4, 6
+	},
+	{
+		5, 6
+	},
+	{
+		15, 8
+	},
+	{
+		3, 10
+	},
+	{
+		25, 12
+	},
+	{
+		26, 12
+	}
 };
 
-static holiday_desc poland_holidays[] = {
-	{1, 1}, {1, 5}, {3, 5}, {15, 6}, {15, 8},
-	{1, 11}, {11, 11}, {25, 12}, {26, 12}
+static holiday_desc poland_holidays[] =
+{
+	{
+		1, 1
+	},
+	{
+		1, 5
+	},
+	{
+		3, 5
+	},
+	{
+		15, 6
+	},
+	{
+		15, 8
+	},
+	{
+		1, 11
+	},
+	{
+		11, 11
+	},
+	{
+		25, 12
+	},
+	{
+		26, 12
+	}
 };
 
-static holiday_desc austria_holidays[] = {
-	{1, 1}, {6, 1}, {1, 5}, {25, 5}, {4, 6},
-	{5, 6}, {15, 6}, {15, 8}, {26, 10}, {1, 11},
-	{8, 12}, {25, 12}, {26, 12}
+static holiday_desc austria_holidays[] =
+{
+	{
+		1, 1
+	},
+	{
+		6, 1
+	},
+	{
+		1, 5
+	},
+	{
+		25, 5
+	},
+	{
+		4, 6
+	},
+	{
+		5, 6
+	},
+	{
+		15, 6
+	},
+	{
+		15, 8
+	},
+	{
+		26, 10
+	},
+	{
+		1, 11
+	},
+	{
+		8, 12
+	},
+	{
+		25, 12
+	},
+	{
+		26, 12
+	}
 };
 
-static holiday_desc slovakia_holidays[] = {
-	{1, 1}, {6, 1}, {1, 5}, {8, 5}, {5, 7},
-	{29, 8}, {1, 9}, {15, 9}, {1, 11}, {17, 11},
-	{24, 12}, {25, 12}, {26, 12}
+static holiday_desc slovakia_holidays[] =
+{
+	{
+		1, 1
+	},
+	{
+		6, 1
+	},
+	{
+		1, 5
+	},
+	{
+		8, 5
+	},
+	{
+		5, 7
+	},
+	{
+		29, 8
+	},
+	{
+		1, 9
+	},
+	{
+		15, 9
+	},
+	{
+		1, 11
+	},
+	{
+		17, 11
+	},
+	{
+		24, 12
+	},
+	{
+		25, 12
+	},
+	{
+		26, 12
+	}
 };
 
-static holiday_desc russian_holidays[] = {
-	{1, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1},
-	{7, 1}, {23, 2}, {8, 3}, {1, 5}, {9, 5},
-	{12, 6}, {4, 11}
+static holiday_desc russian_holidays[] =
+{
+	{
+		1, 1
+	},
+	{
+		2, 1
+	},
+	{
+		3, 1
+	},
+	{
+		4, 1
+	},
+	{
+		5, 1
+	},
+	{
+		7, 1
+	},
+	{
+		23, 2
+	},
+	{
+		8, 3
+	},
+	{
+		1, 5
+	},
+	{
+		9, 5
+	},
+	{
+		12, 6
+	},
+	{
+		4, 11
+	}
 };
 
-static holiday_desc england_holidays[] = {
-	{1, 1}, {2, 1}, {1, 5}, {29, 5}, {28, 8},
-	{25, 12}, {26, 12}
+static holiday_desc england_holidays[] =
+{
+	{
+		1, 1
+	},
+	{
+		2, 1
+	},
+	{
+		1, 5
+	},
+	{
+		29, 5
+	},
+	{
+		28, 8
+	},
+	{
+		25, 12
+	},
+	{
+		26, 12
+	}
 };
 
-static holiday_desc usa_holidays[] = {
-	{1, 1}, {16, 1}, {20, 2}, {29, 5}, {4, 7},
-	{4, 9}, {9, 10}, {11, 11}, {23, 11}, {25, 12}
+static holiday_desc usa_holidays[] =
+{
+	{
+		1, 1
+	},
+	{
+		16, 1
+	},
+	{
+		20, 2
+	},
+	{
+		29, 5
+	},
+	{
+		4, 7
+	},
+	{
+		4, 9
+	},
+	{
+		9, 10
+	},
+	{
+		11, 11
+	},
+	{
+		23, 11
+	},
+	{
+		25, 12
+	}
 };
 
-static cultural_info defaults_ci[] = {
-	{SUNDAY | SATURDAY, true, true, czech_holidays, 11},
-	{SUNDAY | SATURDAY, true, true, germany_holidays, 9},
-	{SUNDAY | SATURDAY, true, false, poland_holidays, 9},
-	{SUNDAY | SATURDAY, true, false, austria_holidays, 13},
-	{SUNDAY | SATURDAY, true, true, slovakia_holidays, 13},
-	{SUNDAY | SATURDAY, false, false, russian_holidays, 12},
-	{SUNDAY | SATURDAY, true, true, england_holidays, 7},
-	{SUNDAY | SATURDAY, false, false, usa_holidays, 10}
+static cultural_info defaults_ci[] =
+{
+	{
+		SUNDAY | SATURDAY, true, true, czech_holidays, 11
+	},
+	{
+		SUNDAY | SATURDAY, true, true, germany_holidays, 9
+	},
+	{
+		SUNDAY | SATURDAY, true, false, poland_holidays, 9
+	},
+	{
+		SUNDAY | SATURDAY, true, false, austria_holidays, 13
+	},
+	{
+		SUNDAY | SATURDAY, true, true, slovakia_holidays, 13
+	},
+	{
+		SUNDAY | SATURDAY, false, false, russian_holidays, 12
+	},
+	{
+		SUNDAY | SATURDAY, true, true, england_holidays, 7
+	},
+	{
+		SUNDAY | SATURDAY, false, false, usa_holidays, 10
+	}
 };
 
 static STRING_PTR_FIELD_TYPE states[] =
