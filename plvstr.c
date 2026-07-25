@@ -1,15 +1,15 @@
 /*
-  This code implements one part of functonality of
-  free available library PL/Vision. Please look www.quest.com
-
-  Original author: Steven Feuerstein, 1996 - 2002
-  PostgreSQL implementation author: Pavel Stehule, 2006-2026
-
-  This module is under BSD Licence
-
-  History:
-    1.0. first public version 13. March 2006
-*/
+ * This code implements one part of functonality of
+ * free available library PL/Vision. Please look www.quest.com
+ *
+ * Original author: Steven Feuerstein, 1996 - 2002
+ * PostgreSQL implementation author: Pavel Stehule, 2006-2026
+ *
+ * This module is under BSD Licence
+ *
+ * History:
+ * 1.0. first public version 13. March 2006
+ */
 
 
 #include "postgres.h"
@@ -91,13 +91,6 @@ if (VARSIZE_ANY_EXHDR(str) == 0) \
 #ifndef _pg_mblen
 #define _pg_mblen	pg_mblen
 #endif
-
-typedef enum
-{
-	POSITION,
-	FIRST,
-	LAST
-} position_mode;
 
 /*
  * Make substring, can handle negative start
