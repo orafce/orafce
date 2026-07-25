@@ -147,3 +147,9 @@ distprep: $(srcdir)/sqlparse.c $(srcdir)/sqlscan.c
 
 maintainer-clean:
 	rm -f $(srcdir)/sqlparse.c $(srcdir)/sqlscan.c $(srcdir)/sqlparse.h $(srcdir)/y.tab.c $(srcdir)/y.tab.h
+
+orafce.typedefs: $(OBJS)
+	./typedefs_gen.py
+
+pgindent: orafce.typedefs
+	pgindent --typedefs=orafce.typedefs *.c *.h
