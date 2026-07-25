@@ -39,12 +39,14 @@ typedef struct
 
 #define MAX_SIZE 82688
 
-static size_t asize[] = {
+static size_t asize[] =
+{
 	32,
 	64, 96, 160, 256,
 	416, 672, 1088, 1760,
 	2848, 4608, 7456, 12064,
-19520, 31584, 51104, 82688};
+	19520, 31584, 51104, 82688
+};
 
 
 static int *list_c = NULL;
@@ -53,10 +55,10 @@ static size_t max_size;
 
 /*
  * for debug
-
-static int cycle = 0;
-static int context;
-
+ *
+ * static int cycle = 0;
+ * static int context;
+ *
  */
 
 /* align requested size */
@@ -170,10 +172,10 @@ align_size(size_t size)
 }
 
 /*
-  initialize shared memory. It works in two modes, create and no create.
-  No create is used for mounting shared memory buffer. Top of memory is
-  used for list_item array.
-*/
+ * initialize shared memory. It works in two modes, create and no create.
+ * No create is used for mounting shared memory buffer. Top of memory is
+ * used for list_item array.
+ */
 
 void
 ora_sinit(void *ptr, size_t size, bool create)
@@ -266,15 +268,15 @@ ora_sfree(void *ptr)
 	int			i;
 
 /*
-	if (cycle++ % 100 == 0)
-	{
-		size_t suma = 0;
-		for (i = 0; i < *list_c; i++)
-			if (list[i].dispossible)
-				suma += list[i].size;
-		elog(NOTICE, "=============== FREE MEM REPORT === %10d ================", suma);
-	}
-*/
+ * if (cycle++ % 100 == 0)
+ * {
+ * size_t suma = 0;
+ * for (i = 0; i < *list_c; i++)
+ * if (list[i].dispossible)
+ * suma += list[i].size;
+ * elog(NOTICE, "=============== FREE MEM REPORT === %10d ================", suma);
+ * }
+ */
 
 	for (i = 0; i < *list_c; i++)
 	{
