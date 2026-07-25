@@ -382,8 +382,10 @@ timestamp_months_between(Timestamp t1, Timestamp t2, int *tz)
 {
 	float8		months;
 	float8		seconds;
-	struct pg_tm tm1, tm2;
-	fsec_t		fsec1, fsec2;
+	struct pg_tm tm1,
+				tm2;
+	fsec_t		fsec1,
+				fsec2;
 
 	if (TIMESTAMP_NOT_FINITE(t1))
 		ereport(ERROR,
@@ -415,9 +417,9 @@ timestamp_months_between(Timestamp t1, Timestamp t2, int *tz)
 		return months;
 
 	seconds = (tm1.tm_sec - tm2.tm_sec) +
-			  (tm1.tm_min - tm2.tm_min) * 60.0 +
-			  (tm1.tm_hour - tm2.tm_hour) * 60.0 * 60.0 +
-			  (tm1.tm_mday - tm2.tm_mday) * 60.0 * 60.0 * 24.0;
+		(tm1.tm_min - tm2.tm_min) * 60.0 +
+		(tm1.tm_hour - tm2.tm_hour) * 60.0 * 60.0 +
+		(tm1.tm_mday - tm2.tm_mday) * 60.0 * 60.0 * 24.0;
 
 	return months + (seconds / 3600.0 / 24.0 / 31.0);
 }
@@ -425,9 +427,9 @@ timestamp_months_between(Timestamp t1, Timestamp t2, int *tz)
 Datum
 months_between_timestamp(PG_FUNCTION_ARGS)
 {
-	Timestamp		t1 = PG_GETARG_TIMESTAMP(0);
-	Timestamp		t2 = PG_GETARG_TIMESTAMP(1);
-	float8			result;
+	Timestamp	t1 = PG_GETARG_TIMESTAMP(0);
+	Timestamp	t2 = PG_GETARG_TIMESTAMP(1);
+	float8		result;
 
 	result = timestamp_months_between(t1, t2, NULL);
 
@@ -437,10 +439,10 @@ months_between_timestamp(PG_FUNCTION_ARGS)
 Datum
 months_between_timestamptz(PG_FUNCTION_ARGS)
 {
-	TimestampTz		t1 = PG_GETARG_TIMESTAMPTZ(0);
-	TimestampTz		t2 = PG_GETARG_TIMESTAMPTZ(1);
-	int				tz;
-	float8			result;
+	TimestampTz t1 = PG_GETARG_TIMESTAMPTZ(0);
+	TimestampTz t2 = PG_GETARG_TIMESTAMPTZ(1);
+	int			tz;
+	float8		result;
 
 	result = timestamp_months_between(t1, t2, &tz);
 
@@ -1292,7 +1294,7 @@ orafce_sys_extract_utc_oracle_date(PG_FUNCTION_ARGS)
 	ErrorSaveContext escontext = {T_ErrorSaveContext};
 
 	loc_ts = timestamp2timestamptz_safe(PG_GETARG_TIMESTAMP(0),
-										 (Node *) &escontext);
+										(Node *) &escontext);
 
 #else
 
