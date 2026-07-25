@@ -1050,7 +1050,7 @@ execute(CursorData *c)
 
 #if PG_VERSION_NUM >= 190000
 
-			TupleDescFinalize(c->coltupdesc);
+		TupleDescFinalize(c->coltupdesc);
 
 #endif
 
