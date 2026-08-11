@@ -9,6 +9,7 @@
 #include "utils/pg_locale.h"
 #include "utils/formatting.h"
 #include "utils/memutils.h"
+#include "catalog/pg_collation.h"
 
 #include "orafce.h"
 #include "builtins.h"
@@ -144,9 +145,9 @@ orafce_to_char_timestamp(PG_FUNCTION_ARGS)
 	if (nls_date_format && strlen(nls_date_format) > 0)
 	{
 		/* it will return the DATE in nls_date_format */
-		result = DatumGetTextP(DirectFunctionCall2(timestamp_to_char,
-												   TimestampGetDatum(ts),
-												   CStringGetTextDatum(nls_date_format)));
+		result = DatumGetTextP(DirectFunctionCall2Coll(timestamp_to_char,
+													   DEFAULT_COLLATION_OID, TimestampGetDatum(ts),
+													   CStringGetTextDatum(nls_date_format)));
 	}
 	else
 	{
