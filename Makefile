@@ -30,7 +30,7 @@ OBJS= regexp.o\
 
 EXTENSION = orafce
 
-DATA = orafce--4.16.sql\
+DATA = orafce--4.17.sql\
 		orafce--3.2--3.3.sql\
 		orafce--3.3--3.4.sql\
 		orafce--3.4--3.5.sql\
@@ -70,7 +70,8 @@ DATA = orafce--4.16.sql\
 		orafce--4.12--4.13.sql\
 		orafce--4.13--4.14.sql\
 		orafce--4.14--4.15.sql\
-		orafce--4.15--4.16.sql
+		orafce--4.15--4.16.sql\
+		orafce--4.16--4.17.sql
 
 
 DOCS = README.asciidoc COPYRIGHT.orafce INSTALL.orafce
@@ -91,7 +92,8 @@ REGRESS = orafce\
 		nlssort\
 		dbms_random\
 		regexp_func\
-		dbms_sql
+		dbms_sql\
+		hextoraw
 
 #REGRESS_OPTS = --load-language=plpgsql --schedule=parallel_schedule --encoding=utf8
 REGRESS_OPTS = --schedule=parallel_schedule --encoding=utf8
