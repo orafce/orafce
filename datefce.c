@@ -301,10 +301,12 @@ days_of_month(int y, int m)
 {
 	int			ndays;
 
-	if (m < 0 || 12 < m)
-		ereport(ERROR,
-				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
-				 errmsg("date out of range")));
+	/*
+	 * arguments are every time calculated - so the value is out of
+	 * range only when some system routines fails.
+	 */
+	if (m < 1 || m > 12)
+		elog(ERROR, "date out of range");
 
 	ndays = month_days[m - 1];
 	if (m == 2 && (y % 400 == 0 || (y % 4 == 0 && y % 100 != 0)))
