@@ -310,4 +310,23 @@ begin
 end;
 $$;
 
+-- should not to crash
+do $$
+declare
+  c int;
+  n int;
+  d dbms_sql.desc_rec[];
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'select * from test');
+  call dbms_sql.describe_columns(c, n, d);
+  raise notice '% %', n, d;
+  call dbms_sql.close_cursor(c);
+  -- should not crash
+  call dbms_sql.parse(c, 'create temp table t(a int)');
+  call dbms_sql.describe_columns(c, n, d);
+  call dbms_sql.close_cursor(c);
+end;
+$$;
+
 drop table test;

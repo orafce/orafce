@@ -2189,6 +2189,12 @@ dbms_sql_describe_columns(PG_FUNCTION_ARGS)
 	plansource = (CachedPlanSource *) linitial(plan->plancache_list);
 	cursor_tupdesc = plansource->resultDesc;
 
+	if (cursor_tupdesc == NULL)
+		ereport(ERROR,
+			(errcode(ERRCODE_INVALID_CURSOR_STATE),
+			 errmsg("cursor doesn't return rows"),
+			 errdetail("The parsed statement is not a query.")));
+
 	ncolumns = cursor_tupdesc->natts;
 
 	for (i = 0; i < ncolumns; i++)
