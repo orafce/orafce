@@ -17,12 +17,31 @@
 #include "orafce.h"
 #include "builtins.h"
 
-/* all the options of interest for regex functions */
+/*
+ * all the options of interest for regex functions
+ *
+ * Some PostgreSQL forks (e.g. IvorySQL, as of at least 4.6) hoist this
+ * struct out of utils/adt/regexp.c and into regex/regex.h, which we already
+ * include above, so that their own Oracle-compatibility regex functions can
+ * share it. Defining it again here is then a hard redefinition error:
+ *
+ *   regexp.c:21:16: error: redefinition of 'pg_re_flags'
+ *   regexp.c:25:3: error: typedef redefinition with different types
+ *     .../regex/regex.h:253:3: note: previous definition is here
+ *
+ * There's no portable way to detect this at compile time (the fork does
+ * not define a distinguishing macro that reliably survives into
+ * pg_config.h across its own released versions), so builds against such a
+ * fork need to pass -DORAFCE_PG_RE_FLAGS_IN_REGEX_H explicitly, e.g. via
+ * PG_CPPFLAGS. On vanilla PostgreSQL nothing changes.
+ */
+#ifndef ORAFCE_PG_RE_FLAGS_IN_REGEX_H
 typedef struct pg_re_flags
 {
 	int			cflags;			/* compile flags for Spencer's regex code */
 	bool		glob;			/* do it globally (for each occurrence) */
 } pg_re_flags;
+#endif
 
 /* cross-call state for regexp_match and regexp_split functions */
 typedef struct regexp_matches_ctx
