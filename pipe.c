@@ -706,7 +706,7 @@ dbms_pipe_pack_message_number(PG_FUNCTION_ARGS)
 
 	output_buffer = check_buffer(output_buffer, LOCALMSGSZ);
 	pack_field(output_buffer, IT_NUMBER,
-			   VARSIZE(num) - VARHDRSZ, VARDATA(num), InvalidOid);
+			   VARSIZE_ANY_EXHDR(num), VARDATA_ANY(num), InvalidOid);
 
 	PG_RETURN_VOID();
 }
@@ -761,7 +761,7 @@ dbms_pipe_pack_message_record(PG_FUNCTION_ARGS)
 
 	output_buffer = check_buffer(output_buffer, LOCALMSGSZ);
 	pack_field(output_buffer, IT_RECORD,
-			   VARSIZE(data), VARDATA(data), tupType);
+			   VARSIZE_ANY_EXHDR(data), VARDATA_ANY(data), tupType);
 
 	PG_RETURN_VOID();
 }
