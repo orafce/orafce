@@ -1609,10 +1609,10 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 				(errcode(ERRCODE_UNDEFINED_COLUMN),
 				 errmsg("no column is defined")));
 
-	if (pos < 1 && pos > c->coltupdesc->natts)
+	if (pos < 1 || pos > c->coltupdesc->natts)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("column position is of of range [1, %d]",
+				 errmsg("column position is out of range [1, %d]",
 						c->coltupdesc->natts)));
 
 	columnTypeId = (TupleDescAttr(c->coltupdesc, pos - 1))->atttypid;
