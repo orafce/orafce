@@ -375,7 +375,7 @@ check_sql_name(char *cp, int len)
 	{
 		if (orafce_is_ident_start(*cp))
 		{
-			char	   *last = cp + len - 1;
+			char	   *last = cp + len;
 
 			cp += 1;
 
