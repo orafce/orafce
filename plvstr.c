@@ -618,35 +618,70 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 	else
 		len = ora_mb_strlen(str, &sizes, &positions);
 
-	start = PG_ARGISNULL(1) ? 1 : PG_GETARG_INT32(1);
-	end = PG_ARGISNULL(2) ? (start < 0 ? -len : len) : PG_GETARG_INT32(2);
+	if (PG_ARGISNULL(1) && PG_ARGISNULL(2))
+	{
+		start = 1;
+		end = len;
+	}
+	else if (PG_ARGISNULL(2))
+	{
+		start = PG_GETARG_INT32(1);
+		if (start < 0)
+			end = PG_INT32_MIN;
+		else
+			end = PG_INT32_MAX;
+	}
+	else if (PG_ARGISNULL(1))
+	{
+		end = PG_GETARG_INT32(2);
+		if (end < 0)
+			start = -1;
+		else
+			start = 0;
+	}
+	else
+	{
+		start = PG_GETARG_INT32(1);
+		end = PG_GETARG_INT32(2);
+	}
 
-	if ((start > end && start > 0) || (start < end && start < 0))
+	if (start == 0 && end == 0)
+		PG_RETURN_TEXT_P(empty_string());
+
+	/* transform +/-0 to +/-1 */
+	if (start == 0)
+		start = end > 0 ? 1 : -1;
+
+	if ((start > end && start >= 0) || (start < end && start < 0))
 		PARAMETER_ERROR("Second parameter is bigger than third.");
+
+	if (abs(start) > len || end == 0)
+		PG_RETURN_TEXT_P(empty_string());
 
 	if (start < 0)
 	{
-		int			new_start,
+		int64		new_start,
 					new_end;
 
-		new_start = len + start + 1;
-
-		if (new_start < 1)
-			PG_RETURN_TEXT_P(empty_string());
-
-		new_end = len + end + 1;
+		new_start = ((int64) len) + start + 1;
+		new_end = ((int64) len) + end + 1;
 		if (new_end < 1)
 			new_end = 1;
 
-		start = new_end;
-		end = new_start;
+		start = (int) new_end;
+		end = (int) new_start;
+	}
+	else
+	{
+		if (end > len)
+			end = len;
 	}
 
-	start = start != 0 ? start : 1;
-	end = end < len ? end : len;
+	Assert(start > 0 && start <= len);
+	Assert(end > 0 && end <= len);
+	Assert(start <= end);
 
 	new_len = end - start + 1;
-	new_len = new_len >= 0 ? new_len : 0;
 
 	if (mb_encode)
 	{
