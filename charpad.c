@@ -32,6 +32,24 @@ PG_FUNCTION_INFO_V1(orafce_lpad);
 PG_FUNCTION_INFO_V1(orafce_rpad);
 
 /*
+ * Note - when third argument of rpad function contains some
+ * combine characters, then these functions returned different
+ * results than Oracle and Postgres. Oracle has known unfixed
+ * bug because doesn't calculate with special unicode chars with
+ * display with zero. Postgres is in this case Oracle buggy
+ * compatible. Original implementation in Orafce returned result
+ * that is more near to correct result, but last multibyte char
+ * was broken too.
+ *
+ * select rpad('x', 10, U&'a\0301') -> xááááa (Postgres)
+ * select rpad('x', 10, unistr('a\0301')) -> xááááa  (Oracle)
+ * select oracle.rpad( ...) -> xááááááááa (Orafce)
+ *
+ * Because Orafce in this case was not compatible with Oracle,
+ * then it is possible to fix this issue.
+ */
+
+/*
  * orafce_lpad(string text, length int32 [, fill text])
  *
  * Fill up the string to length 'length' by prepending
