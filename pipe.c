@@ -419,7 +419,7 @@ find_pipe(text *pipe_name,
 				result = &pipes[i];
 
 				if (expected_identity)
-					*expected_identity = pipes[i].identity = *identity_seq++;
+					*expected_identity = pipes[i].identity = (*identity_seq)++;
 			}
 			break;
 		}
