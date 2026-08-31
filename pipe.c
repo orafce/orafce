@@ -368,8 +368,8 @@ find_pipe(text *pipe_name,
 	for (i = 0; i < MAX_PIPES; i++)
 	{
 		if (pipes[i].is_valid &&
-			strncmp((char *) VARDATA(pipe_name), pipes[i].pipe_name, VARSIZE(pipe_name) - VARHDRSZ) == 0
-			&& (strlen(pipes[i].pipe_name) == (VARSIZE(pipe_name) - VARHDRSZ)))
+			strncmp((char *) VARDATA_ANY(pipe_name), pipes[i].pipe_name, VARSIZE_ANY_EXHDR(pipe_name)) == 0
+			&& (strlen(pipes[i].pipe_name) == (VARSIZE_ANY_EXHDR(pipe_name))))
 		{
 			if (expected_identity && *expected_identity >= 0
 				&& pipes[i].identity != *expected_identity)
@@ -811,8 +811,8 @@ dbms_pipe_unpack_message(PG_FUNCTION_ARGS, message_data_type dtype)
 				StringInfoData buf;
 				text	   *data = cstring_to_text_with_len(ptr, size);
 
-				buf.data = VARDATA(data);
-				buf.len = VARSIZE(data) - VARHDRSZ;
+				buf.data = VARDATA_ANY(data);
+				buf.len = VARSIZE_ANY_EXHDR(data);
 				buf.maxlen = buf.len;
 				buf.cursor = 0;
 

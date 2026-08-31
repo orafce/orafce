@@ -109,8 +109,8 @@ textcmpm(text *txt, char *str)
 	char	   *p;
 	int			len;
 
-	len = VARSIZE(txt) - VARHDRSZ;
-	p = VARDATA(txt);
+	len = VARSIZE_ANY_EXHDR(txt);
+	p = VARDATA_ANY(txt);
 
 	while (len-- && *p != '\0')
 	{

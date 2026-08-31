@@ -358,10 +358,10 @@ utl_file_fopen(PG_FUNCTION_ARGS)
 	else
 		encoding = GetDatabaseEncoding();
 
-	if (VARSIZE(open_mode) - VARHDRSZ != 1)
+	if (VARSIZE_ANY_EXHDR(open_mode) != 1)
 		CUSTOM_EXCEPTION(INVALID_MODE, "open mode is different than [R,W,A]");
 
-	switch (*((char *) VARDATA(open_mode)))
+	switch (*((char *) VARDATA_ANY(open_mode)))
 	{
 		case 'a':
 		case 'A':
@@ -667,7 +667,7 @@ do_write(PG_FUNCTION_ARGS, int n, FILE *f, size_t max_linesize, int encoding)
 	if (fwrite(str, 1, len, f) != len)
 		CHECK_ERRNO_PUT();
 
-	if (VARDATA(arg) != str)
+	if (VARDATA_ANY(arg) != str)
 		pfree(str);
 	PG_FREE_IF_COPY(arg, n);
 
@@ -1064,7 +1064,7 @@ get_safe_path(text *location_or_dirname, text *filename)
 		fullname = palloc(aux_pos + 1 + aux_len + 1);
 		strcpy(fullname, location);
 		fullname[aux_pos] = '/';
-		memcpy(fullname + aux_pos + 1, VARDATA(filename), aux_len);
+		memcpy(fullname + aux_pos + 1, VARDATA_ANY(filename), aux_len);
 		fullname[aux_pos + aux_len + 1] = '\0';
 
 		/* location is safe (ensured by dirname) */
@@ -1077,9 +1077,9 @@ get_safe_path(text *location_or_dirname, text *filename)
 		int			aux_len = VARSIZE_ANY_EXHDR(filename);
 
 		fullname = palloc(aux_pos + 1 + aux_len + 1);
-		memcpy(fullname, VARDATA(location_or_dirname), aux_pos);
+		memcpy(fullname, VARDATA_ANY(location_or_dirname), aux_pos);
 		fullname[aux_pos] = '/';
-		memcpy(fullname + aux_pos + 1, VARDATA(filename), aux_len);
+		memcpy(fullname + aux_pos + 1, VARDATA_ANY(filename), aux_len);
 		fullname[aux_pos + aux_len + 1] = '\0';
 
 		check_locality = true;

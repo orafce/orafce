@@ -406,8 +406,8 @@ dbms_assert_simple_sql_name(PG_FUNCTION_ARGS)
 	if (EMPTY_STR(sname))
 		ISNOT_SIMPLE_SQL_NAME_EXCEPTION();
 
-	len = VARSIZE(sname) - VARHDRSZ;
-	cp = VARDATA(sname);
+	len = VARSIZE_ANY_EXHDR(sname);
+	cp = VARDATA_ANY(sname);
 
 	if (!check_sql_name(cp, len))
 		ISNOT_SIMPLE_SQL_NAME_EXCEPTION();

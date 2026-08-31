@@ -131,7 +131,7 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 		bitmap = NULL;
 	}
 
-	template_str = VARDATA(template_in);
+	template_str = VARDATA_ANY(template_in);
 	template_len = ora_mb_strlen(template_in, &sizes, &positions);
 	subst_mb_len = ora_mb_strlen1(c_subst);
 	subst_len = VARSIZE_ANY_EXHDR(c_subst);
@@ -140,7 +140,7 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 	bitmask = 1;
 	for (i = 0; i < template_len; i++)
 	{
-		if (strncmp(&template_str[positions[i]], VARDATA(c_subst), subst_len) == 0)
+		if (strncmp(&template_str[positions[i]], VARDATA_ANY(c_subst), subst_len) == 0)
 		{
 			if (items++ < nitems)
 			{

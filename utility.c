@@ -184,13 +184,13 @@ dbms_utility_format_call_stack1(PG_FUNCTION_ARGS)
 	text	   *arg = PG_GETARG_TEXT_P(0);
 	char		mode;
 
-	if ((1 != VARSIZE(arg) - VARHDRSZ))
+	if ((1 != VARSIZE_ANY_EXHDR(arg)))
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("invalid parameter"),
 				 errdetail("Allowed only chars [ops].")));
 
-	mode = *VARDATA(arg);
+	mode = *VARDATA_ANY(arg);
 	switch (mode)
 	{
 		case 'o':
