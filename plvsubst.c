@@ -87,10 +87,11 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 	StringInfo	sinfo;
 	const char *template_str;
 	int			template_len;
+	int			template_blen;
 	char	   *sizes;
 	int		   *positions;
-	int			subst_mb_len;
 	int			subst_len;
+	int			subst_blen;
 
 #if PG_VERSION_NUM >= 190000
 
@@ -133,14 +134,16 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 
 	template_str = VARDATA_ANY(template_in);
 	template_len = ora_mb_strlen(template_in, &sizes, &positions);
-	subst_mb_len = ora_mb_strlen1(c_subst);
-	subst_len = VARSIZE_ANY_EXHDR(c_subst);
+	template_blen = VARSIZE_ANY_EXHDR(template_in);
+	subst_len = ora_mb_strlen1(c_subst);
+	subst_blen = VARSIZE_ANY_EXHDR(c_subst);
 	sinfo = makeStringInfo();
 
 	bitmask = 1;
 	for (i = 0; i < template_len; i++)
 	{
-		if (strncmp(&template_str[positions[i]], VARDATA_ANY(c_subst), subst_len) == 0)
+		if (template_blen - positions[i] >= subst_blen &&
+			memcmp(&template_str[positions[i]], VARDATA_ANY(c_subst), subst_blen) == 0)
 		{
 			if (items++ < nitems)
 			{
@@ -179,7 +182,7 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 						(errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("too few parameters specified for template string")));
 
-			i += subst_mb_len - 1;
+			i += subst_len - 1;
 		}
 		else
 			appendBinaryStringInfo(sinfo, &template_str[positions[i]], sizes[i]);
