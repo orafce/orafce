@@ -288,7 +288,7 @@ ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, bool r
 			sh_mem->identity_seq = 0;
 
 			sh_mem->size = size - sh_memory_size;
-			ora_sinit(sh_mem->data, size, true);
+			ora_sinit(sh_mem->data, sh_mem->size, true);
 			pipes = sh_mem->pipes = ora_salloc(max_pipes * sizeof(orafce_pipe));
 			sid = sh_mem->sid = 1;
 
@@ -303,6 +303,7 @@ ora_lock_shmem(size_t size, int max_pipes, int max_events, int max_locks, bool r
 				events[i].event_name = NULL;
 				events[i].max_receivers = 0;
 				events[i].receivers = NULL;
+				events[i].receivers_number = 0;
 				events[i].messages = NULL;
 			}
 			for (i = 0; i < max_locks; i++)
