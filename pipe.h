@@ -28,7 +28,7 @@ typedef struct _message_echo
 typedef struct
 {
 	char	   *event_name;
-	unsigned char max_receivers;
+	int			max_receivers;
 	int		   *receivers;
 	int			receivers_number;
 	struct _message_item *messages;
