@@ -55,6 +55,16 @@ extern void orafce_xact_cb(XactEvent event, void *arg);
 extern void orafce_umask_assign_hook(const char *newvalue, void *extra);
 extern bool orafce_umask_check_hook(char **newval, void **extra, GucSource source);
 
+#if PG_VERSION_NUM < 140000
+
+#define pg_mblen_range(str,end)		orafce_mblen_range(str,end)
+#define pg_mblen_cstr(str)			pg_mblen(str)
+
+extern int orafce_mblen_range(const char *mbstr, const char *end);
+
+#endif
+
+
 
 /*
  * Version compatibility

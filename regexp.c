@@ -120,7 +120,7 @@ check_replace_text_has_escape(const text *replace_text)
  * the string need not be null-terminated.
  */
 static int
-charlen_to_bytelen(const char *p, int n)
+charlen_to_bytelen(const char *p, int n, const char *end)
 {
 	if (pg_database_encoding_max_length() == 1)
 	{
@@ -132,7 +132,7 @@ charlen_to_bytelen(const char *p, int n)
 		const char *s;
 
 		for (s = p; n > 0; n--)
-			s += pg_mblen(s);
+			s += pg_mblen_range(s, end);
 
 		return s - p;
 	}
@@ -237,8 +237,8 @@ appendStringInfoRegexpSubstr(StringInfo str, text *replace_text,
 
 			Assert(so >= data_pos);
 			chunk_start = start_ptr;
-			chunk_start += charlen_to_bytelen(chunk_start, so - data_pos);
-			chunk_len = charlen_to_bytelen(chunk_start, eo - so);
+			chunk_start += charlen_to_bytelen(chunk_start, so - data_pos, p_end);
+			chunk_len = charlen_to_bytelen(chunk_start, eo - so, p_end);
 			appendBinaryStringInfo(str, chunk_start, chunk_len);
 		}
 	}
@@ -273,7 +273,7 @@ orafce_replace_text_regexp(text *src_text, text *pattern_text,
 	pg_wchar   *data;
 	size_t		data_len;
 	size_t		data_pos;
-	char	   *start_ptr;
+	char	   *start_ptr, *end_ptr;
 	int			escape_status;
 
 	initStringInfo(&buf);
@@ -304,6 +304,7 @@ orafce_replace_text_regexp(text *src_text, text *pattern_text,
 
 	/* start_ptr points to the data_pos'th character of src_text */
 	start_ptr = (char *) VARDATA_ANY(src_text);
+	end_ptr = VARDATA_ANY(src_text) + VARSIZE_ANY_EXHDR(src_text);
 	data_pos = 0;
 
 	while (search_start <= (int) data_len)
@@ -361,7 +362,8 @@ orafce_replace_text_regexp(text *src_text, text *pattern_text,
 			int			chunk_len;
 
 			chunk_len = charlen_to_bytelen(start_ptr,
-										   pmatch[0].rm_so - data_pos);
+										   pmatch[0].rm_so - data_pos,
+										   end_ptr);
 			appendBinaryStringInfo(&buf, start_ptr, chunk_len);
 
 			/*
@@ -383,7 +385,8 @@ orafce_replace_text_regexp(text *src_text, text *pattern_text,
 
 		/* Advance start_ptr and data_pos over the matched text. */
 		start_ptr += charlen_to_bytelen(start_ptr,
-										pmatch[0].rm_eo - data_pos);
+										pmatch[0].rm_eo - data_pos,
+										end_ptr);
 		data_pos = pmatch[0].rm_eo;
 
 		/*
@@ -722,6 +725,7 @@ parse_re_flags(pg_re_flags *flags, text *opts)
 	{
 		char	   *opt_p = VARDATA_ANY(opts);
 		int			opt_len = VARSIZE_ANY_EXHDR(opts);
+		char	   *opt_end = opt_p + opt_len;
 		int			i;
 
 		for (i = 0; i < opt_len; i++)
@@ -773,7 +777,7 @@ parse_re_flags(pg_re_flags *flags, text *opts)
 					ereport(ERROR,
 							(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 							 errmsg("invalid regular expression option: \"%.*s\"",
-									pg_mblen(opt_p + i), opt_p + i)));
+									pg_mblen_range(opt_p + i, opt_end), opt_p + i)));
 					break;
 			}
 		}
@@ -1004,12 +1008,13 @@ orafce_textregexreplace(PG_FUNCTION_ARGS)
 	if (opt && VARSIZE_ANY_EXHDR(opt) > 0)
 	{
 		char	   *opt_p = VARDATA_ANY(opt);
+		char	   *opt_end = opt_p + VARSIZE_ANY_EXHDR(opt);
 
 		if (*opt_p >= '0' && *opt_p <= '9')
 			ereport(ERROR,
 					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 					 errmsg("invalid regular expression option: \"%.*s\"",
-							pg_mblen(opt_p), opt_p),
+							pg_mblen_range(opt_p, opt_end), opt_p),
 					 errhint("If you meant to use regexp_replace() with a start parameter, cast the fourth argument to integer explicitly.")));
 	}
 

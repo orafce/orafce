@@ -87,9 +87,23 @@ if (VARSIZE_ANY_EXHDR(str) == 0) \
 		 errmsg("invalid parameter"), \
 		 errdetail(detail)));
 
+#if PG_VERSION_NUM < 140000
 
-#ifndef _pg_mblen
-#define _pg_mblen	pg_mblen
+int
+orafce_mblen_range(const char *mbstr, const char *end)
+{
+	int			length = pg_mblen(mbstr);
+
+	Assert(end > mbstr);
+
+	if (unlikely(mbstr + length > end))
+		ereport(ERROR,
+				(errcode(ERRCODE_CHARACTER_NOT_IN_REPERTOIRE),
+				 errmsg("invalid byte sequence for current encoding")));
+
+	return length;
+}
+
 #endif
 
 /*
@@ -101,11 +115,12 @@ ora_mb_strlen(text *str, char **sizes, int **positions)
 {
 	int			r_len;
 	int			cur_size = 0;
-	char	   *p;
+	char	   *p, *end;
 	int			cur = 0;
 
 	p = VARDATA_ANY(str);
 	r_len = VARSIZE_ANY_EXHDR(str);
+	end = p + r_len;
 
 	if (NULL != sizes)
 		*sizes = palloc(r_len * sizeof(char));
@@ -116,7 +131,7 @@ ora_mb_strlen(text *str, char **sizes, int **positions)
 	{
 		int			sz;
 
-		sz = _pg_mblen(p);
+		sz = pg_mblen_range(p, end);
 		if (sizes)
 			(*sizes)[cur_size] = sz;
 		if (positions)
@@ -135,7 +150,7 @@ ora_mb_strlen1(text *str)
 {
 	int			r_len;
 	int			c;
-	char	   *p;
+	char	   *p, *end;
 
 	r_len = VARSIZE_ANY_EXHDR(str);
 
@@ -143,12 +158,13 @@ ora_mb_strlen1(text *str)
 		return r_len;
 
 	p = VARDATA_ANY(str);
+	end = p + r_len;
 	c = 0;
 	while (r_len > 0)
 	{
 		int			sz;
 
-		sz = _pg_mblen(p);
+		sz = pg_mblen_range(p, end);
 		p += sz;
 		r_len -= sz;
 		c += 1;
@@ -316,7 +332,8 @@ plvstr_normalize(PG_FUNCTION_ARGS)
 	text	   *result;
 	char	   *aux,
 			   *cur,
-			   *aux_cur;
+			   *aux_cur,
+			   *end;
 	int			i;
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(__amd64__))
@@ -341,6 +358,7 @@ plvstr_normalize(PG_FUNCTION_ARGS)
 
 	write_spc = false;
 	cur = VARDATA_ANY(str);
+	end = cur + l;
 
 	for (i = 0; i < l; i++)
 	{
@@ -359,7 +377,7 @@ plvstr_normalize(PG_FUNCTION_ARGS)
 
 				if (mb_encode)
 				{
-					sz = _pg_mblen(cur);
+					sz = pg_mblen_range(cur, end);
 					if (sz > 1 || (sz == 1 && c > 32))
 					{
 						int			j;
@@ -1136,7 +1154,7 @@ plvchr_is_kind_a(PG_FUNCTION_ARGS)
 	NON_EMPTY_CHECK(str);
 	if (pg_database_encoding_max_length() > 1)
 	{
-		if (_pg_mblen(VARDATA_ANY(str)) > 1)
+		if (pg_mblen_range(VARDATA_ANY(str), VARDATA_ANY(str) + VARSIZE_ANY_EXHDR(str)) > 1)
 			PG_RETURN_INT32((k == 5));
 	}
 

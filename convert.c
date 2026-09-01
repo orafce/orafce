@@ -606,7 +606,7 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 {
 	text	   *src;
 	text	   *dst;
-	char	   *s;
+	char	   *s, *end;
 	char	   *d;
 	int			srclen;
 
@@ -645,6 +645,7 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 	src = PG_GETARG_TEXT_PP(0);
 	s = VARDATA_ANY(src);
 	srclen = VARSIZE_ANY_EXHDR(src);
+	end = s + srclen;
 
 	/* XXX - The output length should be <= input length */
 	dst = (text *) palloc0(VARHDRSZ + srclen);
@@ -656,7 +657,7 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 		int			clen;
 		int			mapindex;
 
-		clen = pg_mblen(u);
+		clen = pg_mblen_range(u, end);
 		s += clen;
 
 		if (clen == 1)

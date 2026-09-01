@@ -63,6 +63,7 @@ orafce_lpad(PG_FUNCTION_ARGS)
 	text	   *string2 = PG_GETARG_TEXT_PP(2);
 	text	   *ret;
 	char	   *ptr1,
+			   *ptr1end,
 			   *ptr2 = NULL,
 			   *ptr2start = NULL,
 			   *ptr2end = NULL,
@@ -105,17 +106,18 @@ orafce_lpad(PG_FUNCTION_ARGS)
 	}
 
 	/* byte-length of half-width space */
-	hslen = pg_mblen(spc);
+	hslen = pg_mblen_cstr(spc);
 
 	/*
 	 * Calculate the length of the portion of string1 to include in the final
 	 * output
 	 */
 	ptr1 = VARDATA_ANY(string1);
+	ptr1end = ptr1 + s1blen;
 	while (s1blen > 0)
 	{
 		/* byte-length and display length per character of string1 */
-		mlen = pg_mblen(ptr1);
+		mlen = pg_mblen_range(ptr1, ptr1end);
 		dsplen = pg_dsplen(ptr1);
 
 		/* accumulate display length of string1 */
@@ -178,7 +180,7 @@ orafce_lpad(PG_FUNCTION_ARGS)
 		while (s2_add_width > 0)
 		{
 			/* byte-length and display length per character of string2 */
-			mlen = pg_mblen(ptr2);
+			mlen = pg_mblen_range(ptr2, ptr2end);
 			dsplen = pg_dsplen(ptr2);
 
 			/*
@@ -237,7 +239,7 @@ orafce_lpad(PG_FUNCTION_ARGS)
 			ptr2 = ptr2start;
 		}
 
-		mlen = pg_mblen(ptr2);
+		mlen = pg_mblen_range(ptr2, ptr2end);
 		if (s2_add_blen < mlen)
 			break;
 
@@ -265,7 +267,7 @@ orafce_lpad(PG_FUNCTION_ARGS)
 			ptr1 = VARDATA_ANY(string1);
 		}
 
-		mlen = pg_mblen(ptr1);
+		mlen = pg_mblen_range(ptr1, ptr1end);
 
 		if (s1_add_blen < mlen)
 			break;
@@ -297,6 +299,7 @@ orafce_rpad(PG_FUNCTION_ARGS)
 	text	   *string2 = PG_GETARG_TEXT_PP(2);
 	text	   *ret;
 	char	   *ptr1,
+			   *ptr1end,
 			   *ptr2 = NULL,
 			   *ptr2start = NULL,
 			   *ptr2end = NULL,
@@ -339,17 +342,18 @@ orafce_rpad(PG_FUNCTION_ARGS)
 	}
 
 	/* byte-length of half-width space */
-	hslen = pg_mblen(spc);
+	hslen = pg_mblen_cstr(spc);
 
 	/*
 	 * Calculate the length of the portion of string1 to include in the final
 	 * output
 	 */
 	ptr1 = VARDATA_ANY(string1);
+	ptr1end = ptr1 + s1blen;
 	while (s1blen > 0)
 	{
 		/* byte-length and display length per character of string1 */
-		mlen = pg_mblen(ptr1);
+		mlen = pg_mblen_range(ptr1, ptr1end);
 		dsplen = pg_dsplen(ptr1);
 
 		/* accumulate display length of string1 */
@@ -412,7 +416,7 @@ orafce_rpad(PG_FUNCTION_ARGS)
 		while (s2_add_width > 0)
 		{
 			/* byte-length and display length per character of string2 */
-			mlen = pg_mblen(ptr2);
+			mlen = pg_mblen_range(ptr2, ptr2end);
 			dsplen = pg_dsplen(ptr2);
 
 			/*
@@ -458,7 +462,7 @@ orafce_rpad(PG_FUNCTION_ARGS)
 			ptr1 = VARDATA_ANY(string1);
 		}
 
-		mlen = pg_mblen(ptr1);
+		mlen = pg_mblen_range(ptr1, ptr1end);
 
 		if (s1_add_blen < mlen)
 			break;
@@ -483,7 +487,7 @@ orafce_rpad(PG_FUNCTION_ARGS)
 			ptr2 = ptr2start;
 		}
 
-		mlen = pg_mblen(ptr2);
+		mlen = pg_mblen_range(ptr2, ptr2end);
 		if (s2_add_blen < mlen)
 			break;
 
