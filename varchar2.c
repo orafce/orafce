@@ -174,6 +174,17 @@ varchar2(PG_FUNCTION_ARGS)
 				 errmsg("input value length is %d; too long for type varchar2(%d)", len, maxlen)));
 	}
 
+	/*
+	 * Truncate on a character boundary.  The type modifier counts bytes (see
+	 * NVARCHAR2 for character semantics), so the limit is a byte limit, but
+	 * cutting in the middle of a multibyte character would produce a value
+	 * with invalid encoding -- and varchar2 is binary-coercible to text, so
+	 * that value would then be accepted by every text function in the
+	 * database.  pg_mbcliplen() applies the byte limit without splitting a
+	 * character.
+	 */
+	maxlen = pg_mbcliplen(s_data, len, maxlen);
+
 	PG_RETURN_VARCHAR_P((VarChar *) cstring_to_text_with_len(s_data, maxlen));
 }
 
