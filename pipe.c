@@ -634,7 +634,12 @@ remove_pipe(text *pipe_name, bool purge)
 Datum
 dbms_pipe_next_item_type(PG_FUNCTION_ARGS)
 {
-	PG_RETURN_INT32(input_buffer != NULL ? input_buffer->next->type : IT_NO_MORE_ITEMS);
+	if (input_buffer == NULL ||
+		input_buffer->items_count <= 0 ||
+		input_buffer->next == NULL)
+		PG_RETURN_INT32(IT_NO_MORE_ITEMS);
+
+	PG_RETURN_INT32(input_buffer->next->type);
 }
 
 static void
