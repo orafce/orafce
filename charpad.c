@@ -7,6 +7,7 @@
  */
 
 #include "postgres.h"
+#include "miscadmin.h"
 #include "utils/builtins.h"
 #include "utils/formatting.h"
 #include "mb/pg_wchar.h"
@@ -116,6 +117,8 @@ orafce_lpad(PG_FUNCTION_ARGS)
 	ptr1end = ptr1 + s1blen;
 	while (s1blen > 0)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		/* byte-length and display length per character of string1 */
 		mlen = pg_mblen_range(ptr1, ptr1end);
 		dsplen = pg_dsplen(ptr1);
@@ -179,6 +182,8 @@ orafce_lpad(PG_FUNCTION_ARGS)
 
 		while (s2_add_width > 0)
 		{
+			CHECK_FOR_INTERRUPTS();
+
 			/* byte-length and display length per character of string2 */
 			mlen = pg_mblen_range(ptr2, ptr2end);
 			dsplen = pg_dsplen(ptr2);
@@ -232,6 +237,8 @@ orafce_lpad(PG_FUNCTION_ARGS)
 	/* prepend string2 padding */
 	while (s2_add_blen > 0)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		/* reset ptr2 to the string2 start */
 		if (init_ptr)
 		{
@@ -260,6 +267,8 @@ orafce_lpad(PG_FUNCTION_ARGS)
 	/* string1 */
 	while (s1_add_blen > 0)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		/* reset ptr1 back to the start of string1 */
 		if (init_ptr)
 		{
@@ -352,6 +361,8 @@ orafce_rpad(PG_FUNCTION_ARGS)
 	ptr1end = ptr1 + s1blen;
 	while (s1blen > 0)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		/* byte-length and display length per character of string1 */
 		mlen = pg_mblen_range(ptr1, ptr1end);
 		dsplen = pg_dsplen(ptr1);
@@ -415,6 +426,8 @@ orafce_rpad(PG_FUNCTION_ARGS)
 
 		while (s2_add_width > 0)
 		{
+			CHECK_FOR_INTERRUPTS();
+
 			/* byte-length and display length per character of string2 */
 			mlen = pg_mblen_range(ptr2, ptr2end);
 			dsplen = pg_dsplen(ptr2);
@@ -455,6 +468,8 @@ orafce_rpad(PG_FUNCTION_ARGS)
 	/* string1 */
 	while (s1_add_blen > 0)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		/* reset ptr1 back to the start of string1 */
 		if (init_ptr)
 		{
@@ -480,6 +495,8 @@ orafce_rpad(PG_FUNCTION_ARGS)
 	/* append string2 padding */
 	while (s2_add_blen > 0)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		/* reset ptr2 to the string2 start */
 		if (init_ptr)
 		{
