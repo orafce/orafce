@@ -2439,6 +2439,13 @@ select pos,token from plvlex.tokens('select * from a.b.c join d ON x=y', true, t
   32 | y
 (10 rows)
 
+select pos, token from plvlex.tokens('select '' a + b ', true, true);
+ pos |  token  
+-----+---------
+   0 | select
+   7 |  a + b 
+(2 rows)
+
 SET lc_numeric TO 'C';
 select to_char(22);
  to_char 

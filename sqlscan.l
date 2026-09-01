@@ -383,7 +383,8 @@ other			.
 					addlit(yytext, yyleng);
 				}
 
-<xc><<EOF>>		{ 
+<xc><<EOF>>		{
+					BEGIN(INITIAL);
 					yylval.val.str = litbufdup();
 					yylval.val.modificator = "ecu";
 					yylval.val.keycode = -1;
@@ -422,7 +423,8 @@ other			.
 <xb>{quotecontinue}	{
 					/* ignore */
 				}
-<xb><<EOF>>		{ 
+<xb><<EOF>>		{
+					BEGIN(INITIAL);
 					yylval.val.str = litbufdup();
 					yylval.val.modificator = "bu";
 					yylval.val.keycode = -1;
@@ -452,7 +454,8 @@ other			.
 					yylval.val.sep = NULL;
 					return X_NCONST;
 				}
-<xh><<EOF>>		{ 
+<xh><<EOF>>		{
+					BEGIN(INITIAL);
 					yylval.val.str = litbufdup();
 					yylval.val.modificator = "xu";
 					yylval.val.keycode = -1;
@@ -531,13 +534,14 @@ other			.
 					/* This is only needed for \ just before EOF */
 					addlitchar(yytext[0]);
 				}
-<xq,xe><<EOF>>		{ 
+<xq,xe><<EOF>>	{
+					BEGIN(INITIAL);
 					yylval.val.str = litbufdup();
 					yylval.val.modificator = extended_string ? "esu" : "qsu";
 					yylval.val.keycode = -1;
 					yylval.val.sep = NULL;
 					return X_SCONST;
-				}    
+				}
 
 {dolqdelim}		{
 					SET_YYLLOC();
@@ -586,7 +590,8 @@ other			.
 					/* This is only needed for inside the quoted text */
 					addlitchar(yytext[0]);
 				}
-<xdolq><<EOF>>	{ 
+<xdolq><<EOF>>	{
+					BEGIN(INITIAL);
 					yylval.val.sep = dolqstart;
 					yylval.val.modificator = "dolqu";
 					yylval.val.str = litbufdup();
@@ -621,7 +626,8 @@ other			.
 <xd>{xdinside}	{
 					addlit(yytext, yyleng);
 				}
-<xd><<EOF>>		{ 
+<xd><<EOF>>		{
+					BEGIN(INITIAL);
 					yylval.val.modificator = "dqu";
 					yylval.val.str = litbufdup();
 					yylval.val.keycode = -1;

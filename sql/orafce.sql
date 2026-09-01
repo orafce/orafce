@@ -507,6 +507,7 @@ select PLVstr.lstrip ('WHERE WHITE = ''FRONT'' AND COMP# = 1500', 'WHERE ') = 'W
 select plvstr.left('Příliš žluťoučký kůň',4) = pg_catalog.substr('Příl', 1, 4);
 
 select pos,token from plvlex.tokens('select * from a.b.c join d ON x=y', true, true);
+select pos, token from plvlex.tokens('select '' a + b ', true, true);
 
 SET lc_numeric TO 'C';
 select to_char(22);
