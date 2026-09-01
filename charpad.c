@@ -173,9 +173,11 @@ orafce_lpad(PG_FUNCTION_ARGS)
 	if (s2_operate)
 	{
 		int			s2_add_width;
+		int			s2_add_width_initial;
 
 		/* remaining part of output_width is composed of string2 */
 		s2_add_width = output_width - s1_width;
+		s2_add_width_initial = s2_add_width;
 
 		ptr2 = ptr2start = VARDATA_ANY(string2);
 		ptr2end = ptr2 + s2blen;
@@ -212,7 +214,18 @@ orafce_lpad(PG_FUNCTION_ARGS)
 
 			/* when get to the end of string2, reset ptr2 to the start */
 			if (ptr2 == ptr2end)
+			{
 				ptr2 = ptr2start;
+
+				/*
+				 * Now we are at the end of string2. When there are not
+				 * change at s2_add_width then string2 has zero display
+				 * width and we have to go out if we don't want to be
+				 * in never finish loop.
+				 */
+				if (s2_add_width == s2_add_width_initial)
+					PG_RETURN_TEXT_P(cstring_to_text(""));
+			}
 		}
 	}
 
@@ -417,9 +430,11 @@ orafce_rpad(PG_FUNCTION_ARGS)
 	if (s2_operate)
 	{
 		int			s2_add_width;
+		int			s2_add_width_initial;
 
 		/* remaining part of output_width is composed of string2 */
 		s2_add_width = output_width - s1_width;
+		s2_add_width_initial = s2_add_width;
 
 		ptr2 = ptr2start = VARDATA_ANY(string2);
 		ptr2end = ptr2 + s2blen;
@@ -456,7 +471,11 @@ orafce_rpad(PG_FUNCTION_ARGS)
 
 			/* when get to the end of string2, reset ptr2 to the start */
 			if (ptr2 == ptr2end)
+			{
 				ptr2 = ptr2start;
+				if (s2_add_width == s2_add_width_initial)
+					PG_RETURN_TEXT_P(cstring_to_text(""));
+			}
 		}
 	}
 

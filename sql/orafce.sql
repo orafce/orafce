@@ -954,6 +954,10 @@ SELECT '|' || oracle.rpad('あbcd'::nvarchar2(5), 10, 'xい'::text) || '|';
 SELECT '|' || oracle.rpad('あbcd'::nvarchar2(5), 10, 'xい'::varchar2(5)) || '|';
 SELECT '|' || oracle.rpad('あbcd'::nvarchar2(5), 10, 'xい'::nvarchar2(5)) || '|';
 
+-- should not hangs
+SELECT oracle.rpad('x', 10, U&'\0301');
+SELECT oracle.lpad('x', 10, U&'\0301');
+
 --
 -- test TRIM family of functions
 --
