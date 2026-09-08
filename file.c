@@ -285,6 +285,89 @@ IO_EXCEPTION(void)
  */
 #ifdef WIN32
 
+#if PG_VERSION_NUM >= 190000
+
+/*
+ * char2wchar --- convert multibyte characters to wide characters
+ *
+ * This has almost the API of mbstowcs_l(), except that *from need not be
+ * null-terminated; instead, the number of input bytes is specified as
+ * fromlen.  Also, we ereport() rather than returning -1 for invalid
+ * input encoding.  tolen is the maximum number of wchar_t's to store at *to.
+ * The output will be zero-terminated iff there is room.
+ */
+static size_t
+char2wchar(wchar_t *to, size_t tolen, const char *from, size_t fromlen,
+	   locale_t loc)
+{
+  size_t		result;
+
+  if (tolen == 0)
+	return 0;
+
+  /* See WIN32 "Unicode" comment above */
+  if (GetDatabaseEncoding() == PG_UTF8)
+  {
+	/* Win32 API does not work for zero-length input */
+	if (fromlen == 0)
+	  result = 0;
+	else
+	{
+	  result = MultiByteToWideChar(CP_UTF8, 0, from, fromlen, to, tolen - 1);
+	  /* A zero return is failure */
+	  if (result == 0)
+		result = -1;
+	}
+
+	if (result != -1)
+	{
+	  Assert(result < tolen);
+	  /* Append trailing null wchar (MultiByteToWideChar() does not) */
+	  to[result] = 0;
+	}
+  }
+  else
+  {
+	/* mbstowcs requires ending '\0' */
+	char	   *str = pnstrdup(from, fromlen);
+
+	if (loc == (locale_t) 0)
+	{
+	  /* Use mbstowcs directly for the default locale */
+	  result = mbstowcs(to, str, tolen);
+	}
+	else
+	{
+	  /* Use mbstowcs_l for nondefault locales */
+	  result = _mbstowcs_l(to, str, tolen, loc);
+	}
+
+	pfree(str);
+  }
+
+  if (result == -1)
+  {
+	/*
+	 * Invalid multibyte character encountered.  We try to give a useful
+	 * error message by letting pg_verifymbstr check the string.  But it's
+	 * possible that the string is OK to us, and not OK to mbstowcs ---
+	 * this suggests that the LC_CTYPE locale is different from the
+	 * database encoding.  Give a generic error message if pg_verifymbstr
+	 * can't find anything wrong.
+	 */
+	pg_verifymbstr(from, fromlen, false);	/* might not return */
+	/* but if it does ... */
+	ereport(ERROR,
+		(errcode(ERRCODE_CHARACTER_NOT_IN_REPERTOIRE),
+		 errmsg("invalid multibyte character for locale"),
+		 errhint("The server's LC_CTYPE locale is probably incompatible with the database encoding.")));
+  }
+
+  return result;
+}
+
+#endif
+
 static wchar_t *
 to_wchar(const char *str)
 {
