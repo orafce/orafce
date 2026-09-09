@@ -1,4 +1,4 @@
-project('orafce', ['c'], version: '4.16.8')
+project('orafce', ['c'], version: '4.17.0')
 
 pg_config = find_program('pg_config')
 
@@ -105,6 +105,7 @@ data = [
   'orafce--4.13--4.14.sql',
   'orafce--4.14--4.15.sql',
   'orafce--4.15--4.16.sql',
+  'orafce--4.16--4.17.sql',
    module_name + '--' + module_version + '.sql'
 ]
 
