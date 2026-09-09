@@ -126,6 +126,13 @@ tests = [
 ]
 
 compilerName = meson.get_compiler('c').get_id()
+coptions = []
+
+if pg_version_major >= 19
+  if meson.get_compiler('c').get_id() == 'msvc'
+    coptions = ['c_std=c11']
+  endif
+endif
 
 if meson.get_compiler('c').get_id() == 'msvc'
   incdir = [includedir_server / 'port/win32_msvc',
@@ -151,6 +158,7 @@ module_lib = shared_module(
   install_dir: pkglibdir,
   name_prefix: '',
   dependencies: postgres_lib,
+  override_options: coptions
 )
 
 install_data(data, install_dir: sharedir / 'extension')
