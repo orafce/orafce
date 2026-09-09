@@ -93,7 +93,8 @@ REGRESS = orafce\
 		dbms_random\
 		regexp_func\
 		dbms_sql\
-		hextoraw
+		hextoraw\
+		utl_raw
 
 #REGRESS_OPTS = --load-language=plpgsql --schedule=parallel_schedule --encoding=utf8
 REGRESS_OPTS = --schedule=parallel_schedule --encoding=utf8
