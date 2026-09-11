@@ -1131,50 +1131,43 @@ safe_named_location(text *location)
 static char *
 get_safe_path(text *location_or_dirname, text *filename)
 {
-	char	   *fullname;
+	char		abs_path[MAXPGPATH];
+	char	   *filename_cstr;
 	char	   *location;
-	bool		check_locality;
 
 	NON_EMPTY_TEXT(location_or_dirname);
 	NON_EMPTY_TEXT(filename);
 
 	location = safe_named_location(location_or_dirname);
+	filename_cstr = text_to_cstring(filename);
+
 	if (location)
 	{
-		int			aux_pos = size2int(strlen(location));
-		int			aux_len = VARSIZE_ANY_EXHDR(filename);
+		join_path_components(abs_path, location, filename_cstr);
 
-		fullname = palloc(aux_pos + 1 + aux_len + 1);
-		strcpy(fullname, location);
-		fullname[aux_pos] = '/';
-		memcpy(fullname + aux_pos + 1, VARDATA_ANY(filename), aux_len);
-		fullname[aux_pos + aux_len + 1] = '\0';
-
-		/* location is safe (ensured by dirname) */
-		check_locality = false;
 		pfree(location);
 	}
 	else
 	{
-		int			aux_pos = VARSIZE_ANY_EXHDR(location_or_dirname);
-		int			aux_len = VARSIZE_ANY_EXHDR(filename);
+		char	   *location_or_dirname_cstr;
 
-		fullname = palloc(aux_pos + 1 + aux_len + 1);
-		memcpy(fullname, VARDATA_ANY(location_or_dirname), aux_pos);
-		fullname[aux_pos] = '/';
-		memcpy(fullname + aux_pos + 1, VARDATA_ANY(filename), aux_len);
-		fullname[aux_pos + aux_len + 1] = '\0';
+		location_or_dirname_cstr = text_to_cstring(location_or_dirname);
 
-		check_locality = true;
+		join_path_components(abs_path, location_or_dirname_cstr, filename_cstr);
+
+		pfree(location_or_dirname_cstr);
 	}
 
+	canonicalize_path(abs_path);
+
 	/* check locality in canonizalized form of path */
-	canonicalize_path(fullname);
+	check_secure_locality(abs_path);
 
-	if (check_locality)
-		check_secure_locality(fullname);
+	make_native_path(abs_path);
 
-	return fullname;
+	pfree(filename_cstr);
+
+	return pstrdup(abs_path);
 }
 
 /*
