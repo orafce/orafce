@@ -84,62 +84,20 @@ COMMENT ON FUNCTION utl_raw.concat(VARIADIC bytea[]) IS 'Concatenates raw (bytea
 
 CREATE FUNCTION utl_raw.bit_and(bytea, bytea)
 RETURNS bytea
-AS $$
-DECLARE
-    n integer := least(pg_catalog.length($1), pg_catalog.length($2));
-    result bytea := ''::bytea;
-    i integer;
-BEGIN
-    FOR i IN 0 .. n - 1 LOOP
-        result := result || decode(lpad(to_hex(get_byte($1, i) & get_byte($2, i)), 2, '0'), 'hex');
-    END LOOP;
-    IF pg_catalog.length($1) > n THEN result := result || substring($1 FROM n + 1);
-    ELSIF pg_catalog.length($2) > n THEN result := result || substring($2 FROM n + 1);
-    END IF;
-    RETURN result;
-END
-$$
-LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+AS 'MODULE_PATHNAME','orafce_utl_raw_bit_and'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.bit_and(bytea, bytea) IS 'Bitwise AND of two raw (bytea) values';
 
 CREATE FUNCTION utl_raw.bit_or(bytea, bytea)
 RETURNS bytea
-AS $$
-DECLARE
-    n integer := least(pg_catalog.length($1), pg_catalog.length($2));
-    result bytea := ''::bytea;
-    i integer;
-BEGIN
-    FOR i IN 0 .. n - 1 LOOP
-        result := result || decode(lpad(to_hex(get_byte($1, i) | get_byte($2, i)), 2, '0'), 'hex');
-    END LOOP;
-    IF pg_catalog.length($1) > n THEN result := result || substring($1 FROM n + 1);
-    ELSIF pg_catalog.length($2) > n THEN result := result || substring($2 FROM n + 1);
-    END IF;
-    RETURN result;
-END
-$$
-LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+AS 'MODULE_PATHNAME','orafce_utl_raw_bit_or'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.bit_or(bytea, bytea) IS 'Bitwise OR of two raw (bytea) values';
 
 CREATE FUNCTION utl_raw.bit_xor(bytea, bytea)
 RETURNS bytea
-AS $$
-DECLARE
-    n integer := least(pg_catalog.length($1), pg_catalog.length($2));
-    result bytea := ''::bytea;
-    i integer;
-BEGIN
-    FOR i IN 0 .. n - 1 LOOP
-        result := result || decode(lpad(to_hex(get_byte($1, i) # get_byte($2, i)), 2, '0'), 'hex');
-    END LOOP;
-    IF pg_catalog.length($1) > n THEN result := result || substring($1 FROM n + 1);
-    ELSIF pg_catalog.length($2) > n THEN result := result || substring($2 FROM n + 1);
-    END IF;
-    RETURN result;
-END
-$$
-LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+AS 'MODULE_PATHNAME','orafce_utl_raw_bit_xor'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.bit_xor(bytea, bytea) IS 'Bitwise XOR of two raw (bytea) values';
 
 GRANT USAGE ON SCHEMA utl_raw TO PUBLIC;

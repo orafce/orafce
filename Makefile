@@ -26,7 +26,8 @@ OBJS= regexp.o\
 		charlen.o\
 		replace_empty_string.o\
 		math.o\
-		dbms_sql.o
+		dbms_sql.o\
+		utl_raw.o
 
 EXTENSION = orafce
 
