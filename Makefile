@@ -26,7 +26,8 @@ OBJS= regexp.o\
 		charlen.o\
 		replace_empty_string.o\
 		math.o\
-		dbms_sql.o
+		dbms_sql.o\
+		utl_raw.o
 
 EXTENSION = orafce
 
@@ -94,6 +95,8 @@ REGRESS = orafce\
 		regexp_func\
 		dbms_sql\
 		hextoraw
+		hextoraw\
+		utl_raw
 
 #REGRESS_OPTS = --load-language=plpgsql --schedule=parallel_schedule --encoding=utf8
 REGRESS_OPTS = --schedule=parallel_schedule --encoding=utf8
