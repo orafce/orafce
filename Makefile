@@ -94,7 +94,6 @@ REGRESS = orafce\
 		dbms_random\
 		regexp_func\
 		dbms_sql\
-		hextoraw
 		hextoraw\
 		utl_raw
 
