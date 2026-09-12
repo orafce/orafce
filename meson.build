@@ -61,6 +61,7 @@ sources = files(
   'sqlparse.c',
   'utility.c',
   'varchar2.c',
+  'utl_raw.c',
 )
 
 data = [
@@ -123,6 +124,8 @@ tests = [
   'dbms_random',
   'regexp_func',
   'dbms_sql',
+  'hextoraw',
+  'utl_raw',
 ]
 
 compilerName = meson.get_compiler('c').get_id()
