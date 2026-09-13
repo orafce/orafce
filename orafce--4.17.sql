@@ -3494,6 +3494,10 @@ AS 'MODULE_PATHNAME','ora_get_status'
 LANGUAGE 'c' STRICT IMMUTABLE;
 
 -- Oracle system views
+--
+-- The USER_* views describe the objects the current user owns, so they are
+-- restricted to the current schema. Without that restriction they described
+-- every table in the database, PostgreSQL's own catalogs included.
 create view oracle.user_tab_columns as
     select table_name,
            column_name,
@@ -3505,12 +3509,14 @@ create view oracle.user_tab_columns as
            ordinal_position AS column_id,
            is_updatable AS data_upgraded,
            table_schema
-    from information_schema.columns;
+    from information_schema.columns
+   where table_schema = current_schema();
 
 create view oracle.user_tables as
     select table_name
       from information_schema.tables
-     where table_type = 'BASE TABLE';
+     where table_type = 'BASE TABLE'
+       and table_schema = current_schema();
 
 create view oracle.user_cons_columns as
    select constraint_name, column_name, table_name
