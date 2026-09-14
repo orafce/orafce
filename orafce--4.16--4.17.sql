@@ -101,3 +101,26 @@ LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.bit_xor(bytea, bytea) IS 'Bitwise XOR of two raw (bytea) values';
 
 GRANT USAGE ON SCHEMA utl_raw TO PUBLIC;
+
+-- The USER_* views describe the objects the current user owns, so they are
+-- restricted to the current schema. Without that restriction they described
+-- every table in the database, PostgreSQL's own catalogs included.
+CREATE OR REPLACE VIEW oracle.user_tab_columns AS
+    select table_name,
+           column_name,
+           data_type,
+           coalesce(character_maximum_length, numeric_precision) AS data_length,
+           numeric_precision AS data_precision,
+           numeric_scale AS data_scale,
+           is_nullable AS nullable,
+           ordinal_position AS column_id,
+           is_updatable AS data_upgraded,
+           table_schema
+    from information_schema.columns
+   where table_schema = current_schema();
+
+CREATE OR REPLACE VIEW oracle.user_tables AS
+    select table_name
+      from information_schema.tables
+     where table_type = 'BASE TABLE'
+       and table_schema = current_schema();

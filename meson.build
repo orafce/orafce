@@ -126,6 +126,7 @@ tests = [
   'dbms_sql',
   'hextoraw',
   'utl_raw',
+  'user_tables',
 ]
 
 compilerName = meson.get_compiler('c').get_id()
