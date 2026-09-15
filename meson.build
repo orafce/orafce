@@ -127,6 +127,7 @@ tests = [
   'hextoraw',
   'utl_raw',
   'user_tables',
+  'rowidtochar',
 ]
 
 compilerName = meson.get_compiler('c').get_id()

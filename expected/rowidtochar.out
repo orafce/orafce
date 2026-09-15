@@ -1,0 +1,26 @@
+-- Test for oracle.rowidtochar()
+\set ECHO none
+SET search_path TO oracle, "$user", public, pg_catalog;
+-- PostgreSQL has no ROWID type, so rowidtochar() returns its text argument
+-- unchanged, letting Oracle SQL that calls ROWIDTOCHAR(...) run unmodified.
+-- ORACLE> SELECT ROWIDTOCHAR('AAAAECAABAAAAGaAAA') FROM dual; -> AAAAECAABAAAAGaAAA
+SELECT rowidtochar('AAAAECAABAAAAGaAAA') = 'AAAAECAABAAAAGaAAA';
+ ?column? 
+----------
+ t
+(1 row)
+
+-- an empty string round-trips
+SELECT rowidtochar('') = '';
+ ?column? 
+----------
+ t
+(1 row)
+
+-- STRICT: a NULL argument yields NULL
+SELECT rowidtochar(NULL) IS NULL;
+ ?column? 
+----------
+ t
+(1 row)
+
