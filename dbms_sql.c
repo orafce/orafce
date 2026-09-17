@@ -22,6 +22,7 @@
 #include "builtins.h"
 
 #define MAX_CURSORS			100
+#define DBMS_SQL_MAX_BATCH_ROWS		1000
 
 /*
  * bind variable data
@@ -115,7 +116,7 @@ typedef struct
 	MemoryContext cursor_xact_cxt;
 	MemoryContext tuples_cxt;
 	MemoryContext result_cxt;	/* short life memory context */
-	HeapTuple	tuples[1000];
+	HeapTuple	tuples[DBMS_SQL_MAX_BATCH_ROWS];
 	TupleDesc	coltupdesc;
 	TupleDesc	tupdesc;
 	CastCacheData *casts;
@@ -711,6 +712,17 @@ get_col(CursorData *c, int position, bool append)
 {
 	ListCell   *lc;
 
+	/*
+	 * The position ends as the number of attributes of the tuple descriptor
+	 * built by execute(), so reject anything a tuple descriptor could not
+	 * hold instead of letting palloc() complain about the size.
+	 */
+	if (position < 1 || position > MaxTupleAttributeNumber)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("column position is out of range [1, %d]",
+						MaxTupleAttributeNumber)));
+
 	foreach(lc, c->columns)
 	{
 		ColumnData *col = (ColumnData *) lfirst(lc);
@@ -871,6 +883,17 @@ dbms_sql_define_array(PG_FUNCTION_ARGS)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("cnt is less or equal to zero")));
+
+	/*
+	 * fetch_rows() reads the rows into the fixed size c->tuples array, and it
+	 * rounds the SPI fetch size down to a multiple of batch_rows.  A larger
+	 * value would silently make that size zero, so fetch_rows() would report
+	 * end of data for a query that still has rows.
+	 */
+	if (rowcount > DBMS_SQL_MAX_BATCH_ROWS)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("cnt is greater than %d", DBMS_SQL_MAX_BATCH_ROWS)));
 
 	col->rowcount = (uint64) rowcount;
 
@@ -1359,9 +1382,14 @@ fetch_rows(CursorData *c, bool exact)
 		if (!exact)
 		{
 			if (c->array_columns)
-				batch_rows = (1000 / c->batch_rows) * c->batch_rows;
+			{
+				Assert(c->batch_rows >= 1 &&
+					   c->batch_rows <= DBMS_SQL_MAX_BATCH_ROWS);
+
+				batch_rows = (DBMS_SQL_MAX_BATCH_ROWS / c->batch_rows) * c->batch_rows;
+			}
 			else
-				batch_rows = 1000;
+				batch_rows = DBMS_SQL_MAX_BATCH_ROWS;
 		}
 		else
 			batch_rows = 2;
