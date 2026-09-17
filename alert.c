@@ -883,7 +883,7 @@ _dbms_alert_waitone(text *name, int timeout, FunctionCallInfo fcinfo)
 			if (NULL != find_event(name, false, &message_id))
 			{
 				str[0] = find_and_remove_message_item(message_id, sid,
-													  false, false, false, NULL, &event_name);
+													  false, false, true, NULL, &event_name);
 				if (event_name != NULL)
 				{
 					str[1] = "0";
