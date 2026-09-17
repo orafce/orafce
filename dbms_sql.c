@@ -1024,6 +1024,11 @@ execute(CursorData *c)
 						(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 						 errmsg("a array (bulk) variable can be used only when no column is defined")));
 
+			if (var->typoid == InvalidOid)
+				ereport(ERROR,
+						(errcode(ERRCODE_UNDEFINED_PARAMETER),
+						 errmsg("variable \"%s\" has not a value", var->refname)));
+
 			if (!var->isnull)
 			{
 				/*
@@ -1035,11 +1040,6 @@ execute(CursorData *c)
 			}
 			else
 				nulls[i] = 'n';
-
-			if (var->typoid == InvalidOid)
-				ereport(ERROR,
-						(errcode(ERRCODE_UNDEFINED_PARAMETER),
-						 errmsg("variable \"%s\" has not a value", var->refname)));
 
 			types[i] = var->typoid;
 			i += 1;
@@ -1986,23 +1986,46 @@ next_token(char *str, char **start, size_t *len, orafceTokenType *typ, char **se
 		return aux;
 	}
 
-	/* Pair comments */
-	if (*str == '/' && str[1] == '*')
+	if (*str == '-' && str[1] == '-')
 	{
 		*start = str;
 		str += 2;
-		while (*str)
-		{
-			if (*str == '*' && str[1] == '/')
-			{
-				str += 2;
-				break;
-			}
+		while (*str && *str != '\n' && *str != '\r')
 			str++;
+
+		*typ = TOKEN_COMMENT;
+		*len = (size_t) (str - *start);
+
+		return str;
+	}
+
+	/* PostgreSQL block comments can be nested. */
+	if (*str == '/' && str[1] == '*')
+	{
+		int			depth = 1;
+
+		*start = str;
+		str += 2;
+		while (*str && depth > 0)
+		{
+			if (*str == '/' && str[1] == '*')
+			{
+				depth++;
+				str += 2;
+			}
+			else if (*str == '*' && str[1] == '/')
+			{
+				depth--;
+				str += 2;
+			}
+			else
+				str++;
 		}
+
 		*typ = TOKEN_COMMENT;
 		Assert(str >= *start);
 		*len = (size_t) (str - *start);
+
 		return str;
 	}
 
