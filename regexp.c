@@ -49,6 +49,7 @@ typedef struct regexp_matches_ctx
 	text	   *orig_str;		/* data string in original TEXT form */
 	int			nmatches;		/* number of places where pattern matched */
 	int			npatterns;		/* number of capturing subpatterns */
+	int			nsubexprs;		/* number of capture groups in the pattern */
 	/* We store start char index and end+1 char index for each match */
 	/* so the number of entries in match_locs is nmatches * npatterns * 2 */
 	int		   *match_locs;		/* 0-based character indexes */
@@ -541,6 +542,8 @@ setup_regexp_matches(text *orig_str, text *pattern, pg_re_flags *re_flags,
 
 	cpattern = RE_compile_and_cache(pattern, cflags, collation);
 
+	matchctx->nsubexprs = cpattern->re_nsub;
+
 	/* do we want to remember subpatterns? */
 	if (use_subpatterns && cpattern->re_nsub > 0)
 	{
@@ -880,7 +883,7 @@ orafce_regexp_instr(PG_FUNCTION_ARGS)
 		PG_RETURN_INT32(0);
 
 	/* When subexpr exceeds number of subexpressions return 0 */
-	if (subexpr > matchctx->npatterns)
+	if (subexpr > matchctx->nsubexprs)
 		PG_RETURN_INT32(0);
 
 	/* Select the appropriate match position to return */
