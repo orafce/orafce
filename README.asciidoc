@@ -363,6 +363,13 @@ The `location` parameter can be either the directory name or the dictionary path
 The location is first interpreted and checked as a directory name.
 If not found (in 2nd column), then the location is interpreted and checked as a path.
 
+Joined paths are canonicalized and checked against the allowed directories.
+Parent-directory (`..`) references left by PostgreSQL's canonicalization are
+rejected. Use paths without parent references for consistent behavior across
+PostgreSQL versions. These checks are lexical, not a filesystem sandbox:
+authorized directories and symlinks within them must be controlled by trusted
+administrators.
+
 Functions from utl_file package (schema on Postgres) requires a access to
 table utl_file.utl_file_dir. This fact can be used to control what users
 can use these functions or not. Default setting is READ for PUBLIC. INSERT, UPDATE can
