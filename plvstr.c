@@ -87,7 +87,7 @@ if (VARSIZE_ANY_EXHDR(str) == 0) \
 		 errmsg("invalid parameter"), \
 		 errdetail(detail)));
 
-#if PG_VERSION_NUM < 140000
+#ifndef ORAFCE_HAVE_PG_MBLEN_RANGE
 
 int
 orafce_mblen_range(const char *mbstr, const char *end)
