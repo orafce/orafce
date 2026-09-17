@@ -263,6 +263,17 @@ orafce_float4_cmp(const void *_a, const void *_b)
 	}
 }
 
+static float8
+median_midpoint(float8 a, float8 b)
+{
+	float8		sum = a + b;
+
+	if (isinf(sum) && !isinf(a) && !isinf(b))
+		return a / 2.0 + b / 2.0;
+
+	return sum / 2.0;
+}
+
 Datum
 orafce_median4_finalfn(PG_FUNCTION_ARGS)
 {
@@ -287,7 +298,8 @@ orafce_median4_finalfn(PG_FUNCTION_ARGS)
 	if (lidx == hidx)
 		result = state->d.float4_values[lidx];
 	else
-		result = (state->d.float4_values[lidx] + state->d.float4_values[hidx]) / 2.0f;
+		result = median_midpoint(state->d.float4_values[lidx],
+								 state->d.float4_values[hidx]);
 
 	PG_RETURN_FLOAT4(result);
 }
@@ -368,7 +380,8 @@ orafce_median8_finalfn(PG_FUNCTION_ARGS)
 	if (lidx == hidx)
 		result = state->d.float8_values[lidx];
 	else
-		result = (state->d.float8_values[lidx] + state->d.float8_values[hidx]) / 2.0;
+		result = median_midpoint(state->d.float8_values[lidx],
+								 state->d.float8_values[hidx]);
 
 	PG_RETURN_FLOAT8(result);
 }
