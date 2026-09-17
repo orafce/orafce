@@ -51,6 +51,8 @@ extern bool orafce_emit_error_on_date_bug;
 extern char *orafce_sys_guid_source;
 
 extern void orafce_xact_cb(XactEvent event, void *arg);
+extern void orafce_subxact_cb(SubXactEvent event, SubTransactionId mySubid,
+							SubTransactionId parentSubid, void *arg);
 
 extern void orafce_umask_assign_hook(const char *newvalue, void *extra);
 extern bool orafce_umask_check_hook(char **newval, void **extra, GucSource source);
