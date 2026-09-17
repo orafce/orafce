@@ -1395,7 +1395,7 @@ plvstr_betwn_i(PG_FUNCTION_ARGS)
 		int			v_len = ora_mb_strlen1(string_in);
 
 		start_in = v_len + start_in + 1;
-		end_in = v_len + start_in + 1;
+		end_in = v_len + end_in + 1;
 	}
 
 	if (!inclusive)
