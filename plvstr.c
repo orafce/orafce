@@ -430,44 +430,22 @@ plvstr_is_prefix_text(PG_FUNCTION_ARGS)
 	text	   *str = PG_GETARG_TEXT_PP(0);
 	text	   *prefix = PG_GETARG_TEXT_PP(1);
 	bool		case_sens = PG_GETARG_BOOL(2);
-	bool		mb_encode;
+	int			str_len;
+	int			pref_len;
 
-	int			str_len = VARSIZE_ANY_EXHDR(str);
-	int			pref_len = VARSIZE_ANY_EXHDR(prefix);
-
-	int			i;
-	char	   *ap,
-			   *bp;
-
-	mb_encode = pg_database_encoding_max_length() > 1;
-
-	if (mb_encode && !case_sens)
+	if (!case_sens)
 	{
-		str = (text *) DatumGetPointer(DirectFunctionCall1(lower, PointerGetDatum(str)));
-		prefix = (text *) DatumGetPointer(DirectFunctionCall1(lower, PointerGetDatum(prefix)));
+		str = DatumGetTextP(DirectFunctionCall1Coll(lower, PG_GET_COLLATION(),
+												   PointerGetDatum(str)));
+		prefix = DatumGetTextP(DirectFunctionCall1Coll(lower, PG_GET_COLLATION(),
+													  PointerGetDatum(prefix)));
 	}
 
-	ap = VARDATA_ANY(str);
-	bp = VARDATA_ANY(prefix);
+	str_len = VARSIZE_ANY_EXHDR(str);
+	pref_len = VARSIZE_ANY_EXHDR(prefix);
 
-	for (i = 0; i < pref_len; i++)
-	{
-		if (i >= str_len)
-			break;
-
-		if (case_sens || mb_encode)
-		{
-			if (*ap++ != *bp++)
-				break;
-		}
-		else
-		{
-			if (pg_toupper((unsigned char) *ap++) != pg_toupper((unsigned char) *bp++))
-				break;
-		}
-	}
-
-	PG_RETURN_BOOL(i == pref_len);
+	PG_RETURN_BOOL(str_len >= pref_len &&
+				   memcmp(VARDATA_ANY(str), VARDATA_ANY(prefix), pref_len) == 0);
 }
 
 Datum
