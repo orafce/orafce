@@ -55,7 +55,23 @@ extern void orafce_xact_cb(XactEvent event, void *arg);
 extern void orafce_umask_assign_hook(const char *newvalue, void *extra);
 extern bool orafce_umask_check_hook(char **newval, void **extra, GucSource source);
 
-#if PG_VERSION_NUM < 140000
+/*
+ * pg_mblen_range() and pg_mblen_cstr() replace the now deprecated pg_mblen().
+ * They were not added by a major release - they appeared in the minor releases
+ * 14.21, 15.16, 16.12, 17.8 and 18.2 - so a plain "PG_VERSION_NUM < 140000"
+ * test would make orafce fail to build against every older minor of those
+ * branches.
+ */
+#if PG_VERSION_NUM >= 190000 || \
+	(PG_VERSION_NUM >= 180002 && PG_VERSION_NUM < 190000) || \
+	(PG_VERSION_NUM >= 170008 && PG_VERSION_NUM < 180000) || \
+	(PG_VERSION_NUM >= 160012 && PG_VERSION_NUM < 170000) || \
+	(PG_VERSION_NUM >= 150016 && PG_VERSION_NUM < 160000) || \
+	(PG_VERSION_NUM >= 140021 && PG_VERSION_NUM < 150000)
+#define ORAFCE_HAVE_PG_MBLEN_RANGE
+#endif
+
+#ifndef ORAFCE_HAVE_PG_MBLEN_RANGE
 
 #define pg_mblen_range(str,end)		orafce_mblen_range(str,end)
 #define pg_mblen_cstr(str)			pg_mblen(str)
