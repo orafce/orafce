@@ -1125,13 +1125,13 @@ dbms_alert_signal(PG_FUNCTION_ARGS)
 		{
 			last_signal = s;
 
-			if (text_eq(s->event, event) == 0)
+			if (text_eq(s->event, event))
 			{
 				if (!message && !s->message)
 					PG_RETURN_VOID();
 
 				if (message && s->message &&
-					text_eq(message, s->message) == 0)
+					text_eq(message, s->message))
 					PG_RETURN_VOID();
 			}
 
