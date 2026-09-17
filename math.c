@@ -139,9 +139,9 @@ orafce_reminder_numeric(PG_FUNCTION_ARGS)
 	float8		val2;
 
 	if (numeric_is_nan(num1))
-		duplicate_numeric(num1);
+		PG_RETURN_NUMERIC(duplicate_numeric(num1));
 	if (numeric_is_nan(num2))
-		duplicate_numeric(num2);
+		PG_RETURN_NUMERIC(duplicate_numeric(num2));
 
 	val2 = DatumGetFloat8(DirectFunctionCall1(numeric_float8, NumericGetDatum(num2)));
 
@@ -154,7 +154,7 @@ orafce_reminder_numeric(PG_FUNCTION_ARGS)
 		PG_RETURN_NUMERIC(get_numeric_in("NaN"));
 
 	if (orafce_numeric_is_inf(num2))
-		duplicate_numeric(num1);
+		PG_RETURN_NUMERIC(duplicate_numeric(num1));
 
 #if PG_VERSION_NUM >= 190000
 
