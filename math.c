@@ -16,6 +16,38 @@ PG_FUNCTION_INFO_V1(orafce_reminder_int);
 PG_FUNCTION_INFO_V1(orafce_reminder_bigint);
 PG_FUNCTION_INFO_V1(orafce_reminder_numeric);
 
+static int64
+integer_remainder(int64 dividend, int64 divisor)
+{
+	int64		result;
+	uint64		divisor_magnitude;
+	uint64		remainder_magnitude;
+
+	if (divisor == 0)
+		ereport(ERROR,
+				(errcode(ERRCODE_DIVISION_BY_ZERO),
+				 errmsg("division by zero")));
+
+	if (divisor == -1)
+		return 0;
+
+	result = dividend % divisor;
+
+	/* Unsigned magnitudes also represent the magnitude of INT64_MIN. */
+	divisor_magnitude = divisor < 0 ? -(uint64) divisor : (uint64) divisor;
+	remainder_magnitude = result < 0 ? -(uint64) result : (uint64) result;
+
+	if (remainder_magnitude >= divisor_magnitude - remainder_magnitude)
+	{
+		if ((result > 0) == (divisor > 0))
+			result -= divisor;
+		else
+			result += divisor;
+	}
+
+	return result;
+}
+
 /*
  * CREATE OR REPLACE FUNCTION oracle.remainder(smallint, smallint)
  * RETURNS smallint
@@ -23,20 +55,7 @@ PG_FUNCTION_INFO_V1(orafce_reminder_numeric);
 Datum
 orafce_reminder_smallint(PG_FUNCTION_ARGS)
 {
-	int16		arg1 = PG_GETARG_INT16(0);
-	int16		arg2 = PG_GETARG_INT16(1);
-
-	if (arg2 == 0)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_DIVISION_BY_ZERO),
-				 errmsg("division by zero")));
-	}
-
-	if (arg2 == -1)
-		PG_RETURN_INT16(0);
-
-	PG_RETURN_INT16(arg1 - ((int16) round(((double) arg1) / ((double) arg2)) * arg2));
+	PG_RETURN_INT16(integer_remainder(PG_GETARG_INT16(0), PG_GETARG_INT16(1)));
 }
 
 /*
@@ -46,20 +65,7 @@ orafce_reminder_smallint(PG_FUNCTION_ARGS)
 Datum
 orafce_reminder_int(PG_FUNCTION_ARGS)
 {
-	int32		arg1 = PG_GETARG_INT32(0);
-	int32		arg2 = PG_GETARG_INT32(1);
-
-	if (arg2 == 0)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_DIVISION_BY_ZERO),
-				 errmsg("division by zero")));
-	}
-
-	if (arg2 == -1)
-		PG_RETURN_INT32(0);
-
-	PG_RETURN_INT32(arg1 - ((int32) round(((double) arg1) / ((double) arg2)) * arg2));
+	PG_RETURN_INT32(integer_remainder(PG_GETARG_INT32(0), PG_GETARG_INT32(1)));
 }
 
 /*
@@ -69,20 +75,7 @@ orafce_reminder_int(PG_FUNCTION_ARGS)
 Datum
 orafce_reminder_bigint(PG_FUNCTION_ARGS)
 {
-	int64		arg1 = PG_GETARG_INT64(0);
-	int64		arg2 = PG_GETARG_INT64(1);
-
-	if (arg2 == 0)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_DIVISION_BY_ZERO),
-				 errmsg("division by zero")));
-	}
-
-	if (arg2 == -1)
-		PG_RETURN_INT32(0);
-
-	PG_RETURN_INT64(arg1 - ((int64) round(((long double) arg1) / ((long double) arg2)) * arg2));
+	PG_RETURN_INT64(integer_remainder(PG_GETARG_INT64(0), PG_GETARG_INT64(1)));
 }
 
 /*
