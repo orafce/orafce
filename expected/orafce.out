@@ -51,16 +51,16 @@ SELECT add_months (date '2008-01-31', -12);
  2007-01-31
 (1 row)
 
-SELECT add_months (date '2008-01-31', 95903);
- add_months 
-------------
- 9999-12-31
+SELECT add_months (date '2008-01-31', 95903), (date '2008-01-31')::timestamp + interval '95903 months' AS expr;
+ add_months |        expr         
+------------+---------------------
+ 9999-12-31 | 9999-12-31 00:00:00
 (1 row)
 
-SELECT add_months (date '2008-01-31', -80640);
-  add_months   
----------------
- 4712-01-31 BC
+SELECT add_months (date '2008-01-31', -80640), (date '2008-01-31')::timestamp - interval '80640 months' AS expr;
+  add_months   |          expr          
+---------------+------------------------
+ 4713-01-31 BC | 4713-01-31 00:00:00 BC
 (1 row)
 
 SELECT add_months (date '03-21-2008',3);
@@ -109,6 +109,12 @@ SELECT add_months(date '080321',3);
  add_months 
 ------------
  2008-06-21
+(1 row)
+
+SELECT add_months(date '0001-01-31', -1);
+  add_months   
+---------------
+ 0001-12-31 BC
 (1 row)
 
 SELECT add_months ('2003-08-01 10:12:21', 3);
@@ -168,7 +174,7 @@ SELECT add_months ('2008-01-31 12:12:12', 95903);
 SELECT add_months ('2008-01-31 11:32:12', -80640);
        add_months       
 ------------------------
- 4712-01-31 11:32:12 BC
+ 4713-01-31 11:32:12 BC
 (1 row)
 
 SELECT add_months ('03-21-2008 08:12:22',3);
