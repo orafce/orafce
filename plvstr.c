@@ -1477,32 +1477,102 @@ plvstr_betwn_c(PG_FUNCTION_ARGS)
 									 v_end - v_start + 1));
 }
 
+static bytea *
+empty_bytea(void)
+{
+	bytea	   *result;
+
+	result = palloc(VARHDRSZ);
+	SET_VARSIZE(result, VARHDRSZ);
+
+	return result;
+}
+
 /*
  * len < 0 means "length is not specified".
+ *
+ * The result is typed oracle.varchar2, which is binary coercible to text, so
+ * it must be valid in the database encoding.  A byte range can start or end in
+ * the middle of a multibyte character, and returning those bytes would let an
+ * invalid string escape into the text world (it could be stored in a table and
+ * would then break every text function applied to it).  Characters that are
+ * only partially covered by the requested range are therefore dropped.
  */
 static bytea *
 ora_substrb(Datum str, int start, int len)
 {
+	bytea	   *t;
+	char	   *data;
+	int			n;
+	int64		s;				/* 1 based position of the first byte */
+	int64		e;				/* 1 based position after the last byte */
+
+	t = DatumGetByteaPP(str);
+	data = VARDATA_ANY(t);
+	n = VARSIZE_ANY_EXHDR(t);
+
 	if (start == 0)
-		start = 1;				/* 0 is interpreted as 1 */
+		s = 1;					/* 0 is interpreted as 1 */
 	else if (start < 0)
 	{
-		bytea	   *t = DatumGetByteaPP(str);
-		int			n = VARSIZE_ANY_EXHDR(t);
+		s = (int64) n + start + 1;
+		if (s <= 0)
+			return empty_bytea();
+	}
+	else
+		s = start;
 
-		start = n + start + 1;
-		if (start <= 0)
-			return DatumGetByteaPP(DirectFunctionCall1(byteain, CStringGetDatum("")));
+	e = len < 0 ? (int64) n + 1 : s + len;
 
-		str = PointerGetDatum(t);	/* save detoasted text */
+	if (s < 1)
+		s = 1;
+	if (e > (int64) n + 1)
+		e = (int64) n + 1;
+
+	if (e <= s)
+		return empty_bytea();
+
+	if (pg_database_encoding_max_length() > 1)
+	{
+		char	   *p = data;
+		char	   *endp = data + n;
+		int64		pos = 1;
+		int64		first = 0;
+		int64		last = 0;
+		bool		found = false;
+
+		/* keep only the characters that fit completely into [s, e) */
+		while (p < endp && pos < e)
+		{
+			int			clen = pg_mblen_range(p, endp);
+
+			if (pos >= s && pos + clen <= e)
+			{
+				if (!found)
+				{
+					first = pos;
+					found = true;
+				}
+				last = pos + clen - 1;
+			}
+			else if (found)
+				break;
+
+			p += clen;
+			pos += clen;
+		}
+
+		if (!found)
+			return empty_bytea();
+
+		s = first;
+		e = last + 1;
 	}
 
-	if (len < 0)
-		return DatumGetByteaP(DirectFunctionCall2(bytea_substr_no_len,
-												  str, Int32GetDatum(start)));
-	else
-		return DatumGetByteaP(DirectFunctionCall3(bytea_substr,
-												  str, Int32GetDatum(start), Int32GetDatum(len)));
+	return DatumGetByteaP(DirectFunctionCall3(bytea_substr,
+											  PointerGetDatum(t),
+											  Int32GetDatum((int32) s),
+											  Int32GetDatum((int32) (e - s))));
 }
 
 Datum
