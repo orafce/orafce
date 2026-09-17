@@ -4960,3 +4960,103 @@ select oracle.months_between(to_timestamp('2024-10-01 12:34:56', 'yyyy-mm-dd hh2
                   1 |   1.03225806451613 |   1.04916554659498
 (1 row)
 
+-- one character, three bytes in utf8.
+select octet_length('€'::text) as euro_bytes, length('€'::text) as euro_chars;
+ euro_bytes | euro_chars 
+------------+------------
+          3 |          1
+(1 row)
+
+-- taking one byte of it yields a value that is not valid text.
+select octet_length(oracle.substrb('€'::oracle.varchar2, 1, 1)::text) as sliced_bytes;
+ sliced_bytes 
+--------------
+            1
+(1 row)
+
+-- ... and every text operation on it fails.
+select length(oracle.substrb('€'::oracle.varchar2, 1, 1)::text) as should_not_error;
+ should_not_error 
+------------------
+                1
+(1 row)
+
+select upper(oracle.substrb('€'::oracle.varchar2, 1, 1)::text) as should_not_error;
+ERROR:  invalid byte sequence for encoding "UTF8": 0xe2
+-- the broken value can even be stored, so it outlives the session.
+create temp table substrb_repro (a oracle.varchar2);
+insert into substrb_repro
+select oracle.substrb('€'::oracle.varchar2, 1, 1);
+select octet_length(a::text) as stored_bytes from substrb_repro;
+ stored_bytes 
+--------------
+            1
+(1 row)
+
+select length(a::text)       as should_not_error from substrb_repro;
+ should_not_error 
+------------------
+                1
+(1 row)
+
+-- control: an ordinary out-of-range start returns the empty string
+select quote_literal(plvstr.rvrs('abcde', -6, -6)) as start_minus_6;
+ start_minus_6 
+---------------
+ ''
+(1 row)
+
+-- should to return empty string
+select quote_literal(plvstr.rvrs('abcde', -2147483648, -2147483648)) as start_int32_min;
+ start_int32_min 
+-----------------
+ ''
+(1 row)
+
+-- the two-argument form reaches the same code path
+select quote_literal(plvstr.rvrs('abcde', -2147483648)) as start_int32_min_2arg;
+ start_int32_min_2arg 
+----------------------
+ ''
+(1 row)
+
+-- and so does an empty input string
+select quote_literal(plvstr.rvrs('', -2147483648, -2147483648)) as empty_input;
+ empty_input 
+-------------
+ ''
+(1 row)
+
+-- (a) a finite value modulo infinity is the value itself
+select oracle.remainder(1::numeric, 'infinity'::numeric)  as remainder_says,  -- nan (wrong)
+       mod(1::numeric, 'infinity'::numeric)               as builtin_mod;     -- 1   (right)
+ERROR:  invalid input syntax for type numeric: "infinity"
+LINE 1: select oracle.remainder(1::numeric, 'infinity'::numeric)  as...
+                                            ^
+select oracle.remainder(5::numeric, '-infinity'::numeric) as remainder_neg_inf,  -- nan (wrong)
+       mod(5::numeric, '-infinity'::numeric)              as builtin_mod;        -- 5
+ERROR:  invalid input syntax for type numeric: "-infinity"
+LINE 1: select oracle.remainder(5::numeric, '-infinity'::numeric) as...
+                                            ^
+-- (b) nan must win over the division-by-zero check
+select mod('nan'::numeric, 0::numeric) as builtin_mod_nan_zero;   -- nan
+ builtin_mod_nan_zero 
+----------------------
+                  NaN
+(1 row)
+
+select oracle.remainder('nan'::numeric, 0::numeric) as should_be_nan;  -- error
+ should_be_nan 
+---------------
+           NaN
+(1 row)
+
+-- (c) nan as the second argument only survives by accident: it reaches the
+--     division-by-zero test too, and passes it because "nan == 0" is false.
+select oracle.remainder(1::numeric, 'nan'::numeric) as one_mod_nan,  -- nan, by luck
+       mod(1::numeric, 'nan'::numeric)              as builtin_mod;  -- nan
+ one_mod_nan | builtin_mod 
+-------------+-------------
+         NaN |         NaN
+(1 row)
+
