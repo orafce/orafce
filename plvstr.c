@@ -673,7 +673,13 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 	if ((start > end && start >= 0) || (start < end && start < 0))
 		PARAMETER_ERROR("Second parameter is bigger than third.");
 
-	if (abs(start) > len || end == 0)
+	/*
+	 * Reject an out of range start.  Do not use abs() here: abs(PG_INT32_MIN)
+	 * is undefined and in practice returns PG_INT32_MIN again, which would
+	 * pass the test and let the negative branch below compute a range far
+	 * outside the string.
+	 */
+	if (start > len || start < -len || end == 0)
 		PG_RETURN_TEXT_P(empty_string());
 
 	if (start < 0)
@@ -703,7 +709,7 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 
 	if (mb_encode)
 	{
-		int			max_size;
+		int64		max_size;
 		int			cur_size;
 		char	   *p;
 		int			j;
@@ -711,10 +717,11 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 
 		fz_size = VARSIZE_ANY_EXHDR(str);
 
-		if ((max_size = (new_len * pg_database_encoding_max_length())) > fz_size)
+		/* the product can exceed int for a long string in a wide encoding */
+		if ((max_size = (int64) new_len * pg_database_encoding_max_length()) > fz_size)
 			result = palloc(fz_size + VARHDRSZ);
 		else
-			result = palloc(max_size + VARHDRSZ);
+			result = palloc((int) max_size + VARHDRSZ);
 		data = (char *) VARDATA(result);
 
 		cur_size = 0;
