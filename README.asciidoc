@@ -930,6 +930,10 @@ oracle.replace_null_strings([ 'on' | 'true' | 'warning' | 'error' ])
 Optional string argument is used as indicator so these functions should to
 raise warning (possibly error) when row was changed inside these functions.
 
+Replacements preserve the column type's representation, type modifier, and
+domain constraints. A replacement forbidden by a domain raises the normal
+constraint error rather than storing an invalid value.
+
 ----
 CREATE TABLE test(id serial, name varchar, surname varchar);
 CREATE TRIGGER test_trg

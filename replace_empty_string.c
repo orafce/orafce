@@ -97,7 +97,10 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 	bool	   *nulls = NULL;
 	Oid			prev_typid = InvalidOid;
 	bool		is_string = false;
+	bool		is_text = false;
+	bool		is_domain = false;
 	bool		is_bpchar = false;
+	Oid			output_func = InvalidOid;
 	int			nresetcols = 0;
 	int			attnum;
 	bool		raise_warning = false;
@@ -120,6 +123,7 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 
 		/* simple cache - lot of time columns with same type is side by side */
 		typid = TupleDescAttr(tupdesc, attnum - 1)->atttypid;
+
 		if (typid != prev_typid)
 		{
 			TYPCATEGORY category;
@@ -130,7 +134,16 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 			get_type_category_preferred(base_typid, &category, &ispreferred);
 
 			is_string = (category == TYPCATEGORY_STRING);
+			is_text = IsBinaryCoercible(base_typid, TEXTOID);
+			is_domain = (base_typid != typid);
 			is_bpchar = (base_typid == BPCHAROID);
+
+			if (is_string && !(is_text || is_bpchar))
+			{
+				bool		typisvarlena;
+
+				getTypeOutputInfo(typid, &output_func, &typisvarlena);
+			}
 			prev_typid = typid;
 		}
 
@@ -138,35 +151,56 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 		{
 			Datum		value;
 			bool		isnull;
+			bool		is_emptystr;
 
 			value = SPI_getbinval(rettuple, tupdesc, attnum, &isnull);
+
 			if (!isnull)
 			{
-				text	   *txt = DatumGetTextP(value);
-				int32		len;
-				bool		is_emptystr;
-
-				len = VARSIZE_ANY_EXHDR(txt);
-				is_emptystr = (len == 0);
-
-				if (is_bpchar && !is_emptystr)
+				/*
+				 * Most common types of S category are varchar and
+				 * text - other types are mostly exception (in custom
+				 * queries) today.
+				 */
+				if (is_text)
 				{
-					char	   *s = VARDATA_ANY(txt);
-					int			i;
+					text	   *str = DatumGetTextPP(value);
+
+					is_emptystr = (VARSIZE_ANY_EXHDR(str) == 0);
+				}
+				else if (is_bpchar)
+				{
+					BpChar	   *str = DatumGetBpCharPP(value);
+					char	   *ptr;
 
 					is_emptystr = true;
 
-					for (i = 0; i < len; i++)
-						if (s[i] != ' ')
+					for (ptr = VARDATA_ANY(str);
+						 ptr < VARDATA_ANY(str) + VARSIZE_ANY_EXHDR(str);
+						 ptr++)
+					{
+						if (*ptr != ' ')
 						{
 							is_emptystr = false;
 							break;
 						}
+					}
+				}
+				else
+				{
+					char	   *str = OidOutputFunctionCall(output_func, value);
+
+					is_emptystr = *str == '\0';
+
+					pfree(str);
 				}
 
 				/* is it empty string (has zero length */
 				if (is_emptystr)
 				{
+					if (is_domain)
+						domain_check((Datum) 0, true, typid, NULL, CurrentMemoryContext);
+
 					if (!resetcols)
 					{
 						/* lazy allocation of dynamic memory */
@@ -227,7 +261,8 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 	bool	   *nulls = NULL;
 	Oid			prev_typid = InvalidOid;
 	bool		is_string = false;
-	bool		is_bpchar = false;
+	Oid			input_func = InvalidOid;
+	Oid			typio_param = InvalidOid;
 	int			nresetcols = 0;
 	int			attnum;
 	bool		raise_warning = false;
@@ -268,7 +303,8 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 			get_type_category_preferred(base_typid, &category, &ispreferred);
 
 			is_string = (category == TYPCATEGORY_STRING);
-			is_bpchar = base_typid == BPCHAROID;
+			if (is_string)
+				getTypeInputInfo(typid, &input_func, &typio_param);
 			prev_typid = typid;
 		}
 
@@ -288,21 +324,7 @@ orafce_replace_null_strings(PG_FUNCTION_ARGS)
 				}
 
 				resetcols[nresetcols] = attnum;
-
-				if (is_bpchar && typmod != -1)
-				{
-					BpChar	   *result;
-
-					/* code from bpcharin */
-					result = (BpChar *) palloc(typmod);
-					SET_VARSIZE(result, typmod);
-					memset(VARDATA(result), ' ', typmod - VARHDRSZ);
-
-					values[nresetcols] = PointerGetDatum(result);
-				}
-				else
-					values[nresetcols] = PointerGetDatum(cstring_to_text_with_len("", 0));
-
+				values[nresetcols] = OidInputFunctionCall(input_func, "", typio_param, typmod);
 				nulls[nresetcols++] = false;
 
 				if (raise_warning)
