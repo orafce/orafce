@@ -156,12 +156,12 @@ appendStringInfoText(StringInfo str, const text *t)
  *
  * Append replace_text to str, substituting regexp back references for
  * \n escapes.  start_ptr is the start of the match in the source string,
- * at logical character position data_pos.
+ * at logical character position data_pos; end_ptr is the end of that string.
  */
 static void
 appendStringInfoRegexpSubstr(StringInfo str, text *replace_text,
 							 regmatch_t *pmatch,
-							 char *start_ptr, int data_pos)
+							 char *start_ptr, int data_pos, const char *end_ptr)
 {
 	const char *p = VARDATA_ANY(replace_text);
 	const char *p_end = p + VARSIZE_ANY_EXHDR(replace_text);
@@ -238,8 +238,8 @@ appendStringInfoRegexpSubstr(StringInfo str, text *replace_text,
 
 			Assert(so >= data_pos);
 			chunk_start = start_ptr;
-			chunk_start += charlen_to_bytelen(chunk_start, so - data_pos, p_end);
-			chunk_len = charlen_to_bytelen(chunk_start, eo - so, p_end);
+			chunk_start += charlen_to_bytelen(chunk_start, so - data_pos, end_ptr);
+			chunk_len = charlen_to_bytelen(chunk_start, eo - so, end_ptr);
 			appendBinaryStringInfo(str, chunk_start, chunk_len);
 		}
 	}
@@ -380,7 +380,7 @@ orafce_replace_text_regexp(text *src_text, text *pattern_text,
 		 */
 		if (escape_status > 0)
 			appendStringInfoRegexpSubstr(&buf, replace_text, pmatch,
-										 start_ptr, data_pos);
+										 start_ptr, data_pos, end_ptr);
 		else
 			appendStringInfoText(&buf, replace_text);
 
