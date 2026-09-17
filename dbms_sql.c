@@ -1594,6 +1594,8 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 
 	Assert(c->executed);
 
+	*isnull = true;
+
 	if (last_row_count == 0)
 		ereport(ERROR,
 				(errcode(ERRCODE_NO_DATA_FOUND),
@@ -1804,6 +1806,9 @@ dbms_sql_column_value_f(PG_FUNCTION_ARGS)
 	value = column_value(c, pos, targetTypeId, &isnull, true);
 
 	SPI_finish();
+
+	if (isnull)
+		PG_RETURN_NULL();
 
 	PG_RETURN_DATUM(value);
 }

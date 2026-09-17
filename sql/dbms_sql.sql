@@ -330,3 +330,39 @@ end;
 $$;
 
 drop table test;
+
+do $$
+declare
+  c int;
+  v text;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'select null::text');
+  call dbms_sql.define_column(c, 1, null::text);
+  perform dbms_sql.execute_and_fetch(c, false);
+
+  -- crashes here before the fix
+  v := dbms_sql.column_value_f(c, 1, null::text);
+
+  raise notice 'v is null = %', v is null;
+  call dbms_sql.close_cursor(c);
+end
+$$;
+
+-- the same defect is reachable through the procedure form of column_value().
+do $$
+declare
+  c int;
+  v text;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'select null::text');
+  call dbms_sql.define_column(c, 1, null::text);
+  perform dbms_sql.execute_and_fetch(c, false);
+
+  call dbms_sql.column_value(c, 1, v);
+
+  raise notice 'v is null = %', v is null;
+  call dbms_sql.close_cursor(c);
+end
+$$;
