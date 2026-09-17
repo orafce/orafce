@@ -315,7 +315,13 @@ dbms_random_value_range(PG_FUNCTION_ARGS)
 {
 	float8		low = PG_GETARG_FLOAT8(0);
 	float8		high = PG_GETARG_FLOAT8(1);
+	float8		fraction;
 	float8		result;
+
+	if (isnan(low) || isinf(low) || isnan(high) || isinf(high))
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("random range bounds must be finite")));
 
 	if (low > high)
 	{
@@ -332,7 +338,15 @@ dbms_random_value_range(PG_FUNCTION_ARGS)
 	 * customer's regress tests. To minimize impact on regress tests, we use
 	 * same formula for this case too.
 	 */
-	result = ((double) rand() / ((double) RAND_MAX + 1)) * (high - low) + low;
+	fraction = (double) rand() / ((double) RAND_MAX + 1);
+	if (isinf(high - low))
+		result = fraction * high + (1.0 - fraction) * low;
+	else
+		result = fraction * (high - low) + low;
+
+	/* Rounding can reach the excluded endpoint, even for adjacent floats. */
+	if (low < high && result >= high)
+		result = nextafter(high, low);
 
 	PG_RETURN_FLOAT8(result);
 }

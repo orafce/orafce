@@ -802,6 +802,10 @@ This unit contains some assert functions.
 * dbms_random.value() - Returns a random number from [0.0 - 1.0)
 * dbms_random.value(low double precision, high double precision) - Returns a random number from [low - high)
 
+Range bounds must be finite. Reversed bounds are swapped; equal bounds return
+that value while still advancing the generator. The upper bound remains
+exclusive even when the bounds are adjacent floating-point values.
+
 == Others functions
 
 This module contains implementation of functions: concat, nvl, nvl2, lnnvl, decode, greatest, least,
