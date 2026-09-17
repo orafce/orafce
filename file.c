@@ -1160,6 +1160,10 @@ get_safe_path(text *location_or_dirname, text *filename)
 
 	canonicalize_path(abs_path);
 
+	/* Older PostgreSQL versions leave internal parent references untouched. */
+	if (path_contains_parent_reference(abs_path))
+		CUSTOM_EXCEPTION(INVALID_PATH, "Parent directory references are not allowed.");
+
 	/* check locality in canonizalized form of path */
 	check_secure_locality(abs_path);
 
