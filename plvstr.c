@@ -717,7 +717,13 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 
 		fz_size = VARSIZE_ANY_EXHDR(str);
 
-		/* the product can exceed int for a long string in a wide encoding */
+		/*
+		 * The result cannot be longer than original string and cannot be
+		 * longer than new_len * encoding_max_length, take smaller value.
+		 *
+		 * the product can exceed int for a long string in a wide encoding,
+		 * so use int64.
+		 */
 		if ((max_size = (int64) new_len * pg_database_encoding_max_length()) > fz_size)
 			result = palloc(fz_size + VARHDRSZ);
 		else
