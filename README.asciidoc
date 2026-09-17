@@ -538,6 +538,10 @@ There are some differences compared to Oracle, however:
 
 Another means of inter-process communication.
 
+Signals are delivered only when the signaling transaction commits. Signals
+queued after a savepoint are discarded if that savepoint is rolled back;
+releasing a savepoint defers delivery until the outer transaction commits.
+
 ----
 -- Session A
 select dbms_alert.register('boo');

@@ -51,6 +51,7 @@ typedef struct alert_signal_data
 {
 	text	   *event;
 	text	   *message;
+	SubTransactionId subid;
 	struct alert_signal_data *next;
 } alert_signal_data;
 
@@ -1058,6 +1059,47 @@ orafce_xact_cb(XactEvent event, void *arg)
 			ConditionVariableBroadcast(alert_cv);
 		}
 	}
+
+	if (event == XACT_EVENT_COMMIT || event == XACT_EVENT_ABORT ||
+		event == XACT_EVENT_PREPARE)
+	{
+		signals = NULL;
+		local_buf_cxt = NULL;
+		local_buf_lxid = InvalidTransactionId;
+	}
+}
+
+void
+orafce_subxact_cb(SubXactEvent event, SubTransactionId mySubid,
+				 SubTransactionId parentSubid, void *arg)
+{
+	alert_signal_data **link = &signals;
+
+	if (local_buf_lxid != CURRENT_LXID ||
+		(event != SUBXACT_EVENT_COMMIT_SUB && event != SUBXACT_EVENT_ABORT_SUB))
+		return;
+
+	while (*link)
+	{
+		alert_signal_data *signal = *link;
+
+		if (signal->subid == mySubid)
+		{
+			if (event == SUBXACT_EVENT_ABORT_SUB)
+			{
+				*link = signal->next;
+				pfree(signal->event);
+				if (signal->message)
+					pfree(signal->message);
+				pfree(signal);
+				continue;
+			}
+
+			signal->subid = parentSubid;
+		}
+
+		link = &signal->next;
+	}
 }
 
 static bool
@@ -1095,6 +1137,7 @@ dbms_alert_signal(PG_FUNCTION_ARGS)
 	text	   *message;
 	alert_signal_data *new_signal;
 	alert_signal_data *last_signal = NULL;
+	SubTransactionId subid = GetCurrentSubTransactionId();
 	MemoryContext oldcxt;
 
 	if (PG_ARGISNULL(0))
@@ -1125,7 +1168,8 @@ dbms_alert_signal(PG_FUNCTION_ARGS)
 		{
 			last_signal = s;
 
-			if (text_eq(s->event, event))
+			/* A signal in another subtransaction can still be rolled back. */
+			if (s->subid == subid && text_eq(s->event, event))
 			{
 				if (!message && !s->message)
 					PG_RETURN_VOID();
@@ -1144,6 +1188,7 @@ dbms_alert_signal(PG_FUNCTION_ARGS)
 	new_signal = palloc(sizeof(alert_signal_data));
 	new_signal->event = TextPCopy(event);
 	new_signal->message = message ? TextPCopy(message) : NULL;
+	new_signal->subid = subid;
 	new_signal->next = NULL;
 
 	MemoryContextSwitchTo(oldcxt);

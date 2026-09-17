@@ -187,6 +187,7 @@ _PG_init(void)
 	EmitWarningsOnPlaceholders("orafce");
 
 	RegisterXactCallback(orafce_xact_cb, NULL);
+	RegisterSubXactCallback(orafce_subxact_cb, NULL);
 
 	orafce_initialized = true;
 }
