@@ -477,23 +477,46 @@ add_months(PG_FUNCTION_ARGS)
 				d;
 	int			ndays;
 	DateADT		result;
-	div_t		v;
+	int64		months;
 	bool		is_last_day;
+
+	if (DATE_NOT_FINITE(day))
+		PG_RETURN_DATEADT(day);
 
 	j2date(day + POSTGRES_EPOCH_JDATE, &y, &m, &d);
 	is_last_day = (d == days_of_month(y, m));
 
-	v = div(y * 12 + m - 1 + n, 12);
-	y = v.quot;
-	if (y < 0)
-		y += 1;					/* offset because of year 0 */
-	m = v.rem + 1;
+	/* j2date uses astronomical years; floor division also handles BC months. */
+	months = (int64) y * 12 + m - 1 + n;
+	y = months / 12;
+	m = months % 12;
+
+	/*
+	 * days_of_month requires m in [1..12]. So when
+	 * m is negative, normalize m,n
+	 */
+	if (m < 0)
+	{
+		m += 12;
+		y--;
+	}
+	m++;
 
 	ndays = days_of_month(y, m);
 	if (is_last_day || d > ndays)
 		d = ndays;
 
+	if (!IS_VALID_JULIAN(y, m, d))
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("date out of range")));
+
 	result = date2j(y, m, d) - POSTGRES_EPOCH_JDATE;
+
+	if (!IS_VALID_DATE(result))
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("date out of range")));
 
 	PG_RETURN_DATEADT(result);
 }
