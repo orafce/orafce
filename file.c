@@ -1320,6 +1320,7 @@ utl_file_fcopy(PG_FUNCTION_ARGS)
 	char	   *dstpath;
 	int			start_line;
 	int			end_line;
+	int			result;
 	FILE	   *srcfile;
 	FILE	   *dstfile;
 
@@ -1400,11 +1401,27 @@ utl_file_fcopy(PG_FUNCTION_ARGS)
 		return (Datum) 0;		/* keep cppcheck quiet */
 	}
 
-	if (copy_text_file(srcfile, dstfile, start_line, end_line))
-		IO_EXCEPTION();
+	/*
+	 * copy_text_file can raise an error, and CHECK_FOR_INTERRUPTS in its loops
+	 * raises one whenever the query is cancelled.  Close both streams in any
+	 * case, the session has no other way to release them.
+	 */
+	PG_TRY();
+	{
+		result = copy_text_file(srcfile, dstfile, start_line, end_line);
+	}
+	PG_FINALLY();
+	{
+		fclose(srcfile);
+		fclose(dstfile);
+	}
+	PG_END_TRY();
 
-	fclose(srcfile);
-	fclose(dstfile);
+	if (result != 0)
+	{
+		errno = result;
+		IO_EXCEPTION();
+	}
 
 	PG_RETURN_VOID();
 }
