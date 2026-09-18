@@ -4352,6 +4352,42 @@ SELECT oracle.lpad('x', 10, U&'\0301');
  
 (1 row)
 
+SELECT oracle.rpad('ab', 5, E'\n') = '';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT oracle.lpad('ab', 5, E'\n') = '';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT oracle.rpad('ab', 5, E'\t*') = E'ab\t*\t*\t*';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT oracle.lpad('ab', 5, E'\t*') = E'\t*\t*\t*ab';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT oracle.rpad(E'\n\nab', 5, '*') = E'\n\nab***';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT oracle.rpad('ab', 5, '*') = 'ab***' AND oracle.lpad('ab', 5, '*') = '***ab';
+ ?column? 
+----------
+ t
+(1 row)
+
 --
 -- test TRIM family of functions
 --

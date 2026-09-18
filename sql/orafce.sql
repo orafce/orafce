@@ -972,6 +972,13 @@ SELECT '|' || oracle.rpad('あbcd'::nvarchar2(5), 10, 'xい'::nvarchar2(5)) || '
 SELECT oracle.rpad('x', 10, U&'\0301');
 SELECT oracle.lpad('x', 10, U&'\0301');
 
+SELECT oracle.rpad('ab', 5, E'\n') = '';
+SELECT oracle.lpad('ab', 5, E'\n') = '';
+SELECT oracle.rpad('ab', 5, E'\t*') = E'ab\t*\t*\t*';
+SELECT oracle.lpad('ab', 5, E'\t*') = E'\t*\t*\t*ab';
+SELECT oracle.rpad(E'\n\nab', 5, '*') = E'\n\nab***';
+SELECT oracle.rpad('ab', 5, '*') = 'ab***' AND oracle.lpad('ab', 5, '*') = '***ab';
+
 --
 -- test TRIM family of functions
 --

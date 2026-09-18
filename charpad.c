@@ -33,6 +33,21 @@ PG_FUNCTION_INFO_V1(orafce_lpad);
 PG_FUNCTION_INFO_V1(orafce_rpad);
 
 /*
+ * pg_dsplen() returns -1 for characters that cannot be displayed, like the
+ * ASCII control characters.  A negative width would raise the remaining width
+ * of the padding loops below instead of lowering it, so that these loops would
+ * run until the counters overflow.  Handle such characters like the characters
+ * of zero display width, which the loops already handle safely.
+ */
+static int
+orafce_dsplen(const char *ptr)
+{
+	int			dsplen = pg_dsplen(ptr);
+
+	return dsplen > 0 ? dsplen : 0;
+}
+
+/*
  * Note - when third argument of rpad function contains some
  * combine characters, then these functions returned different
  * results than Oracle and Postgres. Oracle has known unfixed
@@ -121,7 +136,7 @@ orafce_lpad(PG_FUNCTION_ARGS)
 
 		/* byte-length and display length per character of string1 */
 		mlen = pg_mblen_range(ptr1, ptr1end);
-		dsplen = pg_dsplen(ptr1);
+		dsplen = orafce_dsplen(ptr1);
 
 		/* accumulate display length of string1 */
 		s1_width += dsplen;
@@ -188,7 +203,7 @@ orafce_lpad(PG_FUNCTION_ARGS)
 
 			/* byte-length and display length per character of string2 */
 			mlen = pg_mblen_range(ptr2, ptr2end);
-			dsplen = pg_dsplen(ptr2);
+			dsplen = orafce_dsplen(ptr2);
 
 			/*
 			 * output_width can not fit this character of string2, so discard
@@ -378,7 +393,7 @@ orafce_rpad(PG_FUNCTION_ARGS)
 
 		/* byte-length and display length per character of string1 */
 		mlen = pg_mblen_range(ptr1, ptr1end);
-		dsplen = pg_dsplen(ptr1);
+		dsplen = orafce_dsplen(ptr1);
 
 		/* accumulate display length of string1 */
 		s1_width += dsplen;
@@ -445,7 +460,7 @@ orafce_rpad(PG_FUNCTION_ARGS)
 
 			/* byte-length and display length per character of string2 */
 			mlen = pg_mblen_range(ptr2, ptr2end);
-			dsplen = pg_dsplen(ptr2);
+			dsplen = orafce_dsplen(ptr2);
 
 			/*
 			 * output_width can not fit this character of string2, so discard
