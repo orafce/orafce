@@ -1235,9 +1235,27 @@ plvstr_swap(PG_FUNCTION_ARGS)
 
 	start_in = start_in > 0 ? start_in : v_len + start_in + 1;
 
-	if (start_in == 0 || start_in > v_len)
+	/*
+	 * A start outside the string replaces nothing.  Without the test for a
+	 * start before the first character, ora_substr() below reads the negative
+	 * position as a position counted back from the end of the string and the
+	 * negative length as "to the end of the string", and the source string
+	 * ends up in the result a second time.
+	 */
+	if (start_in < 1 || start_in > v_len)
 		PG_RETURN_TEXT_P(TextPCopy(string_in));
-	else if (start_in == 1)
+
+	/*
+	 * A negative length removes nothing, and a length longer than the string
+	 * removes the rest of it.  Clamping also keeps the two sums below inside
+	 * the range of int.
+	 */
+	if (oldlen_in < 0)
+		oldlen_in = 0;
+	else if (oldlen_in > v_len)
+		oldlen_in = v_len;
+
+	if (start_in == 1)
 		PG_RETURN_TEXT_P(ora_concat2(
 									 replace_in, ora_substr_text(string_in, oldlen_in + 1, -1)));
 	else
