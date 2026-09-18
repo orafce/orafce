@@ -132,6 +132,24 @@ PG_FUNCTION_INFO_V1(orafce_sys_extract_utc);
 PG_FUNCTION_INFO_V1(orafce_sys_extract_utc_oracle_date);
 
 /*
+ * next_day() and last_day() shift a day number that j2date() and date2j()
+ * produced, so the result can leave the range the DATE type supports.  Report
+ * that the way DATE + INTEGER does instead of returning a day number that the
+ * type cannot read back.  The argument is int64 so that the caller cannot
+ * overflow the addition before the check runs.
+ */
+static DateADT
+checked_date(int64 day)
+{
+	if (!IS_VALID_DATE(day))
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("date out of range")));
+
+	return (DateADT) day;
+}
+
+/*
  * Search const value in char array
  *
  */
@@ -235,9 +253,14 @@ next_day(PG_FUNCTION_ARGS)
 	CHECK_SEQ_SEARCH(-1, "DAY/Day/day");
 
 found:
+
+	/* the weekday is validated first, so that a typo is still reported */
+	if (DATE_NOT_FINITE(day))
+		PG_RETURN_DATEADT(day);
+
 	off = d - j2day(day + POSTGRES_EPOCH_JDATE);
 
-	PG_RETURN_DATEADT((off <= 0) ? day + off + 7 : day + off);
+	PG_RETURN_DATEADT(checked_date((int64) day + ((off <= 0) ? off + 7 : off)));
 }
 
 /* next_day(date, integer) is not documented in Oracle manual, but ... */
@@ -256,10 +279,14 @@ next_day_by_index(PG_FUNCTION_ARGS)
 	 */
 	CHECK_SEQ_SEARCH((idx < 1 || 7 < idx) ? -1 : 0, "DAY/Day/day");
 
+	/* the index is validated first, so that a bad one is still reported */
+	if (DATE_NOT_FINITE(day))
+		PG_RETURN_DATEADT(day);
+
 	/* j2day returns 0..6 as Sun..Sat */
 	off = (idx - 1) - j2day(day + POSTGRES_EPOCH_JDATE);
 
-	PG_RETURN_DATEADT((off <= 0) ? day + off + 7 : day + off);
+	PG_RETURN_DATEADT(checked_date((int64) day + ((off <= 0) ? off + 7 : off)));
 }
 
 /********************************************************************
@@ -281,15 +308,18 @@ Datum
 last_day(PG_FUNCTION_ARGS)
 {
 	DateADT		day = PG_GETARG_DATEADT(0);
-	DateADT		result;
+	int64		result;
 	int			y,
 				m,
 				d;
 
-	j2date(day + POSTGRES_EPOCH_JDATE, &y, &m, &d);
-	result = date2j(y, m + 1, 1) - POSTGRES_EPOCH_JDATE;
+	if (DATE_NOT_FINITE(day))
+		PG_RETURN_DATEADT(day);
 
-	PG_RETURN_DATEADT(result - 1);
+	j2date(day + POSTGRES_EPOCH_JDATE, &y, &m, &d);
+	result = (int64) date2j(y, m + 1, 1) - POSTGRES_EPOCH_JDATE;
+
+	PG_RETURN_DATEADT(checked_date(result - 1));
 }
 
 static const int month_days[] = {
@@ -345,6 +375,12 @@ months_between(PG_FUNCTION_ARGS)
 				d2;
 
 	float8		result;
+
+	/* months_between() subtracts two dates, and core refuses infinite ones */
+	if (DATE_NOT_FINITE(date1) || DATE_NOT_FINITE(date2))
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("cannot subtract infinite dates")));
 
 	j2date(date1 + POSTGRES_EPOCH_JDATE, &y1, &m1, &d1);
 	j2date(date2 + POSTGRES_EPOCH_JDATE, &y2, &m2, &d2);
