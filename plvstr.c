@@ -1381,13 +1381,15 @@ Datum
 plvstr_betwn_i(PG_FUNCTION_ARGS)
 {
 	text	   *string_in = PG_GETARG_TEXT_P(0);
-	int			start_in = PG_GETARG_INT32(1);
-	int			end_in = PG_GETARG_INT32(2);
+	int			start_arg = PG_GETARG_INT32(1);
+	int			end_arg = PG_GETARG_INT32(2);
 	bool		inclusive = PG_GETARG_BOOL(3);
+	int64		start_in = start_arg;
+	int64		end_in = end_arg;
 
-	if ((start_in < 0 && end_in > 0) ||
-		(start_in > 0 && end_in < 0) ||
-		(start_in > end_in))
+	if ((start_arg < 0 && end_arg > 0) ||
+		(start_arg > 0 && end_arg < 0) ||
+		(start_arg > end_arg))
 		PARAMETER_ERROR("Wrong positions.");
 
 	if (start_in < 0)
@@ -1402,14 +1404,23 @@ plvstr_betwn_i(PG_FUNCTION_ARGS)
 	{
 		start_in += 1;
 		end_in -= 1;
-
-		if (start_in > end_in)
-			PG_RETURN_TEXT_P(cstring_to_text(""));
 	}
 
+	/*
+	 * A position before the first character is not a position in the string.
+	 * Start at the first character instead of handing the negative value to
+	 * ora_substr(), which would read it as a position counted back from the
+	 * end of the string.
+	 */
+	if (start_in < 1)
+		start_in = 1;
+
+	if (end_in < start_in)
+		PG_RETURN_TEXT_P(cstring_to_text(""));
+
 	PG_RETURN_TEXT_P(ora_substr_text(string_in,
-									 start_in,
-									 end_in - start_in + 1));
+									 (int) Min(start_in, PG_INT32_MAX),
+									 (int) Min(end_in - start_in + 1, PG_INT32_MAX)));
 }
 
 

@@ -859,6 +859,84 @@ select PLVstr.betwn('Harry and Sally are very happy', 'a', 'a', 2, 3, FALSE,FALS
  nd Sally are very h
 (1 row)
 
+select PLVstr.betwn('abcdef', -8, -1);
+ betwn  
+--------
+ abcdef
+(1 row)
+
+select PLVstr.betwn('abcdef', -30, -1);
+ betwn  
+--------
+ abcdef
+(1 row)
+
+select PLVstr.betwn('abcdef', -8, -4);
+ betwn 
+-------
+ abc
+(1 row)
+
+select PLVstr.betwn('abcdef', -7, -4);
+ betwn 
+-------
+ abc
+(1 row)
+
+select PLVstr.betwn('abcdef', -9, -7);
+ betwn 
+-------
+ 
+(1 row)
+
+select PLVstr.betwn('abcdef', -10, -8);
+ betwn 
+-------
+ 
+(1 row)
+
+select PLVstr.betwn('abcdef', 2, 4);
+ betwn 
+-------
+ bcd
+(1 row)
+
+select PLVstr.betwn('abcdef', 2, 4, false);
+ betwn 
+-------
+ c
+(1 row)
+
+select PLVstr.betwn('abcdef', -6, -1);
+ betwn  
+--------
+ abcdef
+(1 row)
+
+select PLVstr.betwn('abcdef', -3, -1);
+ betwn 
+-------
+ def
+(1 row)
+
+select PLVstr.betwn('abcdef', 3, 3);
+ betwn 
+-------
+ c
+(1 row)
+
+select PLVstr.betwn('abcdef', 3, 3, false);
+ betwn 
+-------
+ 
+(1 row)
+
+select PLVstr.betwn('Harry and Sally are very happy', 7, 9);
+ betwn 
+-------
+ and
+(1 row)
+
 select plvsubst.string('My name is %s %s.', ARRAY['Pavel','Stěhule']);
           string           
 ---------------------------
