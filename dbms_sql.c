@@ -1443,7 +1443,7 @@ fetch_rows(CursorData *c, bool exact)
 		oldcxt = MemoryContextSwitchTo(c->tuples_cxt);
 
 		c->tupdesc = CreateTupleDescCopy(SPI_tuptable->tupdesc);
-		c->tuples = palloc(SPI_processed * sizeof(HeapTuple *));
+		c->tuples = palloc(SPI_processed * sizeof(HeapTuple));
 
 		for (i = 0; i < SPI_processed; i++)
 			c->tuples[i] = heap_copytuple(SPI_tuptable->vals[i]);
