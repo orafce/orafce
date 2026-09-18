@@ -203,9 +203,6 @@ plvlex_tokens(PG_FUNCTION_ARGS)
 		fctx->values = (char **) palloc(6 * sizeof(char *));
 		fctx->values[0] = (char *) palloc(16 * sizeof(char));
 		fctx->values[2] = (char *) palloc(16 * sizeof(char));
-		fctx->values[3] = (char *) palloc(16 * sizeof(char));
-		fctx->values[4] = (char *) palloc(255 * sizeof(char));
-		fctx->values[5] = (char *) palloc(255 * sizeof(char));
 
 		tupdesc = CreateTemplateTupleDesc(6);
 
@@ -243,33 +240,24 @@ plvlex_tokens(PG_FUNCTION_ARGS)
 		values = fctx->values;
 
 		back_vals[2] = values[2];
-		back_vals[4] = values[4];
-		back_vals[5] = values[5];
 
 		snprintf(values[0], 16, "%d", nd->lloc);
 
 		values[1] = nd->str;
 
 		snprintf(values[2], 16, "%d", nd->keycode);
-		snprintf(values[3], 16, "%s", nd->classname);
-		snprintf(values[4], 255, "%s", SF(nd->sep));
-		snprintf(values[5], 48, "%s", SF(nd->modificator));
+
+		values[3] = nd->classname;
+		values[4] = nd->sep;
+		values[5] = nd->modificator;
 
 		if (nd->keycode == -1)
 			values[2] = NULL;
-
-		if (!nd->sep)
-			values[4] = NULL;
-
-		if (!nd->modificator)
-			values[5] = NULL;
 
 		tuple = BuildTupleFromCStrings(funcctx->attinmeta, fctx->values);
 		result = HeapTupleGetDatum(tuple);
 
 		values[2] = back_vals[2];
-		values[4] = back_vals[4];
-		values[5] = back_vals[5];
 
 		SRF_RETURN_NEXT(funcctx, result);
 	}
