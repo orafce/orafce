@@ -21,8 +21,12 @@
 #include "orafce.h"
 #include "builtins.h"
 
-#define MAX_CURSORS			100
-#define DBMS_SQL_MAX_BATCH_ROWS		1000
+#define MAX_CURSORS				100
+
+/*
+ * the default size of prefetched rows buffer
+ */
+#define DEFAULT_PREFETCH_ROWS	1000
 
 /*
  * bind variable data
@@ -116,7 +120,7 @@ typedef struct
 	MemoryContext cursor_xact_cxt;
 	MemoryContext tuples_cxt;
 	MemoryContext result_cxt;	/* short life memory context */
-	HeapTuple	tuples[DBMS_SQL_MAX_BATCH_ROWS];
+	HeapTuple	*tuples;
 	TupleDesc	coltupdesc;
 	TupleDesc	tupdesc;
 	CastCacheData *casts;
@@ -885,16 +889,13 @@ dbms_sql_define_array(PG_FUNCTION_ARGS)
 				 errmsg("cnt is less or equal to zero")));
 
 	/*
-	 * fetch_rows() reads the rows into the fixed size c->tuples array, and it
-	 * rounds the SPI fetch size down to a multiple of batch_rows.  A larger
-	 * value would silently make that size zero, so fetch_rows() would report
-	 * end of data for a query that still has rows.
+	 * Oracle has not any limit of cnt value. It is a question if
+	 * Orafce should to introduce some dedicated limit for this
+	 * argument. There is possible risk, but the possibility
+	 * how to build massive arrays are already available in
+	 * Postgres - like SELECT ARRAY(SELECT generate_series(1, bignumber)).
+	 * So I don't introduce any upper limit.
 	 */
-	if (rowcount > DBMS_SQL_MAX_BATCH_ROWS)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("cnt is greater than %d", DBMS_SQL_MAX_BATCH_ROWS)));
-
 	col->rowcount = (uint64) rowcount;
 
 	if (PG_ARGISNULL(4))
@@ -928,6 +929,7 @@ cursor_xact_cxt_deletion_callback(void *arg)
 	cur->cursor_xact_cxt = NULL;
 	cur->result_cxt = NULL;
 	cur->tuples_cxt = NULL;
+	cur->tuples = NULL;
 
 	cur->processed = 0;
 	cur->nread = 0;
@@ -973,6 +975,7 @@ execute(CursorData *c)
 		c->casts = NULL;
 		c->tupdesc = NULL;
 		c->tuples_cxt = NULL;
+		c->tuples = NULL;
 	}
 
 	c->result_cxt = AllocSetContextCreate(c->cursor_xact_cxt,
@@ -1377,22 +1380,36 @@ fetch_rows(CursorData *c, bool exact)
 	{
 		MemoryContext oldcxt;
 		uint64		i;
-		int			batch_rows;
+		long		fetch_rows;
 
 		if (!exact)
 		{
 			if (c->array_columns)
 			{
-				Assert(c->batch_rows >= 1 &&
-					   c->batch_rows <= DBMS_SQL_MAX_BATCH_ROWS);
+				Assert(c->batch_rows >= 1);
 
-				batch_rows = (DBMS_SQL_MAX_BATCH_ROWS / c->batch_rows) * c->batch_rows;
+				if (c->batch_rows > DEFAULT_PREFETCH_ROWS)
+					/*
+					 * We need to read as a minimum batch_rows rows.
+					 * DEFAULT_PREFETCH_ROW is not a limit. Generally
+					 * SPI_cursor_fetch has not problem with more
+					 * hundred thousands rows.
+					 */
+					fetch_rows = c->batch_rows;
+				else
+					/*
+					 * batch size is smaller than PREFETCH_ROWS, so we can
+					 * read more batches in one fetch. Calculate how much
+					 * complete batches can be available inside DEFAULT_PREFETCH_ROWS.
+					 */
+					fetch_rows = (DEFAULT_PREFETCH_ROWS / c->batch_rows) * c->batch_rows;
 			}
 			else
-				batch_rows = DBMS_SQL_MAX_BATCH_ROWS;
+				/* edault prefetch size is 1000 rows */
+				fetch_rows = DEFAULT_PREFETCH_ROWS;
 		}
 		else
-			batch_rows = 2;
+			fetch_rows = 2;
 
 		/* create or reset context for tuples */
 		if (!c->tuples_cxt)
@@ -1406,7 +1423,7 @@ fetch_rows(CursorData *c, bool exact)
 			elog(ERROR, "SPI_connact failed");
 
 		/* try to fetch data from cursor */
-		SPI_cursor_fetch(c->portal, true, batch_rows);
+		SPI_cursor_fetch(c->portal, true, fetch_rows);
 
 		if (SPI_tuptable == NULL)
 			elog(ERROR, "cannot fetch data");
@@ -1426,6 +1443,7 @@ fetch_rows(CursorData *c, bool exact)
 		oldcxt = MemoryContextSwitchTo(c->tuples_cxt);
 
 		c->tupdesc = CreateTupleDescCopy(SPI_tuptable->tupdesc);
+		c->tuples = palloc(SPI_processed * sizeof(HeapTuple *));
 
 		for (i = 0; i < SPI_processed; i++)
 			c->tuples[i] = heap_copytuple(SPI_tuptable->vals[i]);
