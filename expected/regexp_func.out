@@ -984,3 +984,28 @@ SELECT oracle.REGEXP_REPLACE('1234', null, 'a', 1, 1, 'i');
  1234
 (1 row)
 
+-- 'A' HAS NO CAPTURE GROUP AT ALL.
+SELECT ORACLE.REGEXP_INSTR('ABC', 'A', 1, 1, 0, '', 0) AS SUBEXPR_0,  -- 1, CORRECT
+       ORACLE.REGEXP_INSTR('ABC', 'A', 1, 1, 0, '', 1) AS SUBEXPR_1,  -- 0, CORRECT
+       ORACLE.REGEXP_INSTR('ABC', 'A', 1, 1, 0, '', 2) AS SUBEXPR_2;  -- 0, CORRECT
+ subexpr_0 | subexpr_1 | subexpr_2 
+-----------+-----------+-----------
+         1 |         0 |         0
+(1 row)
+
+-- REGEXP_SUBSTR() DISAGREES WITH REGEXP_INSTR() FOR THE VERY SAME ARGUMENTS.
+SELECT ORACLE.REGEXP_SUBSTR('ABC', 'A', 1, 1, '', 1) IS NULL AS SUBSTR_SAYS_NO_GROUP;
+ substr_says_no_group 
+----------------------
+ t
+(1 row)
+
+-- WITH A REAL CAPTURE GROUP BOTH BEHAVE CORRECTLY, WHICH SHOWS THE PROBLEM IS
+-- CONFINED TO THE "PATTERN HAS NO GROUPS" CASE.
+SELECT ORACLE.REGEXP_INSTR('ABC', '(A)', 1, 1, 0, '', 1) AS REAL_GROUP_1,
+       ORACLE.REGEXP_INSTR('ABC', '(A)', 1, 1, 0, '', 2) AS REAL_GROUP_2;
+ real_group_1 | real_group_2 
+--------------+--------------
+            1 |            0
+(1 row)
+
