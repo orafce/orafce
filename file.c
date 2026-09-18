@@ -944,7 +944,17 @@ Datum
 utl_file_fclose(PG_FUNCTION_ARGS)
 {
 	int			i;
-	int			d = PG_GETARG_INT32(0);
+	int			d;
+
+	CHECK_FILE_HANDLE();
+	d = PG_GETARG_INT32(0);
+
+	/*
+	 * A free slot stores the invalid slot id, so the loop below would report
+	 * success for a handle that was never open.
+	 */
+	if (d == INVALID_SLOTID)
+		INVALID_FILEHANDLE_EXCEPTION();
 
 	for (i = 0; i < MAX_SLOTS; i++)
 	{
