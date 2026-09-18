@@ -81,6 +81,7 @@ typedef struct
 typedef struct
 {
 	bool		isvalid;		/* true, when this cast can be used */
+	Oid			requested_typid;	/* target type the cache was built for */
 	bool		without_cast;	/* true, when cast is not necessary */
 	Oid			targettypid;	/* used for domains */
 	Oid			array_targettypid;	/* used for array domains */
@@ -1692,6 +1693,14 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 	Assert(c->casts);
 	ccast = &c->casts[pos - 1];
 
+	/*
+	 * The entry holds the type checks and the type properties of the target
+	 * type of the first call.  Build it again when the caller asks for
+	 * another type, so that the checks below are repeated for that type.
+	 */
+	if (ccast->isvalid && ccast->requested_typid != targetTypeId)
+		ccast->isvalid = false;
+
 	if (!ccast->isvalid)
 	{
 		Oid			basetype = getBaseType(targetTypeId);
@@ -1701,6 +1710,7 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 							  columnTypeMode,
 							  SPI_gettypeid(c->tupdesc, pos));
 
+		ccast->requested_typid = targetTypeId;
 		ccast->is_array = bms_is_member(pos, c->array_columns);
 
 		if (ccast->is_array)
