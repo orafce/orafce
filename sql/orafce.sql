@@ -1222,3 +1222,143 @@ select quote_literal(plvstr.rvrs('abcde', -2147483648)) as start_int32_min_2arg;
 
 -- and so does an empty input string
 select quote_literal(plvstr.rvrs('', -2147483648, -2147483648)) as empty_input;
+
+-- the functions that were already hardened, so that the checks below test the
+-- three that were not rather than a server that rejects every infinite date.
+select oracle.add_months(date 'infinity', 1) = date 'infinity';
+select oracle.add_months(date '-infinity', 1) = date '-infinity';
+select oracle.trunc(date 'infinity') = date 'infinity';
+select oracle.round(date 'infinity') = date 'infinity';
+
+SET client_min_messages = notice;
+
+-- next_day() and last_day() have to do the same.  before the fix both
+-- infinities collapsed onto one and the same finite day.
+do $$
+declare
+	nd_pos	date := oracle.next_day(date 'infinity', 1);
+	nd_neg	date := oracle.next_day(date '-infinity', 1);
+	nt_pos	date := oracle.next_day(date 'infinity', 'monday');
+	ld_pos	date := oracle.last_day(date 'infinity');
+	ld_neg	date := oracle.last_day(date '-infinity');
+begin
+	raise notice '%', nd_pos = date 'infinity';
+	raise notice '%', nd_neg = date '-infinity';
+	raise notice '%', nt_pos = date 'infinity';
+	raise notice '%', ld_pos = date 'infinity';
+	raise notice '%', ld_neg = date '-infinity';
+end
+$$;
+
+-- whatever the three return, the value has to be a date.  rendering it and
+-- reading it back is the check that a dump and a restore would make.
+do $$
+declare
+	expr	text;
+	failed	text[] := '{}';
+	shown	text;
+	exprs	text[] := array[
+		'oracle.next_day(date ''infinity'', 1)',
+		'oracle.next_day(date ''-infinity'', 1)',
+		'oracle.next_day(date ''infinity'', ''monday'')',
+		'oracle.last_day(date ''infinity'')',
+		'oracle.last_day(date ''-infinity'')'];
+begin
+	foreach expr in array exprs loop
+		execute format('select (%s)::text', expr) into shown;
+		begin
+			execute format('select %L::date', shown);
+		exception when others then
+			failed := failed || format('%s -> %s', expr, shown);
+		end;
+	end loop;
+
+	raise notice '%', array_to_string(failed, ';');
+end
+$$;
+
+-- core reports an out of range date instead of walking past the end of the
+-- range, and next_day() has to do the same.
+do $$
+declare
+	maxdate	date := date '5874897-12-31';
+	expr	text;
+	failed	text[] := '{}';
+	raised	boolean;
+	state	text;
+	exprs	text[] := array[
+		'oracle.next_day(date ''5874897-12-31'', 1)',
+		'oracle.next_day(date ''5874897-12-31'', ''monday'')'];
+begin
+	-- the precondition: core refuses the same step
+	begin
+		perform maxdate + 1;
+		raised := false;
+	exception when others then
+		raised := true;
+	end;
+
+	raise notice '%', raised;
+
+	foreach expr in array exprs loop
+		begin
+			execute format('select %s', expr);
+			failed := failed || expr;
+		exception when others then
+			state := sqlstate;
+			if state <> '22008' then
+				failed := failed || format('%s raised %s', expr, state);
+			end if;
+
+		end;
+	end loop;
+
+	raise notice '%', array_to_string(failed, ';');
+end
+$$;
+
+-- months_between() subtracts two dates, and core refuses to subtract infinite
+-- dates rather than returning a distance between them.  before the fix
+-- months_between(-infinity, infinity) answered 0.032258064516129.
+do $$
+declare
+	expr	text;
+	failed	text[] := '{}';
+	shown	text;
+	state	text;
+	exprs	text[] := array[
+		'oracle.months_between(date ''infinity'', date ''2024-01-01'')',
+		'oracle.months_between(date ''2024-01-01'', date ''infinity'')',
+		'oracle.months_between(date ''-infinity'', date ''infinity'')',
+		'oracle.months_between(date ''infinity'', date ''infinity'')'];
+begin
+	begin
+		perform date 'infinity' - date '2024-01-01';
+		failed := failed || 'core subtracted two dates one of which is infinite';
+	exception when others then
+		null;
+	end;
+
+	foreach expr in array exprs loop
+		begin
+			execute format('select (%s)::text', expr) into shown;
+			failed := failed || format('%s -> %s', expr, shown);
+		exception when others then
+			state := sqlstate;
+			if state <> '22008' then
+				failed := failed || format('%s raised %s', expr, state);
+			end if;
+		end;
+	end loop;
+
+	raise notice '%', array_to_string(failed, ';');
+end
+$$;
+
+-- the ordinary results must not move.
+select oracle.next_day(date '2024-02-29', 1) = date '2024-03-03';
+select oracle.next_day(date '2024-02-29', 'monday') = date '2024-03-04';
+select oracle.last_day(date '2024-02-15') = date '2024-02-29';
+select oracle.last_day(date '4713-01-01 bc') = date '4713-01-31 bc';
+select oracle.months_between(date '2024-03-31', date '2024-02-29') = 1;
+select oracle.months_between(date '2024-01-01', date '2024-03-01') = -2;
