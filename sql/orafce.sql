@@ -175,6 +175,19 @@ select PLVstr.betwn('Harry and Sally are very happy', 'a', 'ry', 2,1,TRUE,FALSE)
 select PLVstr.betwn('Harry and Sally are very happy', 'a', 'y', 2,1);
 select PLVstr.betwn('Harry and Sally are very happy', 'a', 'a', 2, 2);
 select PLVstr.betwn('Harry and Sally are very happy', 'a', 'a', 2, 3, FALSE,FALSE);
+select PLVstr.betwn('abcdef', -8, -1);
+select PLVstr.betwn('abcdef', -30, -1);
+select PLVstr.betwn('abcdef', -8, -4);
+select PLVstr.betwn('abcdef', -7, -4);
+select PLVstr.betwn('abcdef', -9, -7);
+select PLVstr.betwn('abcdef', -10, -8);
+select PLVstr.betwn('abcdef', 2, 4);
+select PLVstr.betwn('abcdef', 2, 4, false);
+select PLVstr.betwn('abcdef', -6, -1);
+select PLVstr.betwn('abcdef', -3, -1);
+select PLVstr.betwn('abcdef', 3, 3);
+select PLVstr.betwn('abcdef', 3, 3, false);
+select PLVstr.betwn('Harry and Sally are very happy', 7, 9);
 
 select plvsubst.string('My name is %s %s.', ARRAY['Pavel','Stěhule']);
 select plvsubst.string('My name is % %.', ARRAY['Pavel','Stěhule'], '%');
