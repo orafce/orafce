@@ -1734,9 +1734,10 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 		}
 
 		value = makeArrayResult(abs, CurrentMemoryContext);
+		*isnull = false;
 
 		if (ccast->array_targettypid != InvalidOid)
-			domain_check(value, isnull, ccast->array_targettypid, NULL, NULL);
+			domain_check(value, *isnull, ccast->array_targettypid, NULL, NULL);
 	}
 	else
 	{
