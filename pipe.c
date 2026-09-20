@@ -899,6 +899,14 @@ CHECK_FOR_INTERRUPTS(); \
 pg_usleep(10000L); \
 } while(true && t != 0);
 
+#define WATCH_TM_POST_TIMEOUT_ERR(t,et,c) \
+if (GetNowFloat() >= et) \
+LOCK_ERROR(); \
+if (cycle++ % 100 == 0) \
+CHECK_FOR_INTERRUPTS(); \
+pg_usleep(10000L); \
+} while(true && t != 0);
+
 
 Datum
 dbms_pipe_receive_message(PG_FUNCTION_ARGS)
@@ -1154,7 +1162,7 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 			has_lock = true;
 			break;
 		}
-		WATCH_TM_POST(timeout, endtime, cycle);
+		WATCH_TM_POST_TIMEOUT_ERR(timeout, endtime, cycle);
 		if (!has_lock)
 			LOCK_ERROR();
 
