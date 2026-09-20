@@ -16,18 +16,16 @@
 #include "orafce.h"
 #include "builtins.h"
 #include "pipe.h"
-
-#if PG_VERSION_NUM >= 150000
-
 #include "miscadmin.h"
 
-#endif
 
 /*  default value */
 char	   *nls_date_format = NULL;
 char	   *orafce_timezone = NULL;
 
 bool		orafce_initialized = false;
+
+size_t			orafce_shmemmsgsz;
 
 static const struct config_enum_entry orafce_compatibility_options[] = {
 	{"warning_oracle", ORAFCE_COMPATIBILITY_WARNING_ORACLE, false},
@@ -51,7 +49,7 @@ orafce_shmem_request(void)
 	if (prev_shmem_request_hook)
 		prev_shmem_request_hook();
 
-	RequestAddinShmemSpace(SHMEMMSGSZ);
+	RequestAddinShmemSpace(orafce_shmemmsgsz);
 }
 
 #endif
@@ -103,6 +101,11 @@ check_sys_guid_source(char **newval, void **extra, GucSource source)
 void
 _PG_init(void)
 {
+	if (process_shared_preload_libraries_in_progress)
+		orafce_shmemmsgsz = SHMEMMSGSZ_DEFAULT;
+	else
+		orafce_shmemmsgsz = SHMEMMSGSZ_MIN;
+
 
 #if PG_VERSION_NUM >= 150000
 
@@ -111,7 +114,7 @@ _PG_init(void)
 
 #else
 
-	RequestAddinShmemSpace(SHMEMMSGSZ);
+	RequestAddinShmemSpace(orafce_shmemmsgsz);
 
 #endif
 

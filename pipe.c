@@ -511,7 +511,7 @@ get_from_pipe(text *pipe_name,
 	bool		created;
 	message_buffer *result = NULL;
 
-	if (!ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (!ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 		return NULL;
 
 	if (NULL != (p = find_pipe(pipe_name, &created, false, identity, identity_alarm)))
@@ -549,7 +549,7 @@ add_to_pipe(text *pipe_name,
 	bool		result = false;
 	message_buffer *sh_ptr;
 
-	if (!ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (!ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 		return false;
 
 	for (;;)
@@ -1110,7 +1110,7 @@ dbms_pipe_unique_session_name(PG_FUNCTION_ARGS)
 	int			timeout = 10;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		text	   *result;
 
@@ -1149,7 +1149,7 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 		bool		has_lock = false;
 
 		WATCH_PRE(timeout, endtime, cycle);
-		if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+		if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 		{
 			has_lock = true;
 			break;
@@ -1273,7 +1273,7 @@ dbms_pipe_create_pipe(PG_FUNCTION_ARGS)
 	is_private = PG_ARGISNULL(2) ? false : PG_GETARG_BOOL(2);
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		orafce_pipe *p;
 
@@ -1345,7 +1345,7 @@ dbms_pipe_purge(PG_FUNCTION_ARGS)
 	int			timeout = 10;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 
 		remove_pipe(pipe_name, true);
@@ -1373,7 +1373,7 @@ dbms_pipe_remove_pipe(PG_FUNCTION_ARGS)
 	int			timeout = 10;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		remove_pipe(pipe_name, false);
 		LWLockRelease(shmem_lockid);
