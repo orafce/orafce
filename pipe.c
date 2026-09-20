@@ -1312,6 +1312,12 @@ dbms_pipe_create_pipe(PG_FUNCTION_ARGS)
 			LWLockRelease(shmem_lockid);
 			PG_RETURN_VOID();
 		}
+
+		/*
+		 * There is no free pipe slot left, or no shared memory for the name.
+		 * Release lock, and try it again.
+		 */
+		LWLockRelease(shmem_lockid);
 	}
 	WATCH_TM_POST(timeout, endtime, cycle);
 	LOCK_ERROR();
