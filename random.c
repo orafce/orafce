@@ -7,8 +7,11 @@
 
 #include "postgres.h"
 #include "access/hash.h"
+#include "common/int.h"
 #include "lib/stringinfo.h"
 #include "utils/builtins.h"
+#include "utils/memutils.h"
+#include "miscadmin.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -177,19 +180,32 @@ dbms_random_seed_varchar(PG_FUNCTION_ARGS)
 static text *
 random_string(const char *charset, size_t chrset_size, int len)
 {
-	StringInfo	str;
 	int			i;
+	int			tlen;
+	text	   *result;
+	char	   *ptr;
 
-	str = makeStringInfo();
+	if (unlikely(pg_add_s32_overflow(len, VARHDRSZ, &tlen)) ||
+		unlikely(!AllocSizeIsValid(tlen)))
+		ereport(ERROR,
+				(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
+				 errmsg("requested length too large")));
+
+	result = (text *) palloc(tlen);
+	ptr = VARDATA(result);
+
 	for (i = 0; i < len; i++)
 	{
 		double		r = (double) rand();
 		int			pos = (int) floor((r / ((double) RAND_MAX + 1)) * chrset_size);
 
-		appendStringInfoChar(str, charset[pos]);
+		*ptr++ = charset[pos];
+		CHECK_FOR_INTERRUPTS();
 	}
 
-	return cstring_to_text(str->data);
+	SET_VARSIZE(result, tlen);
+
+	return result;
 }
 
 Datum
