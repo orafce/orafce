@@ -4,6 +4,7 @@
 #include "access/tupconvert.h"
 #include "catalog/pg_type_d.h"
 #include "catalog/pg_type.h"
+#include "common/int.h"
 #include "executor/spi.h"
 #include "lib/stringinfo.h"
 #include "parser/parse_coerce.h"
@@ -814,7 +815,15 @@ dbms_sql_define_column(PG_FUNCTION_ARGS)
 
 	get_type_category_preferred(basetype, &category, &ispreferred);
 	col->typisstr = category == TYPCATEGORY_STRING;
-	col->typmod = (col->typisstr && colsize != -1) ? colsize + 4 : -1;
+	if (col->typisstr && colsize != -1)
+	{
+		if (unlikely(pg_add_s32_overflow(colsize, 4, &col->typmod)))
+			ereport(ERROR,
+					(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
+					 errmsg("requested length too large")));
+	}
+	else
+		col->typmod = -1;
 
 	get_typlenbyval(basetype, &col->typlen, &col->typbyval);
 
