@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include "orafce.h"
 #include "builtins.h"
+#include "miscadmin.h"
 
 #if PG_VERSION_NUM >= 160000
 
@@ -524,6 +525,8 @@ ora_add_bizdays(DateADT day, int ndays)
 
 	while (ndays != 0)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		d = (d + dx) % 7;
 		d = (d < 0) ? 6 : d;
 		day += dx;
@@ -580,6 +583,8 @@ ora_diff_bizdays(DateADT day1, DateADT day2)
 
 	while (day1 <= day2)
 	{
+		CHECK_FOR_INTERRUPTS();
+
 		loops++;
 		day1 += 1;
 		d = (d + 1) % 7;
