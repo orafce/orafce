@@ -2,7 +2,21 @@
 #define __PIPE__
 
 #define LOCALMSGSZ (8*1024)
-#define SHMEMMSGSZ (30*1024)
+
+/*
+ * Orafce can use shared memory. For security reasons, the size of
+ * used shared memory is restricted. When orafce is loaded by
+ * shared_proload_library, the limit is 3MB, in other cases, the
+ * limit is 30kB. The SHMEMMSGSZ should be enough for execution
+ * of regresion tests, and for some basic work and usage pipes and
+ * alerts for notification.
+ *
+ * Attention, 30kB is a minimum, and this limit can be early
+ * exhausted, but 30kB is safe limit and this shared memory
+ * always available without necessity of preallocation.
+ */
+#define SHMEMMSGSZ_MIN		(30*1024)
+#define SHMEMMSGSZ_DEFAULT	(3*1024*1024)
 #define MAX_PIPES  30
 #define MAX_EVENTS 30
 #define MAX_LOCKS  256
@@ -58,6 +72,8 @@ extern alert_lock *locks;
 
 extern int	sid;
 extern LWLockId shmem_lockid;
+
+extern size_t orafce_shmemmsgsz;
 
 #include "storage/condition_variable.h"
 

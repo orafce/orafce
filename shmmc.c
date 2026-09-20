@@ -90,7 +90,7 @@ ora_sstrcpy(char *str)
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				 errmsg("out of memory"),
 				 errdetail("Failed while allocation block %d bytes in shared memory.", (int) len + 1),
-				 errhint("Increase SHMEMMSGSZ and recompile package.")));
+				 errhint("Increase SHMEMMSGSZ_MIN and recompile package.")));
 
 	return result;
 }
@@ -113,7 +113,7 @@ ora_scstring(text *str)
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				 errmsg("out of memory"),
 				 errdetail("Failed while allocation block %d bytes in shared memory.", (int) len + 1),
-				 errhint("Increase SHMEMMSGSZ and recompile package.")));
+				 errhint("Increase SHMEMMSGSZ_MIN and recompile package.")));
 
 	return result;
 }
@@ -343,7 +343,7 @@ salloc(size_t size)
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				 errmsg("out of memory"),
 				 errdetail("Failed while allocation block %lu bytes in shared memory.", (unsigned long) size),
-				 errhint("Increase SHMEMMSGSZ and recompile package.")));
+				 errhint("Increase SHMEMMSGSZ_MIN and recompile package.")));
 
 	return result;
 }
@@ -358,7 +358,7 @@ srealloc(void *ptr, size_t size)
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				 errmsg("out of memory"),
 				 errdetail("Failed while reallocation block %lu bytes in shared memory.", (unsigned long) size),
-				 errhint("Increase SHMEMMSGSZ and recompile package.")));
+				 errhint("Increase SHMEMMSGSZ_MIN and recompile package.")));
 
 	return result;
 }

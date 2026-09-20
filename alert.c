@@ -635,7 +635,7 @@ dbms_alert_register(PG_FUNCTION_ARGS)
 	float8		timeout = 2;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		register_event(name);
 		LWLockRelease(shmem_lockid);
@@ -664,7 +664,7 @@ dbms_alert_remove(PG_FUNCTION_ARGS)
 	float8		timeout = 2;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		alert_event *ev;
 
@@ -698,7 +698,7 @@ dbms_alert_removeall(PG_FUNCTION_ARGS)
 	float8		timeout = 2;
 
 	WATCH_PRE(timeout, endtime, cycle);
-	if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		alert_lock *alck;
 		int			i;
@@ -749,7 +749,7 @@ _dbms_alert_waitany(int timeout, FunctionCallInfo fcinfo)
 
 	for (;;)
 	{
-		if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+		if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 		{
 			str[1] = find_and_remove_message_item(-1, sid,
 												  true, false, false, NULL, &str[0]);
@@ -878,7 +878,7 @@ _dbms_alert_waitone(text *name, int timeout, FunctionCallInfo fcinfo)
 
 	for (;;)
 	{
-		if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+		if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 		{
 			if (NULL != find_event(name, false, &message_id))
 			{
@@ -1041,7 +1041,7 @@ orafce_xact_cb(XactEvent event, void *arg)
 	}
 	else if (event == XACT_EVENT_COMMIT && signals)
 	{
-		if (ora_lock_shmem(SHMEMMSGSZ, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+		if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 		{
 			alert_signal_data *signal = signals;
 
