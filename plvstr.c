@@ -329,95 +329,51 @@ Datum
 plvstr_normalize(PG_FUNCTION_ARGS)
 {
 	text	   *str = PG_GETARG_TEXT_PP(0);
+	int			len = VARSIZE_ANY_EXHDR(str);
+	char	   *end;
+	char	   *ptr, *write_ptr;
+	bool		write_spc;
 	text	   *result;
-	char	   *aux,
-			   *cur,
-			   *aux_cur,
-			   *end;
-	int			i;
 
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(__amd64__))
-
-	__int64		l;
-
-#else
-
-	int			l;
-
-#endif
-
-	bool		write_spc = false;
-	bool		ignore_stsp = true;
-	bool		mb_encode;
-	int			sz;
-
-	mb_encode = pg_database_encoding_max_length() > 1;
-
-	l = VARSIZE_ANY_EXHDR(str);
-	aux_cur = aux = palloc(l);
-
+	result = palloc(len + VARHDRSZ);
+	ptr = VARDATA_ANY(str);
+	end = ptr + len;
+	write_ptr = VARDATA(result);
 	write_spc = false;
-	cur = VARDATA_ANY(str);
-	end = cur + l;
 
-	for (i = 0; i < l; i++)
+	while (ptr < end)
 	{
-		char		c;
+		char		c = *ptr;
+		int			mblen = pg_mblen_range(ptr, end);
 
-		switch ((c = *cur))
+		switch (c)
 		{
 			case '\t':
 			case '\n':
 			case '\r':
 			case ' ':
-				write_spc = ignore_stsp ? false : true;
+				write_spc = true;
 				break;
+
 			default:
 				/* ignore all other unvisible chars */
-
-				if (mb_encode)
-				{
-					sz = pg_mblen_range(cur, end);
-					if (sz > 1 || (sz == 1 && c > 32))
-					{
-						int			j;
-
-						if (write_spc)
-						{
-							*aux_cur++ = ' ';
-							write_spc = false;
-
-						}
-						for (j = 0; j < sz; j++)
-						{
-							*aux_cur++ = *cur++;
-						}
-						ignore_stsp = false;
-						i += sz - 1;
-					}
-					continue;
-
-				}
-				else if (c > 32)
+				if (mblen > 1 || c > 32)
 				{
 					if (write_spc)
 					{
-						*aux_cur++ = ' ';
+						*write_ptr++ = ' ';
 						write_spc = false;
 					}
-					*aux_cur++ = c;
-					ignore_stsp = false;
-					continue;
-				}
 
+					memcpy(write_ptr, ptr, mblen);
+					write_ptr += mblen;
+				}
 		}
-		cur += 1;
+
+		ptr += mblen;
 	}
 
-	l = aux_cur - aux;
-	result = palloc(l + VARHDRSZ);
-	SET_VARSIZE(result, l + VARHDRSZ);
-	memcpy(VARDATA(result), aux, l);
+	SET_VARSIZE(result, write_ptr - VARDATA(result) + VARHDRSZ);
 
 	PG_RETURN_TEXT_P(result);
 }
