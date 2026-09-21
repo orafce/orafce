@@ -146,31 +146,10 @@ ora_mb_strlen(text *str, char **sizes, int **positions)
 
 
 int
-ora_mb_strlen1(text *str)
+text_mbstrlen(text *str)
 {
-	int			r_len;
-	int			c;
-	char	   *p, *end;
-
-	r_len = VARSIZE_ANY_EXHDR(str);
-
-	if (pg_database_encoding_max_length() == 1)
-		return r_len;
-
-	p = VARDATA_ANY(str);
-	end = p + r_len;
-	c = 0;
-	while (r_len > 0)
-	{
-		int			sz;
-
-		sz = pg_mblen_range(p, end);
-		p += sz;
-		r_len -= sz;
-		c += 1;
-	}
-
-	return c;
+	return pg_mbstrlen_with_len(VARDATA_ANY(str),
+								VARSIZE_ANY_EXHDR(str));
 }
 
 /*
@@ -935,7 +914,7 @@ plvstr_left(PG_FUNCTION_ARGS)
 	int			n = PG_GETARG_INT32(1);
 
 	if (n < 0)
-		n = ora_mb_strlen1(str) + n;
+		n = text_mbstrlen(str) + n;
 	n = n < 0 ? 0 : n;
 
 	PG_RETURN_TEXT_P(ora_substr_text(str, 1, n));
@@ -962,7 +941,7 @@ plvstr_right(PG_FUNCTION_ARGS)
 	int			n = PG_GETARG_INT32(1);
 
 	if (n < 0)
-		n = ora_mb_strlen1(str) + n;
+		n = text_mbstrlen(str) + n;
 	n = (n < 0) ? 0 : n;
 
 	PG_RETURN_TEXT_P(ora_substr_text(str, -n, -1));
@@ -1284,11 +1263,11 @@ plvstr_swap(PG_FUNCTION_ARGS)
 		start_in = PG_GETARG_INT32(2);
 
 	if (PG_ARGISNULL(3))
-		oldlen_in = ora_mb_strlen1(replace_in);
+		oldlen_in = text_mbstrlen(replace_in);
 	else
 		oldlen_in = PG_GETARG_INT32(3);
 
-	v_len = ora_mb_strlen1(string_in);
+	v_len = text_mbstrlen(string_in);
 
 	start_in = start_in > 0 ? start_in : v_len + start_in + 1;
 
@@ -1350,7 +1329,7 @@ plvstr_betwn_i(PG_FUNCTION_ARGS)
 
 	if (start_in < 0)
 	{
-		int			v_len = ora_mb_strlen1(string_in);
+		int			v_len = text_mbstrlen(string_in);
 
 		start_in = v_len + start_in + 1;
 		end_in = v_len + end_in + 1;
@@ -1425,19 +1404,19 @@ plvstr_betwn_c(PG_FUNCTION_ARGS)
 	if (!inclusive)
 	{
 		if (startnth_in > 0)
-			v_start += ora_mb_strlen1(start_in);
+			v_start += text_mbstrlen(start_in);
 
 		v_end -= 1;
 	}
 	else
-		v_end += (ora_mb_strlen1(end_in) - 1);
+		v_end += (text_mbstrlen(end_in) - 1);
 
 	if (((v_start > v_end) && (v_end > 0)) ||
 		(v_end <= 0 && !gotoend))
 		PG_RETURN_NULL();
 
 	if (v_end <= 0)
-		v_end = ora_mb_strlen1(string_in);
+		v_end = text_mbstrlen(string_in);
 
 	PG_RETURN_TEXT_P(ora_substr_text(string_in,
 									 v_start,
