@@ -910,14 +910,7 @@ plvstr_rstrip(PG_FUNCTION_ARGS)
 Datum
 plvstr_left(PG_FUNCTION_ARGS)
 {
-	text	   *str = PG_GETARG_TEXT_P(0);
-	int			n = PG_GETARG_INT32(1);
-
-	if (n < 0)
-		n = text_mbstrlen(str) + n;
-	n = n < 0 ? 0 : n;
-
-	PG_RETURN_TEXT_P(ora_substr_text(str, 1, n));
+	return text_left(fcinfo);
 }
 
 
@@ -937,14 +930,7 @@ plvstr_left(PG_FUNCTION_ARGS)
 Datum
 plvstr_right(PG_FUNCTION_ARGS)
 {
-	text	   *str = PG_GETARG_TEXT_P(0);
-	int			n = PG_GETARG_INT32(1);
-
-	if (n < 0)
-		n = text_mbstrlen(str) + n;
-	n = (n < 0) ? 0 : n;
-
-	PG_RETURN_TEXT_P(ora_substr_text(str, -n, -1));
+	return text_right(fcinfo);
 }
 
 /****************************************************************
