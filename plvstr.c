@@ -146,7 +146,7 @@ ora_mb_strlen(text *str, char **sizes, int **positions)
 
 
 int
-text_mbstrlen(text *str)
+ora_text_mbstrlen(text *str)
 {
 	return pg_mbstrlen_with_len(VARDATA_ANY(str),
 								VARSIZE_ANY_EXHDR(str));
@@ -743,7 +743,7 @@ plvstr_rpart(PG_FUNCTION_ARGS)
 			PG_RETURN_NULL();
 	}
 	else
-		PG_RETURN_TEXT_P(ora_substr_text(str, loc + 1, -1));
+		PG_RETURN_TEXT_P(ora_substr_text(str, loc + ora_text_mbstrlen(div), -1));
 }
 
 
@@ -1227,11 +1227,11 @@ plvstr_swap(PG_FUNCTION_ARGS)
 		start_in = PG_GETARG_INT32(2);
 
 	if (PG_ARGISNULL(3))
-		oldlen_in = text_mbstrlen(replace_in);
+		oldlen_in = ora_text_mbstrlen(replace_in);
 	else
 		oldlen_in = PG_GETARG_INT32(3);
 
-	v_len = text_mbstrlen(string_in);
+	v_len = ora_text_mbstrlen(string_in);
 
 	start_in = start_in > 0 ? start_in : v_len + start_in + 1;
 
@@ -1293,7 +1293,7 @@ plvstr_betwn_i(PG_FUNCTION_ARGS)
 
 	if (start_in < 0)
 	{
-		int			v_len = text_mbstrlen(string_in);
+		int			v_len = ora_text_mbstrlen(string_in);
 
 		start_in = v_len + start_in + 1;
 		end_in = v_len + end_in + 1;
@@ -1368,19 +1368,19 @@ plvstr_betwn_c(PG_FUNCTION_ARGS)
 	if (!inclusive)
 	{
 		if (startnth_in > 0)
-			v_start += text_mbstrlen(start_in);
+			v_start += ora_text_mbstrlen(start_in);
 
 		v_end -= 1;
 	}
 	else
-		v_end += (text_mbstrlen(end_in) - 1);
+		v_end += (ora_text_mbstrlen(end_in) - 1);
 
 	if (((v_start > v_end) && (v_end > 0)) ||
 		(v_end <= 0 && !gotoend))
 		PG_RETURN_NULL();
 
 	if (v_end <= 0)
-		v_end = text_mbstrlen(string_in);
+		v_end = ora_text_mbstrlen(string_in);
 
 	PG_RETURN_TEXT_P(ora_substr_text(string_in,
 									 v_start,
