@@ -577,10 +577,12 @@ _ora_date_trunc(DateADT day, int f)
 	switch (f)
 	{
 			CASE_fmt_CC
+			{
 				if (y > 0)
-				result = DATE2J(((y - 1) / 100) * 100 + 1, 1, 1);
-			else
-				result = DATE2J(-((99 - (y - 1)) / 100) * 100 + 1, 1, 1);
+					result = DATE2J(((y - 1) / 100) * 100 + 1, 1, 1);
+				else
+					result = DATE2J(-((99 - (y - 1)) / 100) * 100 + 1, 1, 1);
+			}
 			break;
 			CASE_fmt_YYYY
 				result = DATE2J(y, 1, 1);
