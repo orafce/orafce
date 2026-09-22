@@ -568,6 +568,11 @@ ora_diff_bizdays(DateADT day1, DateADT day2)
 	int			loops = 0;
 	bool		start_is_bizday = false;
 
+	if (DATE_NOT_FINITE(day1) || DATE_NOT_FINITE(day2))
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("date is out of range")));
+
 	if (day1 > day2)
 	{
 		DateADT		aux_day;
