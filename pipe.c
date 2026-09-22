@@ -1263,6 +1263,7 @@ dbms_pipe_create_pipe(PG_FUNCTION_ARGS)
 	float8		endtime;
 	int			cycle;
 	int			timeout = 10;
+	bool		limit_exceed;
 
 	if (PG_ARGISNULL(0))
 		ereport(ERROR,
@@ -1284,6 +1285,8 @@ dbms_pipe_create_pipe(PG_FUNCTION_ARGS)
 	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		orafce_pipe *p;
+
+		limit_exceed = false;
 
 		if (NULL != (p = find_pipe(pipe_name, &created, false, NULL, NULL)))
 		{
@@ -1313,6 +1316,8 @@ dbms_pipe_create_pipe(PG_FUNCTION_ARGS)
 			PG_RETURN_VOID();
 		}
 
+		limit_exceed = true;
+
 		/*
 		 * There is no free pipe slot left, or no shared memory for the name.
 		 * Release lock, and try it again.
@@ -1320,7 +1325,14 @@ dbms_pipe_create_pipe(PG_FUNCTION_ARGS)
 		LWLockRelease(shmem_lockid);
 	}
 	WATCH_TM_POST(timeout, endtime, cycle);
-	LOCK_ERROR();
+	if (limit_exceed)
+		ereport(ERROR,
+				(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
+				 errmsg("pipe creation error"),
+				 errdetail("Failed to create pipe."),
+				 errhint("There are too many pipes. Increase MAX_PIPES in 'pipe.h' and recompile library.")));
+	else
+		LOCK_ERROR();
 
 	PG_RETURN_VOID();
 }
