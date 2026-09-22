@@ -128,17 +128,18 @@ orafce_reminder_numeric(PG_FUNCTION_ARGS)
 {
 	Numeric		num1 = PG_GETARG_NUMERIC(0);
 	Numeric		num2 = PG_GETARG_NUMERIC(1);
-	Numeric		result;
-	float8		val2;
+	Datum		result;
+	Datum		zero;
+	Datum		magnitude;
+	Datum		divisor_magnitude;
 
 	if (numeric_is_nan(num1))
 		PG_RETURN_NUMERIC(duplicate_numeric(num1));
 	if (numeric_is_nan(num2))
 		PG_RETURN_NUMERIC(duplicate_numeric(num2));
 
-	val2 = DatumGetFloat8(DirectFunctionCall1(numeric_float8, NumericGetDatum(num2)));
-
-	if (val2 == 0)
+	zero = DirectFunctionCall1(int4_numeric, Int32GetDatum(0));
+	if (DatumGetBool(DirectFunctionCall2(numeric_eq, NumericGetDatum(num2), zero)))
 		ereport(ERROR,
 				(errcode(ERRCODE_DIVISION_BY_ZERO),
 				 errmsg("division by zero")));
@@ -149,50 +150,19 @@ orafce_reminder_numeric(PG_FUNCTION_ARGS)
 	if (orafce_numeric_is_inf(num2))
 		PG_RETURN_NUMERIC(duplicate_numeric(num1));
 
-#if PG_VERSION_NUM >= 190000
+	result = DirectFunctionCall2(numeric_mod, NumericGetDatum(num1), NumericGetDatum(num2));
+	magnitude = DirectFunctionCall1(numeric_abs, result);
+	divisor_magnitude = DirectFunctionCall1(numeric_abs, NumericGetDatum(num2));
 
-	result = numeric_sub_safe(
-							  num1,
-							  numeric_mul_safe(
-											   DatumGetNumeric(
-															   DirectFunctionCall2(
-																				   numeric_round,
-																				   NumericGetDatum(
-																								   numeric_div_safe(num1, num2, NULL)),
-																				   Int32GetDatum(0))),
-											   num2,
-											   NULL),
-							  NULL);
+	if (DatumGetInt32(DirectFunctionCall2(numeric_cmp,
+										 DirectFunctionCall2(numeric_add, magnitude, magnitude),
+										 divisor_magnitude)) >= 0)
+	{
+		if (DatumGetInt32(DirectFunctionCall2(numeric_cmp, result, zero)) > 0)
+			result = DirectFunctionCall2(numeric_sub, result, divisor_magnitude);
+		else
+			result = DirectFunctionCall2(numeric_add, result, divisor_magnitude);
+	}
 
-#elif PG_VERSION_NUM >= 150000
-
-	result = numeric_sub_opt_error(
-								   num1,
-								   numeric_mul_opt_error(
-														 DatumGetNumeric(
-																		 DirectFunctionCall2(
-																							 numeric_round,
-																							 NumericGetDatum(
-																											 numeric_div_opt_error(num1, num2, NULL)),
-																							 Int32GetDatum(0))),
-														 num2,
-														 NULL),
-								   NULL);
-
-#else
-
-	result = DatumGetNumeric(
-							 DirectFunctionCall2(numeric_sub,
-												 NumericGetDatum(num1),
-												 DirectFunctionCall2(numeric_mul,
-																	 DirectFunctionCall2(numeric_round,
-																						 DirectFunctionCall2(numeric_div,
-																											 NumericGetDatum(num1),
-																											 NumericGetDatum(num2)),
-																						 Int32GetDatum(0)),
-																	 NumericGetDatum(num2))));
-
-#endif
-
-	PG_RETURN_NUMERIC(result);
+	PG_RETURN_DATUM(result);
 }
