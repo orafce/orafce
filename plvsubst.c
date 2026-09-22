@@ -135,7 +135,7 @@ plvsubst_string(text *template_in, ArrayType *vals_in, text *c_subst, FunctionCa
 	template_str = VARDATA_ANY(template_in);
 	template_len = ora_mb_strlen(template_in, &sizes, &positions);
 	template_blen = VARSIZE_ANY_EXHDR(template_in);
-	subst_len = text_mbstrlen(c_subst);
+	subst_len = ora_text_mbstrlen(c_subst);
 	subst_blen = VARSIZE_ANY_EXHDR(c_subst);
 	sinfo = makeStringInfo();
 
