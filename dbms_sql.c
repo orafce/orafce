@@ -1648,10 +1648,11 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 	CastCacheData *ccast;
 
 	Assert(c->executed);
+	Assert(c->start_read <= c->processed);
 
 	*isnull = true;
 
-	if (last_row_count == 0)
+	if (c->start_read == c->processed)
 		ereport(ERROR,
 				(errcode(ERRCODE_NO_DATA_FOUND),
 				 errmsg("no data found")));
