@@ -4429,15 +4429,46 @@ COMMENT ON FUNCTION utl_raw.length(bytea) IS 'Returns the number of bytes in a r
 CREATE FUNCTION utl_raw.substr(bytea, integer, integer DEFAULT NULL)
 RETURNS bytea
 AS $$
+DECLARE
+    total integer;
+    pos integer := coalesce($2, 0);
+    len integer;
+BEGIN
     -- Oracle UTL_RAW.SUBSTR is 1-based; a negative position counts from the end,
-    -- and an omitted length runs to the end of the value.
-    SELECT CASE
-        WHEN $2 = 0 THEN NULL
-        WHEN $2 < 0 THEN substring($1 FROM pg_catalog.length($1) + $2 + 1 FOR coalesce($3, pg_catalog.length($1)))
-        ELSE substring($1 FROM $2 FOR coalesce($3, pg_catalog.length($1)))
-    END
+    -- a position of 0 or NULL is taken as 1, and an omitted or NULL length runs
+    -- to the end of the value. Oracle raises VALUE_ERROR (ORA-06502) for a NULL
+    -- raw, a length below 1, and a range that is not wholly inside the value.
+    IF $1 IS NULL THEN
+        RAISE EXCEPTION USING
+            ERRCODE = 'null_value_not_allowed',
+            MESSAGE = 'argument ''r'' must not be NULL';
+    END IF;
+    total := pg_catalog.length($1);
+    IF pos = 0 THEN
+        pos := 1;
+    ELSIF pos < 0 THEN
+        pos := total + pos + 1;
+    END IF;
+    IF pos < 1 OR pos > total THEN
+        RAISE EXCEPTION USING
+            ERRCODE = 'invalid_parameter_value',
+            MESSAGE = 'argument ''pos'' is outside the value';
+    END IF;
+    len := coalesce($3, total - pos + 1);
+    IF len < 1 THEN
+        RAISE EXCEPTION USING
+            ERRCODE = 'invalid_parameter_value',
+            MESSAGE = 'argument ''len'' must be a number greater than 0';
+    END IF;
+    IF pos + len - 1 > total THEN
+        RAISE EXCEPTION USING
+            ERRCODE = 'invalid_parameter_value',
+            MESSAGE = 'argument ''len'' runs past the end of the value';
+    END IF;
+    RETURN substring($1 FROM pos FOR len);
+END;
 $$
-LANGUAGE sql IMMUTABLE PARALLEL SAFE;
+LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.substr(bytea, integer, integer) IS 'Returns a portion of a raw (bytea) value';
 
 CREATE FUNCTION utl_raw.concat(VARIADIC bytea[])
