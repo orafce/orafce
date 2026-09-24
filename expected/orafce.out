@@ -943,6 +943,42 @@ select PLVstr.betwn('Harry and Sally are very happy', 7, 9);
  and
 (1 row)
 
+select PLVstr.swap('abcdef', 'XY', 2, 2);
+  swap  
+--------
+ aXYdef
+(1 row)
+
+select PLVstr.swap('abcdef', 'XY', 3, 2);
+  swap  
+--------
+ abXYef
+(1 row)
+
+select PLVstr.swap('abcdef', 'XY', 8, 2);
+  swap  
+--------
+ abcdef
+(1 row)
+
+select PLVstr.swap('abcdef', 'XY', -6, 2);
+  swap  
+--------
+ XYcdef
+(1 row)
+
+select PLVstr.swap('abcdef', 'XY', -7, 2);
+  swap  
+--------
+ abcdef
+(1 row)
+
+select PLVstr.swap('abcdef', 'XY', -8, 2);
+  swap  
+--------
+ abcdef
+(1 row)
+
 select plvsubst.string('My name is %s %s.', ARRAY['Pavel','Stěhule']);
           string           
 ---------------------------
