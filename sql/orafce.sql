@@ -189,6 +189,12 @@ select PLVstr.betwn('abcdef', -3, -1);
 select PLVstr.betwn('abcdef', 3, 3);
 select PLVstr.betwn('abcdef', 3, 3, false);
 select PLVstr.betwn('Harry and Sally are very happy', 7, 9);
+select PLVstr.swap('abcdef', 'XY', 2, 2);
+select PLVstr.swap('abcdef', 'XY', 3, 2);
+select PLVstr.swap('abcdef', 'XY', 8, 2);
+select PLVstr.swap('abcdef', 'XY', -6, 2);
+select PLVstr.swap('abcdef', 'XY', -7, 2);
+select PLVstr.swap('abcdef', 'XY', -8, 2);
 
 select plvsubst.string('My name is %s %s.', ARRAY['Pavel','Stěhule']);
 select plvsubst.string('My name is % %.', ARRAY['Pavel','Stěhule'], '%');
@@ -1362,3 +1368,4 @@ select oracle.last_day(date '2024-02-15') = date '2024-02-29';
 select oracle.last_day(date '4713-01-01 bc') = date '4713-01-31 bc';
 select oracle.months_between(date '2024-03-31', date '2024-02-29') = 1;
 select oracle.months_between(date '2024-01-01', date '2024-03-01') = -2;
+
