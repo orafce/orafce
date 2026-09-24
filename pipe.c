@@ -1,6 +1,5 @@
 #include "postgres.h"
 #include "funcapi.h"
-#include "fmgr.h"
 #include "access/htup_details.h"
 #include "storage/shmem.h"
 #include "utils/memutils.h"
@@ -12,6 +11,7 @@
 #include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/numeric.h"
+#include "utils/tuplestore.h"
 
 #if PG_VERSION_NUM >= 140000
 
@@ -37,7 +37,7 @@
 #include <string.h>
 
 /*
- * @ Pavel Stehule 2006-2023
+ * @ Pavel Stehule 2006-2026
  */
 
 #ifndef _GetCurrentTimestamp
@@ -899,15 +899,6 @@ CHECK_FOR_INTERRUPTS(); \
 pg_usleep(10000L); \
 } while(true && t != 0);
 
-#define WATCH_TM_POST_TIMEOUT_ERR(t,et,c) \
-if (GetNowFloat() >= et) \
-LOCK_ERROR(); \
-if (cycle++ % 100 == 0) \
-CHECK_FOR_INTERRUPTS(); \
-pg_usleep(10000L); \
-} while(true && t != 0);
-
-
 Datum
 dbms_pipe_receive_message(PG_FUNCTION_ARGS)
 {
@@ -1142,106 +1133,89 @@ dbms_pipe_unique_session_name(PG_FUNCTION_ARGS)
 Datum
 dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 {
-	FuncCallContext *funcctx;
 	TupleDesc	tupdesc;
-	AttInMetadata *attinmeta;
-	PipesFctx  *fctx;
 	float8		endtime;
 	int			cycle;
 	int			timeout = 10;
+	MemoryContext oldcxt;
+	MemoryContext per_query_cxt;
+	Tuplestorestate *tuple_store;
+	ReturnSetInfo *rsi;
 
-	if (SRF_IS_FIRSTCALL())
+	rsi = (ReturnSetInfo *) fcinfo->resultinfo;
+
+	/* check to see if caller supports us returning a tuplestore */
+	if (rsi == NULL || !IsA(rsi, ReturnSetInfo))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("set-valued function called in context that cannot accept a set")));
+
+	if (!(rsi->allowedModes & SFRM_Materialize))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("materialize mode required, but it is not allowed in this context")));
+
+	if (rsi->expectedDesc->natts != DB_PIPES_COLS)
+		elog(ERROR, "unexpected number of returning columns");
+
+	per_query_cxt = rsi->econtext->ecxt_per_query_memory;
+
+	oldcxt = MemoryContextSwitchTo(per_query_cxt);
+
+	tupdesc = CreateTupleDescCopy(rsi->expectedDesc);
+	tuple_store = tuplestore_begin_heap(false, false, work_mem);
+
+	MemoryContextSwitchTo(oldcxt);
+
+	WATCH_PRE(timeout, endtime, cycle);
+	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
 		int			i;
-		MemoryContext oldcontext;
-		bool		has_lock = false;
 
-		WATCH_PRE(timeout, endtime, cycle);
-		if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
+		for (i = 0; i < MAX_PIPES; i++)
 		{
-			has_lock = true;
-			break;
-		}
-		WATCH_TM_POST_TIMEOUT_ERR(timeout, endtime, cycle);
-		if (!has_lock)
-			LOCK_ERROR();
+			orafce_pipe *p = &pipes[i];
 
-		funcctx = SRF_FIRSTCALL_INIT();
-		oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-
-		fctx = palloc(sizeof(PipesFctx));
-		funcctx->user_fctx = fctx;
-		fctx->pipe_nth = 0;
-
-		tupdesc = CreateTemplateTupleDesc(DB_PIPES_COLS);
-
-		i = 0;
-		TupleDescInitEntry(tupdesc, ++i, "name", VARCHAROID, -1, 0);
-		TupleDescInitEntry(tupdesc, ++i, "items", INT4OID, -1, 0);
-		TupleDescInitEntry(tupdesc, ++i, "size", INT4OID, -1, 0);
-		TupleDescInitEntry(tupdesc, ++i, "limit", INT4OID, -1, 0);
-		TupleDescInitEntry(tupdesc, ++i, "private", BOOLOID, -1, 0);
-		TupleDescInitEntry(tupdesc, ++i, "owner", VARCHAROID, -1, 0);
-		Assert(i == DB_PIPES_COLS);
-
-#if PG_VERSION_NUM >= 190000
-
-		TupleDescFinalize(tupdesc);
-
-#endif
-
-		attinmeta = TupleDescGetAttInMetadata(tupdesc);
-		funcctx->attinmeta = attinmeta;
-
-		MemoryContextSwitchTo(oldcontext);
-	}
-
-	funcctx = SRF_PERCALL_SETUP();
-	fctx = (PipesFctx *) funcctx->user_fctx;
-
-	while (fctx->pipe_nth < MAX_PIPES)
-	{
-		if (pipes[fctx->pipe_nth].is_valid)
-		{
-			Datum		result;
-			HeapTuple	tuple;
-			char	   *values[DB_PIPES_COLS];
-			char		items[16];
-			char		size[16];
-			char		limit[16];
-
-			/* name */
-			values[0] = pipes[fctx->pipe_nth].pipe_name;
-			/* items */
-			snprintf(items, lengthof(items), "%d", pipes[fctx->pipe_nth].count);
-			values[1] = items;
-			/* items */
-			snprintf(size, lengthof(size), "%d", pipes[fctx->pipe_nth].size);
-			values[2] = size;
-			/* limit */
-			if (pipes[fctx->pipe_nth].limit != -1)
+			if (p->is_valid)
 			{
-				snprintf(limit, lengthof(limit), "%d", pipes[fctx->pipe_nth].limit);
-				values[3] = limit;
+				Datum		values[DB_PIPES_COLS];
+				bool		nulls[DB_PIPES_COLS] = { false };
+
+				/* name */
+				values[0] = CStringGetTextDatum(p->pipe_name);
+				/* items */
+				values[1] = Int32GetDatum(p->count);
+				/* size */
+				values[2] = Int32GetDatum(p->size);
+				/* limit */
+				if (p->limit != -1)
+					values[3] = Int32GetDatum(p->limit);
+				else
+					nulls[3] = true;
+				/* private */
+				values[4] = BoolGetDatum(p->creator ? true : false);
+				/* owner */
+				if (p->creator)
+					values[5] = CStringGetTextDatum(p->creator);
+				else
+					nulls[5] = true;
+
+				tuplestore_putvalues(tuple_store, tupdesc, values, nulls);
 			}
-			else
-				values[3] = NULL;
-			/* private */
-			values[4] = (pipes[fctx->pipe_nth].creator ? "true" : "false");
-			/* owner */
-			values[5] = pipes[fctx->pipe_nth].creator;
-
-			tuple = BuildTupleFromCStrings(funcctx->attinmeta, values);
-			result = HeapTupleGetDatum(tuple);
-
-			fctx->pipe_nth += 1;
-			SRF_RETURN_NEXT(funcctx, result);
 		}
-		fctx->pipe_nth += 1;
-	}
 
-	LWLockRelease(shmem_lockid);
-	SRF_RETURN_DONE(funcctx);
+		LWLockRelease(shmem_lockid);
+
+		rsi->returnMode = SFRM_Materialize;
+		rsi->setResult = tuple_store;
+		rsi->setDesc = tupdesc;
+
+		return (Datum) 0;
+	}
+	WATCH_TM_POST(timeout, endtime, cycle);
+	LOCK_ERROR();
+
+	return (Datum) 0;
 }
 
 /*
