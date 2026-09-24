@@ -36,6 +36,25 @@ SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), 2, 2));
 SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), 3));
 -- a negative position counts from the end
 SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), -1));
+-- ORACLE> SELECT UTL_RAW.SUBSTR(HEXTORAW('DEADBEEF'), -4, 2) FROM dual; -> DEAD
+SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), -4, 2));
+-- a range ending on the last byte is inside the value
+SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), 4, 1));
+-- a position of 0 or NULL is taken as 1, and a NULL length runs to the end
+-- ORACLE> SELECT UTL_RAW.SUBSTR(HEXTORAW('DEADBEEF'), 0) FROM dual; -> DEADBEEF
+SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), 0));
+SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), 0, 2));
+SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), NULL));
+SELECT rawtohex(utl_raw.substr(hextoraw('DEADBEEF'), 2, NULL));
+-- Oracle raises VALUE_ERROR (ORA-06502) for each of these
+SELECT utl_raw.substr(hextoraw('DEADBEEF'), 1, 0);
+SELECT utl_raw.substr(hextoraw('DEADBEEF'), 1, -1);
+SELECT utl_raw.substr(hextoraw('DEADBEEF'), 5);
+SELECT utl_raw.substr(hextoraw('DEADBEEF'), -5);
+SELECT utl_raw.substr(hextoraw('DEADBEEF'), 4, 2);
+SELECT utl_raw.substr(hextoraw('DEADBEEF'), 1, 5);
+SELECT utl_raw.substr(hextoraw('DEADBEEF'), -1, 2);
+SELECT utl_raw.substr(NULL, 1, 1);
 
 ----
 -- CONCAT() -- concatenate raw values
