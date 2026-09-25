@@ -366,3 +366,101 @@ begin
   call dbms_sql.close_cursor(c);
 end
 $$;
+
+-- a cursor has to be executable repeatedly.  the portal opened by the
+-- previous execution was never closed, so the second execution failed with
+-- 'cursor "__orafce_dbms_sql_cursor_0" already exists'.
+do $$
+declare c int; v int := 0;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'select 42');
+  call dbms_sql.define_column(c, 1, v);
+  perform dbms_sql.execute_and_fetch(c);
+  perform dbms_sql.execute_and_fetch(c);
+  call dbms_sql.column_value(c, 1, v);
+  call dbms_sql.close_cursor(c);
+  raise notice 'v = %', v; -- expected 42
+end
+$$;
+
+-- the cast cache checked the requested array type only while the entry was
+-- built, so a second column_value() call for the same position handed back the
+-- value of the first type labelled with the second one.
+do $$
+declare c int; ia int[]; ta text[]; mismatch boolean := false;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'select i from generate_series(1,3) g(i)');
+  call dbms_sql.define_array(c, 1, ia, 3, 1);
+  perform dbms_sql.execute(c);
+  perform dbms_sql.fetch_rows(c);
+  call dbms_sql.column_value(c, 1, ia);
+  begin
+    call dbms_sql.column_value(c, 1, ta);
+  exception when datatype_mismatch then
+    mismatch := true;
+  end;
+  call dbms_sql.close_cursor(c);
+  raise notice 'ia = %', ia; -- expected [1,2,3]
+  raise notice 'mismatch = %', mismatch; -- expected true
+end
+$$;
+
+
+-- execute() registered the reset callback of the transaction memory
+-- context only when the context was created, but such callbacks fire at most
+-- once.  a cursor executed twice inside one transaction therefore kept a
+-- pointer to a context that the end of the transaction had already freed, and
+-- the next execution reset that freed memory.
+create temp table c31_rows(a int);
+
+do $$
+declare c int;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'insert into c31_rows values(10)');
+  raise notice '%', dbms_sql.execute(c);
+  raise notice '%', dbms_sql.execute(c);
+  raise notice '%', dbms_sql.execute(c);
+  commit;
+  raise notice '%', dbms_sql.execute(c);
+end;
+$$;
+
+
+select dbms_sql.open_cursor() as cur \gset c31_
+
+call dbms_sql.parse(:c31_cur, 'insert into c31_rows values(1)');
+begin;
+select dbms_sql.execute(:c31_cur) as r \gset c31_first_
+select dbms_sql.execute(:c31_cur) as r \gset c31_second_
+commit;
+select dbms_sql.execute(:c31_cur) as r \gset c31_third_
+call dbms_sql.close_cursor(:c31_cur);
+do $$
+begin
+  raise notice 'result = %', (select count(*) = 3 from c31_rows); -- true
+end
+$$;
+
+drop table c31_rows;
+
+create temp table test_cursor(a int);
+
+-- any cursor can be reused
+do $$
+declare c int;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'insert into test_cursor values(10)');
+  raise notice '%', dbms_sql.execute(c);
+  call dbms_sql.parse(c, 'update test_cursor set a = 30');
+  raise notice '%', dbms_sql.execute(c);
+  call dbms_sql.close_cursor(c);
+end;
+$$;
+
+select * from test_cursor;
+
+drop table test_cursor;
