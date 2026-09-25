@@ -10,6 +10,12 @@ AS $$ SELECT upper(encode($1, 'hex')) $$
 LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.rawtohex(bytea) IS 'Converts a raw (bytea) value to a string of hexadecimal digits';
 
+CREATE FUNCTION oracle.rowidtochar(text)
+RETURNS text
+AS $$ SELECT $1 $$
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
+COMMENT ON FUNCTION oracle.rowidtochar(text) IS 'Converts a rowid to its VARCHAR2 string form (identity: PostgreSQL has no ROWID type)';
+
 CREATE FUNCTION oracle.empty_clob()
 RETURNS text
 AS $$ SELECT ''::text $$
