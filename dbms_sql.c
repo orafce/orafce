@@ -951,6 +951,27 @@ cursor_xact_cxt_deletion_callback(void *arg)
 	cur->array_columns = NULL;
 }
 
+/*
+ * A reset callback is unregistered before it is called, so it has to be
+ * registered again after every reset of the related memory context.
+ */
+static void
+register_cursor_xact_cxt_callback(CursorData *c)
+{
+	MemoryContextCallback *mcb;
+	MemoryContext oldcxt;
+
+	oldcxt = MemoryContextSwitchTo(c->cursor_xact_cxt);
+	mcb = palloc0(sizeof(MemoryContextCallback));
+
+	mcb->func = cursor_xact_cxt_deletion_callback;
+	mcb->arg = c;
+
+	MemoryContextRegisterResetCallback(c->cursor_xact_cxt, mcb);
+
+	MemoryContextSwitchTo(oldcxt);
+}
+
 static uint64
 execute(CursorData *c)
 {
@@ -971,22 +992,9 @@ execute(CursorData *c)
 	/* clean space with saved result */
 	if (!c->cursor_xact_cxt)
 	{
-		MemoryContextCallback *mcb;
-		MemoryContext oldcxt;
-
 		c->cursor_xact_cxt = AllocSetContextCreate(TopTransactionContext,
 												   "dbms_sql transaction context",
 												   ALLOCSET_DEFAULT_SIZES);
-
-		oldcxt = MemoryContextSwitchTo(c->cursor_xact_cxt);
-		mcb = palloc0(sizeof(MemoryContextCallback));
-
-		mcb->func = cursor_xact_cxt_deletion_callback;
-		mcb->arg = c;
-
-		MemoryContextRegisterResetCallback(c->cursor_xact_cxt, mcb);
-
-		MemoryContextSwitchTo(oldcxt);
 	}
 	else
 	{
@@ -1000,6 +1008,8 @@ execute(CursorData *c)
 		c->tuples_cxt = NULL;
 		c->tuples = NULL;
 	}
+
+	register_cursor_xact_cxt_callback(c);
 
 	c->result_cxt = AllocSetContextCreate(c->cursor_xact_cxt,
 										  "dbms_sql short life context",
