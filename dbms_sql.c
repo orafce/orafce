@@ -939,6 +939,7 @@ cursor_xact_cxt_deletion_callback(void *arg)
 	cur->result_cxt = NULL;
 	cur->tuples_cxt = NULL;
 	cur->tuples = NULL;
+	cur->portal = NULL;
 
 	cur->processed = 0;
 	cur->nread = 0;
@@ -953,6 +954,18 @@ static uint64
 execute(CursorData *c)
 {
 	last_row_count = 0;
+
+	/*
+	 * A cursor can be executed repeatedly.  The portal of the previous
+	 * execution is still open in that case, and it uses the name that the new
+	 * execution needs, so close it first.
+	 */
+	if (c->executed && c->portal)
+	{
+		SPI_cursor_close(c->portal);
+		c->portal = NULL;
+		c->executed = false;
+	}
 
 	/* clean space with saved result */
 	if (!c->cursor_xact_cxt)
