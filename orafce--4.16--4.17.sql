@@ -1,12 +1,12 @@
 CREATE FUNCTION oracle.hextoraw(text)
 RETURNS bytea
-AS $$ SELECT decode($1, 'hex') $$
+AS $$ SELECT pg_catalog.decode($1, 'hex') $$
 LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.hextoraw(text) IS 'Converts a string of hexadecimal digits to a raw (bytea) value';
 
 CREATE FUNCTION oracle.rawtohex(bytea)
 RETURNS text
-AS $$ SELECT upper(encode($1, 'hex')) $$
+AS $$ SELECT pg_catalog.upper(encode($1, 'hex')) $$
 LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.rawtohex(bytea) IS 'Converts a raw (bytea) value to a string of hexadecimal digits';
 
@@ -46,13 +46,13 @@ CREATE SCHEMA utl_raw;
 
 CREATE FUNCTION utl_raw.cast_to_raw(text)
 RETURNS bytea
-AS $$ SELECT convert_to($1, current_setting('server_encoding')) $$
+AS $$ SELECT pg_catalog.convert_to($1, pg_catalog.current_setting('server_encoding')) $$
 LANGUAGE sql STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.cast_to_raw(text) IS 'Converts a value to a raw (bytea) value using the database character set';
 
 CREATE FUNCTION utl_raw.cast_to_varchar2(bytea)
 RETURNS text
-AS $$ SELECT convert_from($1, current_setting('server_encoding')) $$
+AS $$ SELECT pg_catalog.convert_from($1, pg_catalog.current_setting('server_encoding')) $$
 LANGUAGE sql STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.cast_to_varchar2(bytea) IS 'Converts a raw (bytea) value to a value using the database character set';
 
@@ -109,7 +109,7 @@ COMMENT ON FUNCTION utl_raw.substr(bytea, integer, integer) IS 'Returns a portio
 
 CREATE FUNCTION utl_raw.concat(VARIADIC bytea[])
 RETURNS bytea
-AS $$ SELECT coalesce(string_agg(part, ''::bytea), ''::bytea) FROM unnest($1) AS part $$
+AS $$ SELECT coalesce(pg_catalog.string_agg(part, ''::bytea), ''::bytea) FROM unnest($1) AS part $$
 LANGUAGE sql IMMUTABLE PARALLEL SAFE;
 COMMENT ON FUNCTION utl_raw.concat(VARIADIC bytea[]) IS 'Concatenates raw (bytea) values';
 
@@ -202,3 +202,45 @@ ALTER FUNCTION oracle.round(timestamptz) STABLE;
 ALTER FUNCTION oracle.round(timestamptz, text) STABLE;
 ALTER FUNCTION oracle.trunc(timestamptz) STABLE;
 ALTER FUNCTION oracle.trunc(timestamptz, text) STABLE;
+
+/*
+ * These bodies resolved upper(), encode(), trunc(), date_part(),
+ * translate(), convert_to(), convert_from(), current_setting(),
+ * string_agg() and unnest() through the caller's search_path, so anybody
+ * who could create objects in a schema the caller had in its search_path
+ * could change what they return.  Qualify the calls with pg_catalog.
+ */
+CREATE OR REPLACE FUNCTION oracle.substr(numeric,numeric)
+RETURNS text AS $$
+SELECT oracle.substr($1::text,pg_catalog.trunc($2)::int);
+$$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.substr(numeric,numeric,numeric)
+RETURNS text AS $$
+SELECT oracle.substr($1::text,pg_catalog.trunc($2)::int,pg_catalog.trunc($3)::int);
+$$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.substr(varchar,numeric)
+RETURNS text AS $$
+SELECT oracle.substr($1,pg_catalog.trunc($2)::int);
+$$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.substr(varchar,numeric,numeric)
+RETURNS text AS $$
+SELECT oracle.substr($1,pg_catalog.trunc($2)::int,pg_catalog.trunc($3)::int);
+$$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.subtract(oracle.date,oracle.date)
+RETURNS double precision AS $$
+SELECT pg_catalog.date_part('epoch', ($1::timestamp - $2::timestamp)/3600/24);
+$$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.rawtohex(bytea)
+RETURNS text
+AS $$ SELECT pg_catalog.upper(pg_catalog.encode($1, 'hex')) $$
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION plvchr.stripped(str text, char_in text)
+RETURNS varchar
+AS $$ SELECT pg_catalog.translate($1, 'A'||$2, 'A'); $$
+LANGUAGE SQL IMMUTABLE STRICT;
