@@ -200,12 +200,12 @@ LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.sinh(float8)
 RETURNS float8 AS
-$$ SELECT (exp($1) - exp(-$1)) / 2; $$
+$$ SELECT (pg_catalog.exp($1) - pg_catalog.exp(-$1)) / 2; $$
 LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.cosh(float8)
 RETURNS float8 AS
-$$ SELECT (exp($1) + exp(-$1)) / 2; $$
+$$ SELECT (pg_catalog.exp($1) + pg_catalog.exp(-$1)) / 2; $$
 LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.tanh(float8)
@@ -468,7 +468,7 @@ LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OR REPLACE FUNCTION oracle.last_day(TIMESTAMPTZ)
 RETURNS TIMESTAMP
-AS $$ SELECT (date_trunc('MONTH', $1) + INTERVAL '1 MONTH - 1 day' + $1::time)::oracle.date; $$
+AS $$ SELECT (pg_catalog.date_trunc('MONTH', $1) + INTERVAL '1 MONTH - 1 day' + $1::time)::oracle.date; $$
 LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.months_between(TIMESTAMP WITH TIME ZONE,TIMESTAMP WITH TIME ZONE)

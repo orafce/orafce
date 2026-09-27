@@ -166,3 +166,23 @@ ALTER FUNCTION plvstr.instr(text, text, int) PARALLEL SAFE;
 ALTER FUNCTION plvstr.instr(text, text, int, int) PARALLEL SAFE;
 ALTER FUNCTION plvstr.substr(text, int) PARALLEL SAFE;
 ALTER FUNCTION plvstr.substr(text, int, int) PARALLEL SAFE;
+
+/*
+ * orafce--3.21--3.22.sql qualified these references with pg_catalog, but the
+ * install script kept the unqualified bodies, so an installation that was
+ * created from an install script still resolves them through search_path.
+ */
+CREATE OR REPLACE FUNCTION oracle.sinh(float8)
+RETURNS float8 AS
+$$ SELECT (pg_catalog.exp($1) - pg_catalog.exp(-$1)) / 2; $$
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.cosh(float8)
+RETURNS float8 AS
+$$ SELECT (pg_catalog.exp($1) + pg_catalog.exp(-$1)) / 2; $$
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION oracle.last_day(TIMESTAMPTZ)
+RETURNS TIMESTAMP
+AS $$ SELECT (pg_catalog.date_trunc('MONTH', $1) + INTERVAL '1 MONTH - 1 day' + $1::time)::oracle.date; $$
+LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
