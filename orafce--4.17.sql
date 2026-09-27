@@ -50,19 +50,19 @@ COMMENT ON FUNCTION oracle.add_months(date, int) IS 'returns date plus n months'
 CREATE FUNCTION oracle.trunc(value timestamp with time zone, fmt text)
 RETURNS timestamp with time zone
 AS 'MODULE_PATHNAME', 'ora_timestamptz_trunc'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE C STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.trunc(timestamp with time zone, text) IS 'truncate date according to the specified format';
 
 CREATE FUNCTION oracle.round(value timestamp with time zone, fmt text)
 RETURNS timestamp with time zone
 AS 'MODULE_PATHNAME','ora_timestamptz_round'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE C STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.round(timestamp with time zone, text) IS 'round dates according to the specified format';
 
 CREATE FUNCTION oracle.round(value timestamp with time zone)
 RETURNS timestamp with time zone
 AS $$ SELECT oracle.round($1, 'DDD'); $$
-LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.round(timestamp with time zone) IS 'will round dates according to the specified format';
 
 CREATE FUNCTION oracle.round(value date)
@@ -74,7 +74,7 @@ COMMENT ON FUNCTION oracle.round(value date)IS 'will round dates according to th
 CREATE FUNCTION oracle.trunc(value timestamp with time zone)
 RETURNS timestamp with time zone
 AS $$ SELECT oracle.trunc($1, 'DDD'); $$
-LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.trunc(timestamp with time zone) IS 'truncate date according to the specified format';
 
 CREATE FUNCTION oracle.trunc(value date)
@@ -464,28 +464,28 @@ CREATE OPERATOR oracle.- (
 CREATE FUNCTION oracle.add_months(TIMESTAMP WITH TIME ZONE,INTEGER)
 RETURNS TIMESTAMP
 AS $$ SELECT (oracle.add_months($1::pg_catalog.date, $2) + $1::time)::oracle.date; $$
-LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 
 CREATE OR REPLACE FUNCTION oracle.last_day(TIMESTAMPTZ)
 RETURNS TIMESTAMP
 AS $$ SELECT (pg_catalog.date_trunc('MONTH', $1) + INTERVAL '1 MONTH - 1 day' + $1::time)::oracle.date; $$
-LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.months_between(TIMESTAMP WITH TIME ZONE,TIMESTAMP WITH TIME ZONE)
 RETURNS NUMERIC
 AS 'MODULE_PATHNAME', 'months_between_timestamptz'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE C STABLE STRICT PARALLEL SAFE;
 COMMENT ON FUNCTION oracle.months_between(TIMESTAMP WITH TIME ZONE, TIMESTAMP WITH TIME ZONE) IS 'returns the number of months between date1 and date2';
 
 CREATE FUNCTION oracle.next_day(TIMESTAMP WITH TIME ZONE,INTEGER)
 RETURNS TIMESTAMP
 AS $$ SELECT (oracle.next_day($1::pg_catalog.date,$2) + $1::time)::oracle.date; $$
-LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.next_day(TIMESTAMP WITH TIME ZONE,TEXT)
 RETURNS TIMESTAMP
 AS $$ SELECT (oracle.next_day($1::pg_catalog.date,$2) + $1::time)::oracle.date; $$
-LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+LANGUAGE SQL STABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION oracle.to_date(TEXT)
 RETURNS oracle.date

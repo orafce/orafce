@@ -186,3 +186,19 @@ CREATE OR REPLACE FUNCTION oracle.last_day(TIMESTAMPTZ)
 RETURNS TIMESTAMP
 AS $$ SELECT (pg_catalog.date_trunc('MONTH', $1) + INTERVAL '1 MONTH - 1 day' + $1::time)::oracle.date; $$
 LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+
+/*
+ * These functions reduce their timestamptz argument to a local date or a
+ * local time, so the result depends on the TimeZone setting and they must
+ * not be marked IMMUTABLE.  PostgreSQL marks date(timestamptz) and
+ * date_trunc(text, timestamptz) STABLE for the same reason.
+ */
+ALTER FUNCTION oracle.add_months(timestamptz, int) STABLE;
+ALTER FUNCTION oracle.last_day(timestamptz) STABLE;
+ALTER FUNCTION oracle.months_between(timestamptz, timestamptz) STABLE;
+ALTER FUNCTION oracle.next_day(timestamptz, int) STABLE;
+ALTER FUNCTION oracle.next_day(timestamptz, text) STABLE;
+ALTER FUNCTION oracle.round(timestamptz) STABLE;
+ALTER FUNCTION oracle.round(timestamptz, text) STABLE;
+ALTER FUNCTION oracle.trunc(timestamptz) STABLE;
+ALTER FUNCTION oracle.trunc(timestamptz, text) STABLE;
