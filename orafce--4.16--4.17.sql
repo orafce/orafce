@@ -155,3 +155,14 @@ CREATE OR REPLACE VIEW oracle.user_tables AS
       from information_schema.tables
      where table_type = 'BASE TABLE'
        and table_schema = current_schema();
+
+/*
+ * orafce--4.7--4.8.sql declared the string functions parallel safe, but it
+ * missed these five, so an installation created before 4.8 still excludes
+ * every query that uses them from parallel execution.
+ */
+ALTER FUNCTION plvstr.instr(text, text) PARALLEL SAFE;
+ALTER FUNCTION plvstr.instr(text, text, int) PARALLEL SAFE;
+ALTER FUNCTION plvstr.instr(text, text, int, int) PARALLEL SAFE;
+ALTER FUNCTION plvstr.substr(text, int) PARALLEL SAFE;
+ALTER FUNCTION plvstr.substr(text, int, int) PARALLEL SAFE;
