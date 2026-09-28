@@ -278,3 +278,7 @@ ALTER FUNCTION plvdate.next_bizday(date) VOLATILE;
 ALTER FUNCTION plvdate.bizdays_between(date, date) VOLATILE;
 ALTER FUNCTION plvdate.prev_bizday(date) VOLATILE;
 ALTER FUNCTION plvdate.isbizday(date) VOLATILE;
+
+ALTER FUNCTION dbms_random.initialize(integer) VOLATILE;
+ALTER FUNCTION dbms_random.seed(integer) VOLATILE;
+ALTER FUNCTION dbms_random.seed(text) VOLATILE;

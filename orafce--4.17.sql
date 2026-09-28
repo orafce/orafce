@@ -2087,7 +2087,7 @@ CREATE SCHEMA dbms_random;
 CREATE FUNCTION dbms_random.initialize(int)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_random_initialize'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION dbms_random.initialize(int) IS 'Initialize package with a seed value';
 
 CREATE FUNCTION dbms_random.normal()
@@ -2105,13 +2105,13 @@ COMMENT ON FUNCTION dbms_random.random() IS 'Generate Random Numeric Values';
 CREATE FUNCTION dbms_random.seed(integer)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_random_seed_int'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION dbms_random.seed(int) IS 'Reset the seed value';
 
 CREATE FUNCTION dbms_random.seed(text)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_random_seed_varchar'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION dbms_random.seed(text) IS 'Reset the seed value';
 
 CREATE FUNCTION dbms_random.string(opt text, len int)
