@@ -2156,7 +2156,7 @@ COMMENT ON FUNCTION utl_file.put_line(utl_file.file_type, anyelement) IS 'Puts d
 
 CREATE FUNCTION utl_file.put_line(file utl_file.file_type, buffer anyelement, autoflush bool)
 RETURNS bool
-AS $$SELECT utl_file.put_line($1, $2::text, true); $$
+AS $$SELECT utl_file.put_line($1, $2::text, $3); $$
 LANGUAGE SQL VOLATILE;
 COMMENT ON FUNCTION utl_file.put_line(utl_file.file_type, anyelement, bool) IS 'Puts data to specified file and append newline character';
 

@@ -266,3 +266,8 @@ CREATE OR REPLACE FUNCTION plvchr.stripped(str text, char_in text)
 RETURNS varchar
 AS $$ SELECT pg_catalog.translate($1, 'A'||$2, 'A'); $$
 LANGUAGE SQL IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION utl_file.put_line(file utl_file.file_type, buffer anyelement, autoflush bool)
+RETURNS bool
+AS $$SELECT utl_file.put_line($1, $2::text, $3); $$
+LANGUAGE SQL VOLATILE;
