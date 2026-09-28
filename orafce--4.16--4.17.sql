@@ -204,6 +204,17 @@ ALTER FUNCTION oracle.trunc(timestamptz) STABLE;
 ALTER FUNCTION oracle.trunc(timestamptz, text) STABLE;
 
 /*
+ * These function was marked as STABLE, should be IMMUTABLE.
+ *
+ * For consistency with orafce_concat2(varchar2, varchar2).
+ * The function is not really IMMUTABLE because it depends
+ * on orafce.varchar2_null_safe_concat. But without overwritting
+ * volatility, this functionality was useable. Overwriting volatility
+ * is known workaround with known risks.
+ */
+ALTER FUNCTION oracle.orafce_concat2(oracle.nvarchar2, oracle.nvarchar2) IMMUTABLE;
+
+/*
  * These bodies resolved upper(), encode(), trunc(), date_part(),
  * translate(), convert_to(), convert_from(), current_setting(),
  * string_agg() and unnest() through the caller's search_path, so anybody

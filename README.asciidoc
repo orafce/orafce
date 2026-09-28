@@ -873,9 +873,13 @@ orafce's VARCHAR2 implements parts of Oracle database specification about VARCHA
   Attention: - when result is empty string, then result is NULL. This behaviour is
   disabled by default.
 
-  Attention: - there is possible incompatibility between 3.7 and older Orafce
-  releases. A operator function is now marked as stable (was immutable before).
-  It's not possible to create functional indexes over stable or volatile expressions.
+  Attention: - orafce.varchar2_null_safe_concat should not be changed without
+  a) ending all sessions or restart,
+  b) reindex all functional indexes that uses operator || for datatypes nvarchar2 or varchar2
+
+  The reason of this is volatility immutable of function orafce_concat2. If you change this operator
+  inside a work, the result of queries can be incorrect or indexes that uses operator || can be broken.
+  When you change this value, all indexes that uses mentioned operator, must be reindexed.
 
 ----
 -- null safe concat (disabled by default)

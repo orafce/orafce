@@ -2306,10 +2306,16 @@ collatable = true,
 storage = extended
 );
 
+/*
+ * The function is not really IMMUTABLE because it depends
+ * on orafce.varchar2_null_safe_concat. But without overwritting
+ * volatility, this functionality was useable. Overwriting volatility
+ * is known workaround with known risks.
+ */
 CREATE FUNCTION oracle.orafce_concat2(oracle.varchar2, oracle.varchar2)
 RETURNS oracle.varchar2
 AS 'MODULE_PATHNAME','orafce_concat2'
-LANGUAGE C STABLE PARALLEL SAFE;
+LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
 /* CREATE CAST */
 CREATE CAST (oracle.varchar2 AS text)
@@ -2526,6 +2532,15 @@ collatable = true,
 storage = extended
 );
 
+/*
+ * These function was marked as STABLE, should be IMMUTABLE.
+ *
+ * For consistency with orafce_concat2(varchar2, varchar2).
+ * The function is not really IMMUTABLE because it depends
+ * on orafce.varchar2_null_safe_concat. But without overwritting
+ * volatility, this functionality was useable. Overwriting volatility
+ * is known workaround with known risks.
+ */
 CREATE FUNCTION oracle.orafce_concat2(oracle.nvarchar2, oracle.nvarchar2)
 RETURNS oracle.nvarchar2
 AS 'MODULE_PATHNAME','orafce_concat2'
