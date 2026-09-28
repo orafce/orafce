@@ -1659,31 +1659,31 @@ CREATE SCHEMA plvsubst;
 CREATE FUNCTION plvsubst.string(template_in text, values_in text[], subst text)
 RETURNS text
 AS 'MODULE_PATHNAME','plvsubst_string_array'
-LANGUAGE C IMMUTABLE;
+LANGUAGE C STABLE;
 COMMENT ON FUNCTION plvsubst.string(text, text[], text) IS 'Scans a string for all instances of the substitution keyword and replace it with the next value in the substitution values list';
 
 CREATE FUNCTION plvsubst.string(template_in text, values_in text[])
 RETURNS text
 AS $$SELECT plvsubst.string($1,$2, NULL);$$
-LANGUAGE SQL STRICT VOLATILE;
+LANGUAGE SQL STRICT STABLE;
 COMMENT ON FUNCTION plvsubst.string(text, text[]) IS 'Scans a string for all instances of the substitution keyword and replace it with the next value in the substitution values list';
 
 CREATE FUNCTION plvsubst.string(template_in text, vals_in text, delim_in text, subst_in text)
 RETURNS text
 AS 'MODULE_PATHNAME','plvsubst_string_string'
-LANGUAGE C IMMUTABLE;
+LANGUAGE C STABLE;
 COMMENT ON FUNCTION plvsubst.string(text, text, text, text) IS 'Scans a string for all instances of the substitution keyword and replace it with the next value in the substitution values list';
 
 CREATE FUNCTION plvsubst.string(template_in text, vals_in text)
 RETURNS text
 AS 'MODULE_PATHNAME','plvsubst_string_string'
-LANGUAGE C IMMUTABLE;
+LANGUAGE C STABLE;
 COMMENT ON FUNCTION plvsubst.string(text, text) IS 'Scans a string for all instances of the substitution keyword and replace it with the next value in the substitution values list';
 
 CREATE FUNCTION plvsubst.string(template_in text, vals_in text, delim_in text)
 RETURNS text
 AS 'MODULE_PATHNAME','plvsubst_string_string'
-LANGUAGE C IMMUTABLE;
+LANGUAGE C STABLE;
 COMMENT ON FUNCTION plvsubst.string(text, text, text) IS 'Scans a string for all instances of the substitution keyword and replace it with the next value in the substitution values list';
 
 CREATE FUNCTION plvsubst.setsubst(str text)

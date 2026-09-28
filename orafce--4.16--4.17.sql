@@ -204,6 +204,17 @@ ALTER FUNCTION oracle.trunc(timestamptz) STABLE;
 ALTER FUNCTION oracle.trunc(timestamptz, text) STABLE;
 
 /*
+ * These overloads take the substitution keyword from the session state set
+ * by plvsubst.setsubst() whenever the subst argument is absent or NULL, so
+ * they are not immutable either.
+ */
+ALTER FUNCTION plvsubst.string(text, text) STABLE;
+ALTER FUNCTION plvsubst.string(text, text, text) STABLE;
+ALTER FUNCTION plvsubst.string(text, text, text, text) STABLE;
+ALTER FUNCTION plvsubst.string(text, text[]) STABLE;
+ALTER FUNCTION plvsubst.string(text, text[], text) STABLE;
+
+/*
  * These function was marked as STABLE, should be IMMUTABLE.
  *
  * For consistency with orafce_concat2(varchar2, varchar2).
