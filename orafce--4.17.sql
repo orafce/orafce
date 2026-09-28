@@ -1117,37 +1117,37 @@ CREATE SCHEMA plvdate;
 CREATE FUNCTION plvdate.add_bizdays(date, int)
 RETURNS date
 AS 'MODULE_PATHNAME','plvdate_add_bizdays'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION plvdate.add_bizdays(date, int) IS 'Get the date created by adding <n> business days to a date';
 
 CREATE FUNCTION plvdate.nearest_bizday(date)
 RETURNS date
 AS 'MODULE_PATHNAME','plvdate_nearest_bizday'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION plvdate.nearest_bizday(date) IS 'Get the nearest business date to a given date, user defined';
 
 CREATE FUNCTION plvdate.next_bizday(date)
 RETURNS date
 AS 'MODULE_PATHNAME','plvdate_next_bizday'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION plvdate.next_bizday(date) IS 'Get the next business date from a given date, user defined';
 
 CREATE FUNCTION plvdate.bizdays_between(date, date)
 RETURNS int
 AS 'MODULE_PATHNAME','plvdate_bizdays_between'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION plvdate.bizdays_between(date, date) IS 'Get the number of business days between two dates';
 
 CREATE FUNCTION plvdate.prev_bizday(date)
 RETURNS date
 AS 'MODULE_PATHNAME','plvdate_prev_bizday'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION plvdate.prev_bizday(date) IS 'Get the previous business date from a given date';
 
 CREATE FUNCTION plvdate.isbizday(date)
 RETURNS bool
 AS 'MODULE_PATHNAME','plvdate_isbizday'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C VOLATILE STRICT;
 COMMENT ON FUNCTION plvdate.isbizday(date) IS 'Call this function to determine if a date is a business day';
 
 CREATE FUNCTION plvdate.set_nonbizday(text)

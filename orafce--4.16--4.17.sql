@@ -271,3 +271,10 @@ CREATE OR REPLACE FUNCTION utl_file.put_line(file utl_file.file_type, buffer any
 RETURNS bool
 AS $$SELECT utl_file.put_line($1, $2::text, $3); $$
 LANGUAGE SQL VOLATILE;
+
+ALTER FUNCTION plvdate.add_bizdays(date, integer) VOLATILE;
+ALTER FUNCTION plvdate.nearest_bizday(date) VOLATILE;
+ALTER FUNCTION plvdate.next_bizday(date) VOLATILE;
+ALTER FUNCTION plvdate.bizdays_between(date, date) VOLATILE;
+ALTER FUNCTION plvdate.prev_bizday(date) VOLATILE;
+ALTER FUNCTION plvdate.isbizday(date) VOLATILE;
