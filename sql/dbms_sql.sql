@@ -464,3 +464,32 @@ $$;
 select * from test_cursor;
 
 drop table test_cursor;
+
+create function public.close_during_convert()
+returns boolean
+language plpgsql
+as $$
+begin
+  if current_setting('audit.arm', true) = 'on' then
+    perform set_config('audit.arm', 'off', false);
+    call dbms_sql.close_cursor(current_setting('audit.cursor')::int);
+  end if;
+  return true;
+end $$;
+
+create domain public.d_big as text check (public.close_during_convert());
+
+do $$
+declare c integer; big public.d_big; result text;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'select repeat(''x'', 300000)::text');
+  call dbms_sql.define_column(c, 1, big);
+  perform dbms_sql.execute(c);
+  perform dbms_sql.fetch_rows(c);
+  perform set_config('audit.cursor', c::text, false);
+  perform set_config('audit.arm', 'on', false);
+  result := dbms_sql.column_value_f(c, 1, big); -- closes cursor mid-call, then faults
+end $$;
+
+drop function public.close_during_convert cascade;

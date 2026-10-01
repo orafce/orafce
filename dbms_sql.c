@@ -134,6 +134,13 @@ typedef struct
 	Bitmapset  *array_columns;	/* set of array columns */
 	uint64		batch_rows;		/* how much rows should be fetched to fill
 								 * target arrays */
+
+	/*
+	 * User can execute by dbms_sql interface a routines from
+	 * dbms_sql schema. This flag disallow to use cursor, when
+	 * dbms_sql routines are in execution.
+	 */
+	bool		in_use;
 } CursorData;
 
 typedef enum
@@ -250,6 +257,11 @@ get_cursor(FunctionCallInfo fcinfo, bool should_be_assigned)
 		ereport(ERROR,
 				(errcode(ERRCODE_UNDEFINED_CURSOR),
 				 errmsg("cursor is not valid")));
+
+	if (cursor->in_use)
+		ereport(ERROR,
+				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+				 errmsg("cursor is in use and cannot be used recursively")));
 
 	return cursor;
 }
@@ -1388,10 +1400,22 @@ Datum
 dbms_sql_execute(PG_FUNCTION_ARGS)
 {
 	CursorData *c;
+	volatile int64 result;
 
 	c = get_cursor(fcinfo, true);
 
-	PG_RETURN_INT64((int64) execute(c));
+	PG_TRY();
+	{
+		c->in_use = true;
+		result = (int64) execute(c);
+	}
+	PG_FINALLY();
+	{
+		c->in_use = false;
+	}
+	PG_END_TRY();
+
+	PG_RETURN_INT64(result);
 }
 
 static uint64
@@ -1509,10 +1533,22 @@ Datum
 dbms_sql_fetch_rows(PG_FUNCTION_ARGS)
 {
 	CursorData *c;
+	volatile int32 result;
 
 	c = get_cursor(fcinfo, true);
+	c->in_use = true;
 
-	PG_RETURN_INT32(fetch_rows(c, false));
+	PG_TRY();
+	{
+		result = fetch_rows(c, false);
+	}
+	PG_FINALLY();
+	{
+		c->in_use = false;
+	}
+	PG_END_TRY();
+
+	PG_RETURN_INT32(result);
 }
 
 /*
@@ -1523,6 +1559,7 @@ dbms_sql_execute_and_fetch(PG_FUNCTION_ARGS)
 {
 	CursorData *c;
 	bool		exact;
+	volatile int32 result;
 
 	c = get_cursor(fcinfo, true);
 
@@ -1533,9 +1570,20 @@ dbms_sql_execute_and_fetch(PG_FUNCTION_ARGS)
 
 	exact = PG_GETARG_BOOL(1);
 
-	execute(c);
+	c->in_use = true;
 
-	PG_RETURN_INT32(fetch_rows(c, exact));
+	PG_TRY();
+	{
+		execute(c);
+		result = fetch_rows(c, exact);
+	}
+	PG_FINALLY();
+	{
+		c->in_use = false;
+	}
+	PG_END_TRY();
+
+	PG_RETURN_INT32(result);
 }
 
 /*
@@ -1806,7 +1854,8 @@ Datum
 dbms_sql_column_value(PG_FUNCTION_ARGS)
 {
 	CursorData *c;
-	Datum		value;
+	volatile Datum value;
+	Datum	   _value;
 	Datum		result;
 	int			pos;
 	bool		isnull;
@@ -1850,9 +1899,20 @@ dbms_sql_column_value(PG_FUNCTION_ARGS)
 		/* internal error, should not to be */
 		elog(ERROR, "unexpected function result type");
 
-	value = column_value(c, pos, targetTypeId, &isnull, false);
+	c->in_use = true;
+	PG_TRY();
+	{
+		value = column_value(c, pos, targetTypeId, &isnull, false);
+	}
+	PG_FINALLY();
+	{
+		c->in_use = false;
+	}
+	PG_END_TRY();
 
-	resulttuple = heap_form_tuple(resulttupdesc, &value, &isnull);
+	_value = value;
+
+	resulttuple = heap_form_tuple(resulttupdesc, &_value, &isnull);
 	result = PointerGetDatum(SPI_returntuple(resulttuple, CreateTupleDescCopy(resulttupdesc)));
 
 	SPI_finish();
@@ -1869,7 +1929,7 @@ Datum
 dbms_sql_column_value_f(PG_FUNCTION_ARGS)
 {
 	CursorData *c;
-	Datum		value;
+	volatile Datum value;
 	int			pos;
 	bool		isnull;
 	Oid			targetTypeId;
@@ -1893,7 +1953,16 @@ dbms_sql_column_value_f(PG_FUNCTION_ARGS)
 
 	targetTypeId = get_fn_expr_argtype(fcinfo->flinfo, 2);
 
-	value = column_value(c, pos, targetTypeId, &isnull, true);
+	c->in_use = true;
+	PG_TRY();
+	{
+		value = column_value(c, pos, targetTypeId, &isnull, true);
+	}
+	PG_FINALLY();
+	{
+		c->in_use = false;
+	}
+	PG_END_TRY();
 
 	SPI_finish();
 
