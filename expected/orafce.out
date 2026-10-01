@@ -2922,6 +2922,24 @@ select dbms_assert.qualified_sql_name('aaa.bbb.ccc."aaaa""aaa"');
 
 select dbms_assert.qualified_sql_name('aaa.bbb.cc%c."aaaa""aaa"');
 ERROR:  string is not qualified SQL name
+select dbms_assert.qualified_sql_name('"ahoj"  dddd');
+ERROR:  string is not qualified SQL name
+select dbms_assert.qualified_sql_name('"x", 2 AS y');
+ERROR:  string is not qualified SQL name
+select dbms_assert.qualified_sql_name('"x" UNION SELECT 1');
+ERROR:  string is not qualified SQL name
+select dbms_assert.qualified_sql_name('"x"; DROP TABLE t');
+ERROR:  string is not qualified SQL name
+select dbms_assert.qualified_sql_name('"x" -- c');
+ERROR:  string is not qualified SQL name
+select dbms_assert.qualified_sql_name('"x"'),
+       dbms_assert.qualified_sql_name('"s"."t"'),
+       dbms_assert.qualified_sql_name('schema.table');
+ qualified_sql_name | qualified_sql_name | qualified_sql_name 
+--------------------+--------------------+--------------------
+ "x"                | "s"."t"            | schema.table
+(1 row)
+
 select dbms_assert.schema_name('dbms_assert');
  schema_name 
 -------------

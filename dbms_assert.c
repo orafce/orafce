@@ -129,9 +129,6 @@ ParseIdentifierString(char *str, int len)
 				else
 					return false;
 			}
-
-			/* endp now points at the terminating quote */
-			ptr = endp + 1;
 		}
 		else
 		{
