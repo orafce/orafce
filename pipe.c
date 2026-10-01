@@ -1141,6 +1141,9 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 	MemoryContext per_query_cxt;
 	Tuplestorestate *tuple_store;
 	ReturnSetInfo *rsi;
+	static const Oid expect[DB_PIPES_COLS] =
+			{ VARCHAROID, INT4OID, INT4OID, INT4OID, BOOLOID, VARCHAROID };
+	int			i;
 
 	rsi = (ReturnSetInfo *) fcinfo->resultinfo;
 
@@ -1163,6 +1166,18 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 	oldcxt = MemoryContextSwitchTo(per_query_cxt);
 
 	tupdesc = CreateTupleDescCopy(rsi->expectedDesc);
+
+	/*
+	 * Unfortunately, the implementation of this function is very old,
+	 * and the function is defined as RETURNS SETOF RECORD, so we need
+	 * to check expected tupdesc first.
+	 */
+	for (i = 0; i < DB_PIPES_COLS; i++)
+		if (TupleDescAttr(rsi->expectedDesc, i)->atttypid != expect[i])
+			ereport(ERROR,
+					(errcode(ERRCODE_DATATYPE_MISMATCH),
+					 errmsg("column %d must be of type %s", i + 1, format_type_be(expect[i]))));
+
 	tuple_store = tuplestore_begin_heap(false, false, work_mem);
 
 	MemoryContextSwitchTo(oldcxt);
