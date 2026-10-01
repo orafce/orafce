@@ -1185,8 +1185,6 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 	WATCH_PRE(timeout, endtime, cycle);
 	if (ora_lock_shmem(orafce_shmemmsgsz, MAX_PIPES, MAX_EVENTS, MAX_LOCKS, false))
 	{
-		int			i;
-
 		for (i = 0; i < MAX_PIPES; i++)
 		{
 			orafce_pipe *p = &pipes[i];

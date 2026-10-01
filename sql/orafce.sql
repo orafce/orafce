@@ -598,6 +598,15 @@ select dbms_assert.enquote_name('''"AAA', false);
 select dbms_assert.noop('some string');
 select dbms_assert.qualified_sql_name('aaa.bbb.ccc."aaaa""aaa"');
 select dbms_assert.qualified_sql_name('aaa.bbb.cc%c."aaaa""aaa"');
+select dbms_assert.qualified_sql_name('"ahoj"  dddd');
+select dbms_assert.qualified_sql_name('"x", 2 AS y');
+select dbms_assert.qualified_sql_name('"x" UNION SELECT 1');
+select dbms_assert.qualified_sql_name('"x"; DROP TABLE t');
+select dbms_assert.qualified_sql_name('"x" -- c');
+select dbms_assert.qualified_sql_name('"x"'),
+       dbms_assert.qualified_sql_name('"s"."t"'),
+       dbms_assert.qualified_sql_name('schema.table');
+
 select dbms_assert.schema_name('dbms_assert');
 select dbms_assert.schema_name('jabadabado');
 select dbms_assert.simple_sql_name('"Aaa dghh shsh"');
