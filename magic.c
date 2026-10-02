@@ -5,7 +5,7 @@
 
 PG_MODULE_MAGIC_EXT(
 					.name = "orafce",
-					.version = "4.16.12"
+					.version = "4.16.13"
 );
 
 #elif defined PG_MODULE_MAGIC
