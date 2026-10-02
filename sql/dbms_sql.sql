@@ -493,3 +493,18 @@ begin
 end $$;
 
 drop function public.close_during_convert cascade;
+
+create temp table t(v int);
+
+do $$
+declare c int;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'insert into t(v) values (:value)');
+  call dbms_sql.bind_array(c, 'value', array[1,2], 1, 2); -- is_array = true
+  perform dbms_sql.execute(c);
+  call dbms_sql.bind_variable(c, 'value', 42); -- scalar rebind; is_array stays true
+  perform dbms_sql.execute(c);-- datumgetarraytypep(42) -> deref
+end $$;
+
+drop table t;

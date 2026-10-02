@@ -118,6 +118,8 @@ typedef struct
 	char		cursorname[32];
 	Portal		portal;			/* one shot (execute) plan */
 	SPIPlanPtr	plan;
+	int			nargs;
+	Oid		   *argtypids;
 	MemoryContext cursor_cxt;
 	MemoryContext cursor_xact_cxt;
 	MemoryContext tuples_cxt;
@@ -564,12 +566,13 @@ bind_variable(PG_FUNCTION_ARGS)
 	}
 
 	var->typoid = valtype;
+	var->is_array = false;
+
+	get_typlenbyval(var->typoid, &var->typlen, &var->typbyval);
 
 	if (!PG_ARGISNULL(2))
 	{
 		MemoryContext oldcxt;
-
-		get_typlenbyval(var->typoid, &var->typlen, &var->typbyval);
 
 		oldcxt = MemoryContextSwitchTo(c->cursor_cxt);
 
@@ -1196,6 +1199,36 @@ execute(CursorData *c)
 		if (SPI_connect() != SPI_OK_CONNECT)
 			elog(ERROR, "SPI_connact failed");
 
+		/* check if arguments of plan are still same */
+		if (c->plan)
+		{
+			bool		plan_is_valid = true;
+
+			if (c->nargs == c->nvariables)
+			{
+				i = 0;
+				foreach(lc, c->variables)
+				{
+					VariableData *var = (VariableData *) lfirst(lc);
+
+					if (c->argtypids[i++] != var->typoid)
+					{
+						plan_is_valid = false;
+						break;
+					}
+				}
+
+				if (!plan_is_valid)
+				{
+					SPI_freeplan(c->plan);
+					pfree(c->argtypids);
+
+					c->plan = NULL;
+					c->argtypids = NULL;
+				}
+			}
+		}
+
 		/* prepare, or reuse cached plan */
 		if (!c->plan)
 		{
@@ -1227,8 +1260,14 @@ execute(CursorData *c)
 				pfree(types);
 
 			SPI_keepplan(plan);
-
 			c->plan = plan;
+
+			/* keep plan arg types (for validation) */
+			oldcxt = MemoryContextSwitchTo(c->cursor_cxt);
+			c->nargs = c->nvariables;
+			c->argtypids = palloc(sizeof(Oid) * c->nargs);
+			memcpy(c->argtypids, types, sizeof(Oid) * c->nargs);
+			MemoryContextSwitchTo(oldcxt);
 		}
 
 		oldcxt = MemoryContextSwitchTo(c->result_cxt);
