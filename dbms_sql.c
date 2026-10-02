@@ -1643,12 +1643,16 @@ static void
 init_cast_cache_entry(CastCacheData *ccast,
 					  Oid targettypid,
 					  int32 targettypmod,
-					  Oid sourcetypid)
+					  Oid sourcetypid,
+					  Oid requested_typid,
+					  bool is_array)
 {
 	Oid			funcoid;
 	Oid			basetypid;
+	Oid			requested_basetypid;
 
 	basetypid = getBaseType(targettypid);
+	requested_basetypid = getBaseType(requested_typid);
 
 	if (targettypid != basetypid)
 		ccast->targettypid = targettypid;
@@ -1699,6 +1703,25 @@ init_cast_cache_entry(CastCacheData *ccast,
 				fmgr_info(funcoid, &ccast->finfo_typmod);
 		}
 	}
+
+	ccast->requested_typid = requested_typid;
+	ccast->is_array = is_array;
+
+	if (ccast->is_array)
+	{
+		ccast->array_targettypid = requested_basetypid != requested_typid ? requested_typid : InvalidOid;
+
+		if (get_array_type(basetypid) != requested_basetypid)
+			ereport(ERROR,
+					(errcode(ERRCODE_DATATYPE_MISMATCH),
+					 errmsg("unexpected target type \"%s\" (expected type \"%s\")",
+							format_type_be(requested_basetypid),
+							format_type_be(get_array_type(basetypid)))));
+	}
+	else
+		ccast->array_targettypid = InvalidOid;
+
+	get_typlenbyval(requested_basetypid, &ccast->typlen, &ccast->typbyval);
 
 	ccast->isvalid = true;
 }
@@ -1800,31 +1823,12 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 
 	if (!ccast->isvalid)
 	{
-		Oid			basetype = getBaseType(targetTypeId);
-
 		init_cast_cache_entry(ccast,
 							  columnTypeId,
 							  columnTypeMode,
-							  SPI_gettypeid(c->tupdesc, pos));
-
-		ccast->requested_typid = targetTypeId;
-		ccast->is_array = bms_is_member(pos, c->array_columns);
-
-		if (ccast->is_array)
-		{
-			ccast->array_targettypid = basetype != targetTypeId ? targetTypeId : InvalidOid;
-
-			if (get_array_type(getBaseType(columnTypeId)) != basetype)
-				ereport(ERROR,
-						(errcode(ERRCODE_DATATYPE_MISMATCH),
-						 errmsg("unexpected target type \"%s\" (expected type \"%s\")",
-								format_type_be(basetype),
-								format_type_be(get_array_type(getBaseType(columnTypeId))))));
-		}
-		else
-			ccast->array_targettypid = InvalidOid;
-
-		get_typlenbyval(basetype, &ccast->typlen, &ccast->typbyval);
+							  SPI_gettypeid(c->tupdesc, pos),
+							  targetTypeId,
+							  bms_is_member(pos, c->array_columns));
 	}
 
 	if (ccast->is_array)
