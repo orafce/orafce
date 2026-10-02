@@ -508,3 +508,22 @@ begin
 end $$;
 
 drop table t;
+
+begin;
+
+create temp table audit_row(a integer, b text);
+
+do $$
+  declare c integer; a text; b text;
+begin
+  c := dbms_sql.open_cursor();
+  call dbms_sql.parse(c, 'select row(1, ''marker'')::pg_temp.audit_row');
+  call dbms_sql.define_column(c, 1, null::text);
+  perform dbms_sql.execute(c);
+  perform dbms_sql.fetch_rows(c);
+  a := dbms_sql.column_value_f(c, 1, null::text); -- builds the cast cache
+  b := dbms_sql.column_value_f(c, 1, null::text); -- reuses it after spi_finish freed fn_mcxt
+  call dbms_sql.close_cursor(c);
+end $$;
+
+rollback;

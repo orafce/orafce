@@ -1823,12 +1823,22 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 
 	if (!ccast->isvalid)
 	{
+		MemoryContext oldcxt;
+
+		/*
+		 * We need to switch to longlife context, because
+		 * CurrentMemoryContext is saved as fn_mcxt.
+		 */
+		oldcxt = MemoryContextSwitchTo(c->cursor_xact_cxt);
+
 		init_cast_cache_entry(ccast,
 							  columnTypeId,
 							  columnTypeMode,
 							  SPI_gettypeid(c->tupdesc, pos),
 							  targetTypeId,
 							  bms_is_member(pos, c->array_columns));
+
+		MemoryContextSwitchTo(oldcxt);
 	}
 
 	if (ccast->is_array)
