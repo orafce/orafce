@@ -765,6 +765,107 @@ _ora_date_round(DateADT day, int f)
 	return result;
 }
 
+/*
+ * Oracle's RR and RRRR format elements are not known to PostgreSQL.
+ *
+ * RR is rewritten to YY (exactly two digits) and RRRR to YYYY; the year
+ * of the parsed value is then moved to the century that Oracle's RR rule gives:
+ *
+ *   current year 00-49: input 00-49 -> this century,     50-99 -> previous century
+ *   current year 50-99: input 00-49 -> next century,      50-99 -> this century
+ *
+ * For RRRR only a year below 100 is treated as a two-digit input, any other
+ * year was given with four digits and is kept as it is.
+ *
+ * Quoted text ("...") of the format is not touched.  Returns the rewritten
+ * format, or NULL when the format has no RR/RRRR element (then fmt is used
+ * unchanged).  *rr_always is set when the plain RR element is used.
+ */
+static char *
+orafce_rr_format(text *fmt_txt, bool *rr_always)
+{
+	char	   *fmt = text_to_cstring(fmt_txt);
+	char	   *p;
+	bool		found = false;
+	bool		quoted = false;
+
+	*rr_always = false;
+
+	for (p = fmt; *p; p++)
+	{
+		if (*p == '"')
+		{
+			quoted = !quoted;
+			continue;
+		}
+		if (quoted || (*p != 'R' && *p != 'r'))
+			continue;
+		if ((p[1] == 'R' || p[1] == 'r'))
+		{
+			if ((p[2] == 'R' || p[2] == 'r') && (p[3] == 'R' || p[3] == 'r'))
+			{
+				memcpy(p, "YYYY", 4);
+				p += 3;
+			}
+			else
+			{
+				memcpy(p, "YY", 2);
+				p += 1;
+				*rr_always = true;
+			}
+			found = true;
+		}
+	}
+
+	if (!found)
+	{
+		pfree(fmt);
+		return NULL;
+	}
+	return fmt;
+}
+
+/* move the year of a value parsed with an RR element to the century Oracle gives */
+static Timestamp
+orafce_rr_adjust(Timestamp ts, bool rr_always)
+{
+	struct pg_tm tm;
+	fsec_t		fsec;
+	struct pg_tm now;
+	fsec_t		now_fsec;
+	int			year;
+	int			yy;
+	int			century;
+
+	if (TIMESTAMP_NOT_FINITE(ts) || timestamp2tm(ts, NULL, &tm, &fsec, NULL, NULL) != 0)
+		return ts;
+
+	/* astronomical year: 1 BC is 0, so '00' parsed as YYYY ends up here */
+	year = tm.tm_year;
+	if (!rr_always && (year > 99 || year < 0))
+		return ts;
+	yy = ((year % 100) + 100) % 100;
+
+	if (timestamp2tm(GetCurrentTimestamp(), NULL, &now, &now_fsec, NULL, NULL) != 0)
+		return ts;
+	century = now.tm_year / 100;
+
+	if (now.tm_year % 100 < 50)
+	{
+		if (yy >= 50)
+			century -= 1;
+	}
+	else if (yy < 50)
+		century += 1;
+
+	tm.tm_year = century * 100 + yy;
+	if (tm2timestamp(&tm, fsec, NULL, &ts) != 0)
+		ereport(ERROR,
+				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 errmsg("timestamp out of range")));
+	return ts;
+}
+
 /********************************************************************
  *
  * ora_to_date
@@ -797,6 +898,8 @@ ora_to_date(PG_FUNCTION_ARGS)
 	{
 		text	   *fmt_txt = PG_GETARG_TEXT_PP(1);
 		Datum		newDate;
+		char	   *rr_fmt;
+		bool		rr_always;
 
 		/*
 		 * With Oracle passing en empty string to to_date(txt, fmt) returns
@@ -805,13 +908,19 @@ ora_to_date(PG_FUNCTION_ARGS)
 		if (strlen(text_to_cstring(date_txt)) == 0)
 			PG_RETURN_NULL();
 
+		/* RR and RRRR are not known to PostgreSQL, see orafce_rr_format */
+		rr_fmt = orafce_rr_format(fmt_txt, &rr_always);
+
 		/* it will return timestamp at GMT */
 		newDate = DirectFunctionCall2(to_timestamp,
 									  PointerGetDatum(date_txt),
-									  PointerGetDatum(fmt_txt));
+									  rr_fmt ? CStringGetTextDatum(rr_fmt) : PointerGetDatum(fmt_txt));
 
 		/* convert to local timestamp */
 		result = DatumGetTimestamp(DirectFunctionCall1(timestamptz_timestamp, newDate));
+
+		if (rr_fmt)
+			result = orafce_rr_adjust(result, rr_always);
 
 		if (orafce_emit_error_on_date_bug)
 		{
@@ -843,14 +952,21 @@ ora_to_date(PG_FUNCTION_ARGS)
 	if (nls_date_format && strlen(nls_date_format))
 	{
 		Datum		newDate;
+		char	   *rr_fmt;
+		bool		rr_always;
+
+		rr_fmt = orafce_rr_format(cstring_to_text(nls_date_format), &rr_always);
 
 		/* it will return timestamp at GMT */
 		newDate = DirectFunctionCall2(to_timestamp,
 									  PointerGetDatum(date_txt),
-									  CStringGetTextDatum(nls_date_format));
+									  CStringGetTextDatum(rr_fmt ? rr_fmt : nls_date_format));
 
 		/* convert to local timestamp */
 		result = DatumGetTimestamp(DirectFunctionCall1(timestamptz_timestamp, newDate));
+
+		if (rr_fmt)
+			result = orafce_rr_adjust(result, rr_always);
 	}
 	else
 		result = DatumGetTimestamp(DirectFunctionCall3(timestamp_in,

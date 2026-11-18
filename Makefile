@@ -96,7 +96,8 @@ REGRESS = orafce\
 		dbms_sql\
 		hextoraw\
 		utl_raw\
-		user_tables
+		user_tables\
+		to_date_rr
 
 #REGRESS_OPTS = --load-language=plpgsql --schedule=parallel_schedule --encoding=utf8
 REGRESS_OPTS = --schedule=parallel_schedule --encoding=utf8
