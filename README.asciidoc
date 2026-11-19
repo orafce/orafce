@@ -118,6 +118,19 @@ reported by default, to disable this behavior `set orafce.orafce_emit_error_on_d
 	 1003-03-15 00:00:00
 	(1 row)
 ----
++
+The Oracle format elements `RR` and `RRRR`, which PostgreSQL does not know, are supported by
+`to_date(text, text)` and by the format given in `orafce.nls_date_format`. A two digit year is
+moved to the century given by Oracle's rule: when the current year is 00-49, the years 00-49 are
+in the current century and 50-99 in the previous one; when it is 50-99, the years 00-49 are in the
+next century and 50-99 in the current one. `RRRR` keeps a year given with four digits, so a year
+below 100 is taken as a two digit input. `RR` requires exactly two digits.
+----
+	-- the current year is 2026
+	SELECT oracle.to_date('01.02.24', 'DD.MM.RR');    -> 2024-02-01 00:00:00
+	SELECT oracle.to_date('01.02.55', 'DD.MM.RR');    -> 1955-02-01 00:00:00
+	SELECT oracle.to_date('01.02.2055', 'DD.MM.RRRR'); -> 2055-02-01 00:00:00
+----
 
 == oracle.date data type
 
