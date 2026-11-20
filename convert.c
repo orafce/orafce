@@ -606,7 +606,8 @@ orafce_to_single_byte(PG_FUNCTION_ARGS)
 {
 	text	   *src;
 	text	   *dst;
-	char	   *s, *end;
+	char	   *s,
+			   *end;
 	char	   *d;
 	int			srclen;
 

@@ -34,7 +34,7 @@ typedef enum orafce_compatibility
 	ORAFCE_COMPATIBILITY_WARNING_ORAFCE,
 	ORAFCE_COMPATIBILITY_ORACLE,
 	ORAFCE_COMPATIBILITY_ORAFCE,
-} orafce_compatibility;
+}			orafce_compatibility;
 
 extern int	ora_instr(text *txt, text *pattern, int start, int nth);
 extern int	ora_mb_strlen(text *str, char **sizes, int **positions);
@@ -52,7 +52,7 @@ extern char *orafce_sys_guid_source;
 
 extern void orafce_xact_cb(XactEvent event, void *arg);
 extern void orafce_subxact_cb(SubXactEvent event, SubTransactionId mySubid,
-							SubTransactionId parentSubid, void *arg);
+							  SubTransactionId parentSubid, void *arg);
 
 extern void orafce_umask_assign_hook(const char *newvalue, void *extra);
 extern bool orafce_umask_check_hook(char **newval, void **extra, GucSource source);
@@ -78,7 +78,7 @@ extern bool orafce_umask_check_hook(char **newval, void **extra, GucSource sourc
 #define pg_mblen_range(str,end)		orafce_mblen_range(str,end)
 #define pg_mblen_cstr(str)			pg_mblen(str)
 
-extern int orafce_mblen_range(const char *mbstr, const char *end);
+extern int	orafce_mblen_range(const char *mbstr, const char *end);
 
 #endif
 

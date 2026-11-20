@@ -233,10 +233,9 @@ orafce_lpad(PG_FUNCTION_ARGS)
 				ptr2 = ptr2start;
 
 				/*
-				 * Now we are at the end of string2. When there are not
-				 * change at s2_add_width then string2 has zero display
-				 * width and we have to go out if we don't want to be
-				 * in never finish loop.
+				 * Now we are at the end of string2. When there are not change
+				 * at s2_add_width then string2 has zero display width and we
+				 * have to go out if we don't want to be in never finish loop.
 				 */
 				if (s2_add_width == s2_add_width_initial)
 					PG_RETURN_TEXT_P(cstring_to_text(""));

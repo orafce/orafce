@@ -115,7 +115,8 @@ ora_mb_strlen(text *str, char **sizes, int **positions)
 {
 	int			r_len;
 	int			cur_size = 0;
-	char	   *p, *end;
+	char	   *p,
+			   *end;
 	int			cur = 0;
 
 	p = VARDATA_ANY(str);
@@ -310,7 +311,8 @@ plvstr_normalize(PG_FUNCTION_ARGS)
 	text	   *str = PG_GETARG_TEXT_PP(0);
 	int			len = VARSIZE_ANY_EXHDR(str);
 	char	   *end;
-	char	   *ptr, *write_ptr;
+	char	   *ptr,
+			   *write_ptr;
 	bool		write_spc;
 	text	   *result;
 
@@ -436,9 +438,9 @@ plvstr_is_prefix_text(PG_FUNCTION_ARGS)
 	if (!case_sens)
 	{
 		str = DatumGetTextP(DirectFunctionCall1Coll(lower, PG_GET_COLLATION(),
-												   PointerGetDatum(str)));
+													PointerGetDatum(str)));
 		prefix = DatumGetTextP(DirectFunctionCall1Coll(lower, PG_GET_COLLATION(),
-													  PointerGetDatum(prefix)));
+													   PointerGetDatum(prefix)));
 	}
 
 	str_len = VARSIZE_ANY_EXHDR(str);
@@ -634,8 +636,8 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 		 * The result cannot be longer than original string and cannot be
 		 * longer than new_len * encoding_max_length, take smaller value.
 		 *
-		 * the product can exceed int for a long string in a wide encoding,
-		 * so use int64.
+		 * the product can exceed int for a long string in a wide encoding, so
+		 * use int64.
 		 */
 		if ((max_size = (int64) new_len * pg_database_encoding_max_length()) > fz_size)
 			result = palloc(fz_size + VARHDRSZ);

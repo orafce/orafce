@@ -1071,7 +1071,7 @@ orafce_xact_cb(XactEvent event, void *arg)
 
 void
 orafce_subxact_cb(SubXactEvent event, SubTransactionId mySubid,
-				 SubTransactionId parentSubid, void *arg)
+				  SubTransactionId parentSubid, void *arg)
 {
 	alert_signal_data **link = &signals;
 

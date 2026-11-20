@@ -124,7 +124,7 @@ typedef struct
 	MemoryContext cursor_xact_cxt;
 	MemoryContext tuples_cxt;
 	MemoryContext result_cxt;	/* short life memory context */
-	HeapTuple	*tuples;
+	HeapTuple  *tuples;
 	TupleDesc	coltupdesc;
 	TupleDesc	tupdesc;
 	CastCacheData *casts;
@@ -138,9 +138,9 @@ typedef struct
 								 * target arrays */
 
 	/*
-	 * User can execute by dbms_sql interface a routines from
-	 * dbms_sql schema. This flag disallow to use cursor, when
-	 * dbms_sql routines are in execution.
+	 * User can execute by dbms_sql interface a routines from dbms_sql schema.
+	 * This flag disallow to use cursor, when dbms_sql routines are in
+	 * execution.
 	 */
 	bool		in_use;
 } CursorData;
@@ -914,12 +914,11 @@ dbms_sql_define_array(PG_FUNCTION_ARGS)
 				 errmsg("cnt is less or equal to zero")));
 
 	/*
-	 * Oracle has not any limit of cnt value. It is a question if
-	 * Orafce should to introduce some dedicated limit for this
-	 * argument. There is possible risk, but the possibility
-	 * how to build massive arrays are already available in
-	 * Postgres - like SELECT ARRAY(SELECT generate_series(1, bignumber)).
-	 * So I don't introduce any upper limit.
+	 * Oracle has not any limit of cnt value. It is a question if Orafce
+	 * should to introduce some dedicated limit for this argument. There is
+	 * possible risk, but the possibility how to build massive arrays are
+	 * already available in Postgres - like SELECT ARRAY(SELECT
+	 * generate_series(1, bignumber)). So I don't introduce any upper limit.
 	 */
 	col->rowcount = (uint64) rowcount;
 
@@ -1485,18 +1484,21 @@ fetch_rows(CursorData *c, bool exact)
 				Assert(c->batch_rows >= 1);
 
 				if (c->batch_rows > DEFAULT_PREFETCH_ROWS)
+
 					/*
 					 * We need to read as a minimum batch_rows rows.
 					 * DEFAULT_PREFETCH_ROW is not a limit. Generally
-					 * SPI_cursor_fetch has not problem with more
-					 * hundred thousands rows.
+					 * SPI_cursor_fetch has not problem with more hundred
+					 * thousands rows.
 					 */
 					fetch_rows = c->batch_rows;
 				else
+
 					/*
 					 * batch size is smaller than PREFETCH_ROWS, so we can
 					 * read more batches in one fetch. Calculate how much
-					 * complete batches can be available inside DEFAULT_PREFETCH_ROWS.
+					 * complete batches can be available inside
+					 * DEFAULT_PREFETCH_ROWS.
 					 */
 					fetch_rows = (DEFAULT_PREFETCH_ROWS / c->batch_rows) * c->batch_rows;
 			}
@@ -1826,8 +1828,8 @@ column_value(CursorData *c, int pos, Oid targetTypeId, bool *isnull, bool spi_tr
 		MemoryContext oldcxt;
 
 		/*
-		 * We need to switch to longlife context, because
-		 * CurrentMemoryContext is saved as fn_mcxt.
+		 * We need to switch to longlife context, because CurrentMemoryContext
+		 * is saved as fn_mcxt.
 		 */
 		oldcxt = MemoryContextSwitchTo(c->cursor_xact_cxt);
 
@@ -1908,7 +1910,7 @@ dbms_sql_column_value(PG_FUNCTION_ARGS)
 {
 	CursorData *c;
 	volatile Datum value;
-	Datum	   _value;
+	Datum		_value;
 	Datum		result;
 	int			pos;
 	bool		isnull;
@@ -2431,9 +2433,9 @@ dbms_sql_describe_columns(PG_FUNCTION_ARGS)
 
 	if (cursor_tupdesc == NULL)
 		ereport(ERROR,
-			(errcode(ERRCODE_INVALID_CURSOR_STATE),
-			 errmsg("cursor doesn't return rows"),
-			 errdetail("The parsed statement is not a query.")));
+				(errcode(ERRCODE_INVALID_CURSOR_STATE),
+				 errmsg("cursor doesn't return rows"),
+				 errdetail("The parsed statement is not a query.")));
 
 	ncolumns = cursor_tupdesc->natts;
 

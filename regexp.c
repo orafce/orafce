@@ -274,7 +274,8 @@ orafce_replace_text_regexp(text *src_text, text *pattern_text,
 	pg_wchar   *data;
 	size_t		data_len;
 	size_t		data_pos;
-	char	   *start_ptr, *end_ptr;
+	char	   *start_ptr,
+			   *end_ptr;
 	int			escape_status;
 
 	initStringInfo(&buf);

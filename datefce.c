@@ -950,7 +950,8 @@ static Timestamp
 _orafce_to_date_fmt(text *date_txt, text *fmt_txt)
 {
 	Timestamp	ts_tz;
-	Timestamp	ts, _ts;
+	Timestamp	ts,
+				_ts;
 	int			flags = 0;
 	text	   *_fmt_txt = NULL;
 

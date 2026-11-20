@@ -155,8 +155,8 @@ orafce_reminder_numeric(PG_FUNCTION_ARGS)
 	divisor_magnitude = DirectFunctionCall1(numeric_abs, NumericGetDatum(num2));
 
 	if (DatumGetInt32(DirectFunctionCall2(numeric_cmp,
-										 DirectFunctionCall2(numeric_add, magnitude, magnitude),
-										 divisor_magnitude)) >= 0)
+										  DirectFunctionCall2(numeric_add, magnitude, magnitude),
+										  divisor_magnitude)) >= 0)
 	{
 		if (DatumGetInt32(DirectFunctionCall2(numeric_cmp, result, zero)) > 0)
 			result = DirectFunctionCall2(numeric_sub, result, divisor_magnitude);

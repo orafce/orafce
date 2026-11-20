@@ -158,9 +158,8 @@ orafce_replace_empty_strings(PG_FUNCTION_ARGS)
 			if (!isnull)
 			{
 				/*
-				 * Most common types of S category are varchar and
-				 * text - other types are mostly exception (in custom
-				 * queries) today.
+				 * Most common types of S category are varchar and text -
+				 * other types are mostly exception (in custom queries) today.
 				 */
 				if (is_text)
 				{

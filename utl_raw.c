@@ -27,15 +27,15 @@ PG_FUNCTION_INFO_V1(orafce_utl_raw_bit_xor);
 static bytea *
 ora_raw_bitop(bytea *a, bytea *b, char op)
 {
-	int				la = VARSIZE_ANY_EXHDR(a);
-	int				lb = VARSIZE_ANY_EXHDR(b);
-	int				n = Min(la, lb);
-	int				m = Max(la, lb);
-	bytea		   *result = (bytea *) palloc(VARHDRSZ + m);
-	unsigned char  *pa = (unsigned char *) VARDATA_ANY(a);
-	unsigned char  *pb = (unsigned char *) VARDATA_ANY(b);
-	unsigned char  *pr = (unsigned char *) VARDATA(result);
-	int				i;
+	int			la = VARSIZE_ANY_EXHDR(a);
+	int			lb = VARSIZE_ANY_EXHDR(b);
+	int			n = Min(la, lb);
+	int			m = Max(la, lb);
+	bytea	   *result = (bytea *) palloc(VARHDRSZ + m);
+	unsigned char *pa = (unsigned char *) VARDATA_ANY(a);
+	unsigned char *pb = (unsigned char *) VARDATA_ANY(b);
+	unsigned char *pr = (unsigned char *) VARDATA(result);
+	int			i;
 
 	SET_VARSIZE(result, VARHDRSZ + m);
 

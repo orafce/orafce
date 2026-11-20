@@ -143,7 +143,7 @@ typedef struct
 typedef struct PipesFctx
 {
 	int			pipe_nth;
-} PipesFctx;
+}			PipesFctx;
 
 typedef struct
 {
@@ -1142,7 +1142,7 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 	Tuplestorestate *tuple_store;
 	ReturnSetInfo *rsi;
 	static const Oid expect[DB_PIPES_COLS] =
-			{ VARCHAROID, INT4OID, INT4OID, INT4OID, BOOLOID, VARCHAROID };
+	{VARCHAROID, INT4OID, INT4OID, INT4OID, BOOLOID, VARCHAROID};
 	int			i;
 
 	rsi = (ReturnSetInfo *) fcinfo->resultinfo;
@@ -1168,9 +1168,9 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 	tupdesc = CreateTupleDescCopy(rsi->expectedDesc);
 
 	/*
-	 * Unfortunately, the implementation of this function is very old,
-	 * and the function is defined as RETURNS SETOF RECORD, so we need
-	 * to check expected tupdesc first.
+	 * Unfortunately, the implementation of this function is very old, and the
+	 * function is defined as RETURNS SETOF RECORD, so we need to check
+	 * expected tupdesc first.
 	 */
 	for (i = 0; i < DB_PIPES_COLS; i++)
 		if (TupleDescAttr(rsi->expectedDesc, i)->atttypid != expect[i])
@@ -1192,7 +1192,7 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 			if (p->is_valid)
 			{
 				Datum		values[DB_PIPES_COLS];
-				bool		nulls[DB_PIPES_COLS] = { false };
+				bool		nulls[DB_PIPES_COLS] = {false};
 
 				/* name */
 				values[0] = CStringGetTextDatum(p->pipe_name);

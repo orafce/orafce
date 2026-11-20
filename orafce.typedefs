@@ -48,7 +48,6 @@ DateADT
 Datum
 DatumTupleFields
 DestReceiver
-DomainConstraintCache
 EState
 ErrorContextCallback
 ErrorData
@@ -67,8 +66,6 @@ FILE
 FileSlot
 FmgrInfo
 ForEachState
-ForPortionOfExpr
-ForPortionOfState
 ForkNumber
 FormData_pg_attribute
 FormData_pg_class
@@ -84,10 +81,6 @@ FromExpr
 FuncCallContext
 FunctionCallInfo
 FunctionCallInfoBaseData
-GraphElementPattern
-GraphElementPatternKind
-GraphPattern
-GraphTableParseState
 GucBoolAssignHook
 GucBoolCheckHook
 GucContext
@@ -107,6 +100,9 @@ IOStats
 Index
 IndexBuildCallback
 IndexInfo
+IndexScanDesc
+IndexTuple
+IndexTupleData
 ItemPointer
 ItemPointerData
 JoinType
@@ -148,6 +144,7 @@ NullableDatum
 Numeric
 OffsetNumber
 Oid
+Oid8
 OnConflictAction
 OnConflictActionState
 OnConflictExpr
@@ -180,7 +177,6 @@ PartitionKey
 Pg_abi_values
 Pg_finfo_record
 Pg_magic_struct
-PipesFctx
 Plan
 PlanState
 PlannedStmt
@@ -242,6 +238,8 @@ String
 StringInfo
 StringInfoData
 SubTransactionId
+SubXactCallback
+SubXactEvent
 SysCacheIdentifier
 TBMIterator
 TBMPrivateIterator
@@ -270,11 +268,9 @@ TupleDesc
 TupleTableSlot
 TupleTableSlotOps
 Tuplestorestate
-TypeCacheEntry
 TypeFuncClass
 VacuumParams
 ValidateIndexState
-Var
 VarChar
 VarReturningType
 VariableData
@@ -327,7 +323,6 @@ char32_t
 clockid_t
 cultural_info
 dclist_head
-div_t
 dlist_head
 dlist_node
 flex_int16_t

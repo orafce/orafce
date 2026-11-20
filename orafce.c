@@ -25,7 +25,7 @@ char	   *orafce_timezone = NULL;
 
 bool		orafce_initialized = false;
 
-size_t			orafce_shmemmsgsz;
+size_t		orafce_shmemmsgsz;
 
 static const struct config_enum_entry orafce_compatibility_options[] = {
 	{"warning_oracle", ORAFCE_COMPATIBILITY_WARNING_ORACLE, false},
