@@ -28,6 +28,9 @@
 
 bool		orafce_emit_error_on_date_bug = true;
 
+static bool buglimit_tz_is_computed = false;
+static Timestamp buglimit_tz = (Datum) 0;
+
 #define ENABLE_INTERNATIONALIZED_WEEKDAY
 
 #ifdef ENABLE_INTERNATIONALIZED_WEEKDAY
@@ -332,8 +335,8 @@ days_of_month(int y, int m)
 	int			ndays;
 
 	/*
-	 * arguments are every time calculated - so the value is out of
-	 * range only when some system routines fails.
+	 * arguments are every time calculated - so the value is out of range only
+	 * when some system routines fails.
 	 */
 	if (m < 1 || m > 12)
 		elog(ERROR, "date out of range");
@@ -528,8 +531,8 @@ add_months(PG_FUNCTION_ARGS)
 	m = months % 12;
 
 	/*
-	 * days_of_month requires m in [1..12]. So when
-	 * m is negative, normalize m,n
+	 * days_of_month requires m in [1..12]. So when m is negative, normalize
+	 * m,n
 	 */
 	if (m < 0)
 	{
@@ -768,7 +771,7 @@ _ora_date_round(DateADT day, int f)
 /*
  * Oracle's RR and RRRR format elements are not known to PostgreSQL.
  *
- * RR is rewritten to YY (exactly two digits) and RRRR to YYYY; the year
+ * RR can be rewritten to YY (exactly two digits) and RRRR to YYYY; the year
  * of the parsed value is then moved to the century that Oracle's RR rule gives:
  *
  *   current year 00-49: input 00-49 -> this century,     50-99 -> previous century
@@ -777,57 +780,122 @@ _ora_date_round(DateADT day, int f)
  * For RRRR only a year below 100 is treated as a two-digit input, any other
  * year was given with four digits and is kept as it is.
  *
- * Quoted text ("...") of the format is not touched.  Returns the rewritten
- * format, or NULL when the format has no RR/RRRR element (then fmt is used
- * unchanged).  The format is only read, nothing is allocated until the first
- * RR element is found, so formats without RR cost one scan.  *rr_always is
- * set when the plain RR element is used.
+ */
+#define TO_DATE_FMT_RR_FLAG			0x1
+#define TO_DATE_FMT_RRRR_FLAG		0x2
+#define TO_DATE_FMT_J_FLAG			0x4
+
+/*
+ * translate fmt string
+ *
+ * Currently only translation RR -> YY and RRRR -> YYYY are supported.
+ *
+ * Returns original text when it is unmodified or new modified text.
+ *
  */
 static text *
-orafce_rr_format(text *fmt_txt, bool *rr_always)
+orafce_tranlate_fmt(text *fmt_txt, int *flags)
 {
-	const char *src = VARDATA_ANY(fmt_txt);
-	int			len = VARSIZE_ANY_EXHDR(fmt_txt);
-	char	   *fmt = NULL;
+	const char *fmt = VARDATA_ANY(fmt_txt);
+	size_t		len = VARSIZE_ANY_EXHDR(fmt_txt);
+	StringInfoData str;
 	bool		quoted = false;
 
-	*rr_always = false;
+	*flags = 0;
 
-	for (int i = 0; i + 1 < len; i++)
+	/*
+	 * Fast exit when we sure so nothing interesting format element is used.
+	 * This will be most common case.
+	 */
+	if (!memchr(fmt, 'r', len) &&
+		!memchr(fmt, 'R', len) &&
+		!memchr(fmt, 'J', len) &&
+		!memchr(fmt, 'j', len))
+		return fmt_txt;
+
+	initStringInfo(&str);
+
+	while (len > 0)
 	{
-		if (src[i] == '"')
-			quoted = !quoted;
-		else if (!quoted && (src[i] == 'R' || src[i] == 'r') &&
-				 (src[i + 1] == 'R' || src[i + 1] == 'r'))
+		if (*fmt == '"')
 		{
-			if (!fmt)
+			quoted = !quoted;
+		}
+		else if (quoted && *fmt == '\\' && len > 1)
+		{
+			if (fmt[1] == '"')
 			{
-				fmt = palloc(len + 1);
-				memcpy(fmt, src, len);
-				fmt[len] = '\0';
-			}
-
-			if (i + 3 < len && (src[i + 2] == 'R' || src[i + 2] == 'r') &&
-				(src[i + 3] == 'R' || src[i + 3] == 'r'))
-			{
-				memcpy(fmt + i, "YYYY", 4);
-				i += 3;
-			}
-			else
-			{
-				memcpy(fmt + i, "YY", 2);
-				i += 1;
-				*rr_always = true;
+				appendBinaryStringInfo(&str, "\\\"", 2);
+				len -= 2;
+				fmt += 2;
+				continue;
 			}
 		}
+		else if (!quoted && (*fmt == 'r' || *fmt == 'R'))
+		{
+			int			i;
+			size_t		_len = len - 1;
+			const char *ptr = fmt + 1;
+
+			/* check next 3 chars */
+			for (i = 0; i < 3 && _len > 0; i++, _len--, ptr++)
+			{
+				if (*ptr == 'r' || *ptr == 'R')
+					continue;
+				break;
+			}
+
+			if (i == 3)
+			{
+				*flags |= TO_DATE_FMT_RRRR_FLAG;
+				appendBinaryStringInfo(&str, "YYYY", 4);
+				len -= 4;
+				fmt += 4;
+				continue;
+			}
+			else if (i >= 1)
+			{
+				*flags |= TO_DATE_FMT_RR_FLAG;
+				appendBinaryStringInfo(&str, "YY", 2);
+				len -= 2;
+				fmt += 2;
+				continue;
+			}
+		}
+		else if (!quoted && (*fmt == 'j' || *fmt == 'J'))
+		{
+			*flags |= TO_DATE_FMT_J_FLAG;
+		}
+
+		appendStringInfoChar(&str, *fmt++);
+		len -= 1;
 	}
 
-	return fmt ? cstring_to_text_with_len(fmt, len) : NULL;
+	fmt_txt = cstring_to_text_with_len(str.data, str.len);
+
+	pfree(str.data);
+
+	return fmt_txt;
 }
 
-/* move the year of a value parsed with an RR element to the century Oracle gives */
+/*
+ * Oracle's RR and RRRR format elements are not known to PostgreSQL.
+ *
+ * RR can be rewritten to YY (exactly two digits) and RRRR to YYYY; the
+ * year of the parsed value is then moved to the century that Oracle's RR
+ * rule gives:
+ *
+ * current year 00-49: input 00-49 -> this century,  50-99 -> previous
+ * century
+ *
+ * current year 50-99: input 00-49 -> next century, 50-99 -> this century
+ *
+ * For RRRR only a year below 100 is treated as a two-digit input, any
+ * other year was given with four digits and is kept as it is.
+ *
+ */
 static Timestamp
-orafce_rr_adjust(Timestamp ts, bool rr_always)
+orafce_adjust_date(Timestamp ts, int flags)
 {
 	struct pg_tm tm;
 	fsec_t		fsec;
@@ -837,17 +905,23 @@ orafce_rr_adjust(Timestamp ts, bool rr_always)
 	int			yy;
 	int			century;
 
+	if (!((flags & TO_DATE_FMT_RRRR_FLAG) || (flags & TO_DATE_FMT_RR_FLAG)))
+		return ts;
+
 	if (TIMESTAMP_NOT_FINITE(ts) || timestamp2tm(ts, NULL, &tm, &fsec, NULL, NULL) != 0)
 		return ts;
 
 	/* astronomical year: 1 BC is 0, so '00' parsed as YYYY ends up here */
 	year = tm.tm_year;
-	if (!rr_always && (year > 99 || year < 0))
+
+	if ((flags & TO_DATE_FMT_RRRR_FLAG) && (year > 99 || year < 0))
 		return ts;
+
 	yy = ((year % 100) + 100) % 100;
 
 	if (timestamp2tm(GetCurrentTransactionStartTimestamp(), NULL, &now, &now_fsec, NULL, NULL) != 0)
 		return ts;
+
 	century = now.tm_year / 100;
 
 	if (now.tm_year % 100 < 50)
@@ -856,9 +930,12 @@ orafce_rr_adjust(Timestamp ts, bool rr_always)
 			century -= 1;
 	}
 	else if (yy < 50)
+	{
 		century += 1;
+	}
 
 	tm.tm_year = century * 100 + yy;
+
 	if (tm2timestamp(&tm, fsec, NULL, &ts) != 0)
 		ereport(ERROR,
 				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
@@ -870,22 +947,81 @@ orafce_rr_adjust(Timestamp ts, bool rr_always)
  * parse date_txt by the format and return the local timestamp, handle RR/RRRR
  */
 static Timestamp
-orafce_to_date_fmt(text *date_txt, text *fmt_txt)
+_orafce_to_date_fmt(text *date_txt, text *fmt_txt)
 {
-	bool		rr_always;
-	text	   *rr_fmt = orafce_rr_format(fmt_txt, &rr_always);
-	Datum		newDate;
-	Timestamp	result;
+	Timestamp	ts_tz;
+	Timestamp	ts, _ts;
+	int			flags = 0;
+	text	   *_fmt_txt = NULL;
 
-	/* it will return timestamp at GMT */
-	newDate = DirectFunctionCall2(to_timestamp,
-								  PointerGetDatum(date_txt),
-								  PointerGetDatum(rr_fmt ? rr_fmt : fmt_txt));
+	if (fmt_txt)
+	{
+		_fmt_txt = orafce_tranlate_fmt(fmt_txt, &flags);
 
-	/* convert to local timestamp */
-	result = DatumGetTimestamp(DirectFunctionCall1(timestamptz_timestamp, newDate));
+		/* it will return timestamp at GMT */
+		ts_tz = DatumGetTimestamp(DirectFunctionCall2(to_timestamp,
+													  PointerGetDatum(date_txt),
+													  PointerGetDatum(_fmt_txt)));
 
-	return rr_fmt ? orafce_rr_adjust(result, rr_always) : result;
+		/* convert ts_tz to local timestamp */
+		ts = DatumGetTimestamp(DirectFunctionCall1(timestamptz_timestamp,
+												   TimestampGetDatum(ts_tz)));
+
+		if (fmt_txt != _fmt_txt)
+			pfree(_fmt_txt);
+	}
+	else
+	{
+		ts = DatumGetTimestamp(DirectFunctionCall3(timestamp_in,
+												   CStringGetDatum(text_to_cstring(date_txt)),
+												   ObjectIdGetDatum(InvalidOid),
+												   Int32GetDatum(-1)));
+
+		ts_tz = DatumGetTimestamp(DirectFunctionCall1(timestamp_timestamptz, ts));
+	}
+
+	/* there can be some another transformations (by usage RR or RRRR) */
+	_ts = orafce_adjust_date(ts, flags);
+
+	/* refresh ts_tz when ts was changed */
+	if (_ts != ts)
+	{
+		ts_tz = DatumGetTimestamp(DirectFunctionCall1(timestamp_timestamptz, ts));
+		ts = _ts;
+	}
+
+	/*
+	 * Du to an Oracle bug, when we have a format we emit an error if the date
+	 * is before 1582-10-04 with the J format or before 1100-03-01 for the
+	 * other formats.
+	 */
+	if (orafce_emit_error_on_date_bug && !TIMESTAMP_NOT_FINITE(ts_tz))
+	{
+		if (flags & TO_DATE_FMT_J_FLAG)
+		{
+			if (atoi(text_to_cstring(date_txt)) <= 2299160)
+				elog(ERROR, "Dates before 1582-10-05 ('J2299159') cannot be verified due to a bug in Oracle.");
+		}
+		else
+		{
+			if (!buglimit_tz_is_computed)
+			{
+				text	   *buglimit_txt = cstring_to_text("1100-03-01 00:00:00");
+				text	   *buglimit_fmt = cstring_to_text("YYYY-MM-DD H24:MI:SS");
+
+				buglimit_tz = DatumGetTimestamp(DirectFunctionCall2(to_timestamp,
+																	PointerGetDatum(buglimit_txt),
+																	PointerGetDatum(buglimit_fmt)));
+
+				buglimit_tz_is_computed = true;
+			}
+
+			if (ts_tz < buglimit_tz)
+				elog(ERROR, "Dates before 1100-03-01 cannot be verified due to a bug in Oracle.");
+		}
+	}
+
+	return ts;
 }
 
 /********************************************************************
@@ -911,51 +1047,18 @@ ora_to_date(PG_FUNCTION_ARGS)
 	if (VARSIZE_ANY_EXHDR(date_txt) == 0)
 		PG_RETURN_NULL();
 
-	/*
-	 * Du to an Oracle bug, when we have a format we emit an error if the date
-	 * is before 1582-10-04 with the J format or before 1100-03-01 for the
-	 * other formats.
-	 */
 	if (PG_NARGS() == 2)
 	{
 		text	   *fmt_txt = PG_GETARG_TEXT_PP(1);
 
-		result = orafce_to_date_fmt(date_txt, fmt_txt);
-
-		if (orafce_emit_error_on_date_bug)
-		{
-			if (pg_strcasecmp(text_to_cstring(fmt_txt), "J") == 0)
-			{
-				if (atoi(text_to_cstring(date_txt)) <= 2299160)
-					elog(ERROR, "Dates before 1582-10-05 ('J2299159') cannot be verified due to a bug in Oracle.");
-			}
-			else
-			{
-				text	   *buglimit_txt = cstring_to_text("1100-03-01 00:00:00");
-				text	   *buglimit_fmt = cstring_to_text("YYYY-MM-DD H24:MI:SS");
-				Datum		bugDate;
-				Timestamp	bugResult;
-
-				bugDate = DirectFunctionCall2(to_timestamp,
-											  PointerGetDatum(buglimit_txt),
-											  PointerGetDatum(buglimit_fmt));
-
-				bugResult = DatumGetTimestamp(DirectFunctionCall1(timestamptz_timestamp, bugDate));
-
-				if (result < bugResult)
-					elog(ERROR, "Dates before 1100-03-01 cannot be verified due to a bug in Oracle.");
-			}
-		}
+		result = _orafce_to_date_fmt(date_txt, fmt_txt);
 		PG_RETURN_TIMESTAMP(result);
 	}
 
-	if (nls_date_format && strlen(nls_date_format))
-		result = orafce_to_date_fmt(date_txt, cstring_to_text(nls_date_format));
+	if (nls_date_format && strlen(nls_date_format) > 0)
+		result = _orafce_to_date_fmt(date_txt, cstring_to_text(nls_date_format));
 	else
-		result = DatumGetTimestamp(DirectFunctionCall3(timestamp_in,
-													   CStringGetDatum(text_to_cstring(date_txt)),
-													   ObjectIdGetDatum(InvalidOid),
-													   Int32GetDatum(-1)));
+		result = _orafce_to_date_fmt(date_txt, NULL);
 
 	PG_RETURN_TIMESTAMP(result);
 }
