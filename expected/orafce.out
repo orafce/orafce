@@ -1202,7 +1202,7 @@ select instr('abc', NULL) IS NULL;
 select 1 = instr('abc', '');
  ?column? 
 ----------
- t
+ f
 (1 row)
 
 select 1 = instr('abc', 'a');
@@ -1336,7 +1336,7 @@ select oracle.instr('abc', '', 4) AS start_past_end,
        plvstr.instr('abc', '', 1, 4) AS nth_past_end;
  start_past_end | empty_string | nth_past_end 
 ----------------+--------------+--------------
-              4 |            1 |            4
+              0 |            0 |            0
 (1 row)
 
 SELECT plvstr.lpart('abc', '', 4, 1, false) AS lpart,
@@ -1344,7 +1344,7 @@ SELECT plvstr.lpart('abc', '', 4, 1, false) AS lpart,
        plvstr.betwn('abc', '', '', 1, 4, true, true) AS betwn;
  lpart | rpart | betwn 
 -------+-------+-------
- abc   |       | abc
+       |       | 
 (1 row)
 
 set orafce.using_substring_zero_width_in_substr TO orafce;
