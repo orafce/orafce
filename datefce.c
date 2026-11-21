@@ -162,7 +162,7 @@ ora_seq_search(const char *name, STRING_PTR_FIELD_TYPE array[], size_t max)
 {
 	int			i;
 
-	if (!*name)
+	if (max == 0)
 		return -1;
 
 	for (i = 0; array[i]; i++)
@@ -179,7 +179,7 @@ ora_seq_prefix_search(const char *name, STRING_PTR_FIELD_TYPE array[], int max)
 {
 	int			i;
 
-	if (!*name)
+	if (max == 0)
 		return -1;
 
 	for (i = 0; array[i]; i++)
