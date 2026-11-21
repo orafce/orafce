@@ -930,3 +930,41 @@ begin
 end $$;
 NOTICE:  cast function got typmod = -1, is_explicit = false
 NOTICE:  value = 42
+do $$
+declare
+  c int := dbms_sql.open_cursor();
+  n int;
+begin
+  call dbms_sql.parse(c, 'select :x::int + 1');
+  call dbms_sql.bind_variable(c, 'x', 41);
+  n := dbms_sql.execute(c);
+  n := dbms_sql.execute(c);
+  raise notice 'executed twice, n = %', n;
+  call dbms_sql.close_cursor(c);
+end $$;
+NOTICE:  executed twice, n = 1
+-- part 2: cached plan vs. bulk (array) bind
+create temp table repro05(a int[]);
+do $$
+declare
+  c int := dbms_sql.open_cursor();
+  n int;
+begin
+  call dbms_sql.parse(c, 'insert into repro05 values (:x)');
+
+  -- plan prepared with a parameter of type int[]
+  call dbms_sql.bind_variable(c, 'x', array[1, 2, 3]);
+  n := dbms_sql.execute(c);
+
+  -- bulk bind: every element (an int4) is passed as a separate parameter value
+  call dbms_sql.bind_array(c, 'x', array[1, 2, 3]);
+  n := dbms_sql.execute(c);
+
+  call dbms_sql.close_cursor(c);
+end $$;
+ERROR:  column "a" is of type integer[] but expression is of type integer
+LINE 1: insert into repro05 values ($1)
+                                    ^
+HINT:  You will need to rewrite or cast the expression.
+QUERY:  insert into repro05 values ($1)
+CONTEXT:  PL/pgSQL function inline_code_block line 14 at assignment

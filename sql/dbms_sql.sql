@@ -599,3 +599,37 @@ begin
   raise notice 'value = %', v;
   call dbms_sql.close_cursor(c);
 end $$;
+
+do $$
+declare
+  c int := dbms_sql.open_cursor();
+  n int;
+begin
+  call dbms_sql.parse(c, 'select :x::int + 1');
+  call dbms_sql.bind_variable(c, 'x', 41);
+  n := dbms_sql.execute(c);
+  n := dbms_sql.execute(c);
+  raise notice 'executed twice, n = %', n;
+  call dbms_sql.close_cursor(c);
+end $$;
+
+-- part 2: cached plan vs. bulk (array) bind
+create temp table repro05(a int[]);
+
+do $$
+declare
+  c int := dbms_sql.open_cursor();
+  n int;
+begin
+  call dbms_sql.parse(c, 'insert into repro05 values (:x)');
+
+  -- plan prepared with a parameter of type int[]
+  call dbms_sql.bind_variable(c, 'x', array[1, 2, 3]);
+  n := dbms_sql.execute(c);
+
+  -- bulk bind: every element (an int4) is passed as a separate parameter value
+  call dbms_sql.bind_array(c, 'x', array[1, 2, 3]);
+  n := dbms_sql.execute(c);
+
+  call dbms_sql.close_cursor(c);
+end $$;

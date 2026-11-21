@@ -1210,8 +1210,12 @@ execute(CursorData *c)
 				foreach(lc, c->variables)
 				{
 					VariableData *var = (VariableData *) lfirst(lc);
+					Oid			typid;
 
-					if (c->argtypids[i++] != var->typoid)
+					/* the plan is prepared with the element type of arrays */
+					typid = var->is_array ? var->typelemid : var->typoid;
+
+					if (c->argtypids[i++] != typid)
 					{
 						plan_is_valid = false;
 						break;
@@ -1256,10 +1260,8 @@ execute(CursorData *c)
 				/* internal error */
 				elog(ERROR, "cannot to prepare plan");
 
-			if (types)
-				pfree(types);
-
 			SPI_keepplan(plan);
+
 			c->plan = plan;
 
 			/* keep plan arg types (for validation) */
@@ -1268,6 +1270,9 @@ execute(CursorData *c)
 			c->argtypids = palloc(sizeof(Oid) * c->nargs);
 			memcpy(c->argtypids, types, sizeof(Oid) * c->nargs);
 			MemoryContextSwitchTo(oldcxt);
+
+			if (types)
+				pfree(types);
 		}
 
 		oldcxt = MemoryContextSwitchTo(c->result_cxt);
