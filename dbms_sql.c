@@ -1748,7 +1748,38 @@ cast_value(CastCacheData *ccast, Datum value, bool isnull)
 	if (!isnull && !ccast->without_cast)
 	{
 		if (ccast->path == COERCION_PATH_FUNC)
-			value = FunctionCall1(&ccast->finfo, value);
+		{
+			/*
+			 * A cast function can take the target typmod and the "is
+			 * explicit" flag as optional arguments (see CREATE CAST), and it
+			 * would read them even when we don't pass them.  Pass them like
+			 * PostgreSQL does for an assignment cast, which is what
+			 * init_cast_cache_entry() looked up.
+			 */
+			switch (ccast->finfo.fn_nargs)
+			{
+				case 1:
+					value = FunctionCall1(&ccast->finfo, value);
+					break;
+
+				case 2:
+					value = FunctionCall2(&ccast->finfo,
+										  value,
+										  Int32GetDatum(ccast->targettypmod));
+					break;
+
+				case 3:
+					value = FunctionCall3(&ccast->finfo,
+										  value,
+										  Int32GetDatum(ccast->targettypmod),
+										  BoolGetDatum(false));
+					break;
+
+				default:
+					  elog(ERROR, "unexpected number of cast function arguments: %d",
+						    ccast->finfo.fn_nargs);
+			}
+		}
 		else if (ccast->path == COERCION_PATH_RELABELTYPE)
 		{
 			/* do nothing */
