@@ -185,6 +185,13 @@ random_string(const char *charset, size_t chrset_size, int len)
 	text	   *result;
 	char	   *ptr;
 
+	/*
+	 * Oracle returns NULL for this cases, we can
+	 * return empty string.
+	 */
+	if (len < 0)
+		len = 0;
+
 	if (unlikely(pg_add_s32_overflow(len, VARHDRSZ, &tlen)) ||
 		unlikely(!AllocSizeIsValid(tlen)))
 		ereport(ERROR,
