@@ -1331,6 +1331,22 @@ select oracle.substr('TechOnTheNet', -8, 2) =  'On';
  t
 (1 row)
 
+select oracle.instr('abc', '', 4) AS start_past_end,
+       oracle.instr('', '', 1) AS empty_string,
+       plvstr.instr('abc', '', 1, 4) AS nth_past_end;
+ start_past_end | empty_string | nth_past_end 
+----------------+--------------+--------------
+              4 |            1 |            4
+(1 row)
+
+SELECT plvstr.lpart('abc', '', 4, 1, false) AS lpart,
+       plvstr.rpart('abc', '', 4, 1, false) AS rpart,
+       plvstr.betwn('abc', '', '', 1, 4, true, true) AS betwn;
+ lpart | rpart | betwn 
+-------+-------+-------
+ abc   |       | abc
+(1 row)
+
 set orafce.using_substring_zero_width_in_substr TO orafce;
 select oracle.substr('TechOnTheNet', -8, 0) =  '';
  ?column? 
@@ -5398,84 +5414,98 @@ select oracle.months_between(date '2024-01-01', date '2024-03-01') = -2;
 (1 row)
 
 -- RR and RRRR elements of the to_date() format
--- The century of a two digit year depends on the current year (Oracle's rule), so
+-- the century of a two digit year depends on the current year (oracle's rule), so
 -- the expected value is computed from it:
 --   current year 00-49: input 00-49 is this century,  50-99 the previous one
 --   current year 50-99: input 00-49 is the next one,   50-99 this century
-CREATE FUNCTION rr_year(yy int) RETURNS int AS $$
-	SELECT (extract(year FROM now())::int / 100
-			+ CASE WHEN extract(year FROM now())::int % 100 < 50 AND yy >= 50 THEN -1
-				   WHEN extract(year FROM now())::int % 100 >= 50 AND yy < 50 THEN 1
-				   ELSE 0 END) * 100 + yy
-$$ LANGUAGE sql;
+create function rr_year(yy int) returns int as $$
+	select (extract(year from now())::int / 100
+			+ case when extract(year from now())::int % 100 < 50 and yy >= 50 then -1
+				   when extract(year from now())::int % 100 >= 50 and yy < 50 then 1
+				   else 0 end) * 100 + yy
+$$ language sql;
 -- every two digit year, both elements
-SELECT bool_and(oracle.to_date('01.02.' || lpad(yy::text, 2, '0'), 'DD.MM.RR') = make_date(rr_year(yy), 2, 1)) AS rr_all
-  FROM generate_series(0, 99) yy;
+select bool_and(oracle.to_date('01.02.' || lpad(yy::text, 2, '0'), 'dd.mm.rr') = make_date(rr_year(yy), 2, 1)) as rr_all
+  from generate_series(0, 99) yy;
  rr_all 
 --------
  t
 (1 row)
 
-SELECT bool_and(oracle.to_date('01.02.' || lpad(yy::text, 2, '0'), 'DD.MM.RRRR') = make_date(rr_year(yy), 2, 1)) AS rrrr_two_digits
-  FROM generate_series(0, 99) yy;
+select bool_and(oracle.to_date('01.02.' || lpad(yy::text, 2, '0'), 'dd.mm.rrrr') = make_date(rr_year(yy), 2, 1)) as rrrr_two_digits
+  from generate_series(0, 99) yy;
  rrrr_two_digits 
 -----------------
  t
 (1 row)
 
--- RRRR with four digits keeps the year
-SELECT oracle.to_date('01.02.2024', 'DD.MM.RRRR') = make_date(2024, 2, 1) AS rrrr_four_digits;
+-- rrrr with four digits keeps the year
+select oracle.to_date('01.02.2024', 'dd.mm.rrrr') = make_date(2024, 2, 1) as rrrr_four_digits;
  rrrr_four_digits 
 ------------------
  t
 (1 row)
 
-SELECT oracle.to_date('01.02.1987', 'DD.MM.RRRR') = make_date(1987, 2, 1) AS rrrr_four_digits_1987;
+select oracle.to_date('01.02.1987', 'dd.mm.rrrr') = make_date(1987, 2, 1) as rrrr_four_digits_1987;
  rrrr_four_digits_1987 
 -----------------------
  t
 (1 row)
 
 -- lower case, no separators, with a time part
-SELECT oracle.to_date('010224', 'ddmmrr') = make_date(rr_year(24), 2, 1) AS lower_case_no_separator;
+select oracle.to_date('010224', 'ddmmrr') = make_date(rr_year(24), 2, 1) as lower_case_no_separator;
  lower_case_no_separator 
 -------------------------
  t
 (1 row)
 
-SELECT oracle.to_date('01.02.55 13:14:15', 'DD.MM.RR HH24:MI:SS') = make_date(rr_year(55), 2, 1) + time '13:14:15' AS with_time;
+select oracle.to_date('01.02.55 13:14:15', 'dd.mm.rr hh24:mi:ss') = make_date(rr_year(55), 2, 1) + time '13:14:15' as with_time;
  with_time 
 -----------
  t
 (1 row)
 
 -- text in double quotes is not a format element
-SELECT oracle.to_date('01 RR 02 24', 'DD "RR" MM RR') = make_date(rr_year(24), 2, 1) AS quoted_rr;
+select oracle.to_date('01 rr 02 24', 'dd "rr" mm rr') = make_date(rr_year(24), 2, 1) as quoted_rr;
  quoted_rr 
 -----------
  t
 (1 row)
 
--- formats without RR are not changed
-SELECT oracle.to_date('01.02.24', 'DD.MM.YY') = make_date(2024, 2, 1) AS yy_unchanged;
+-- formats without rr are not changed
+select oracle.to_date('01.02.24', 'dd.mm.yy') = make_date(2024, 2, 1) as yy_unchanged;
  yy_unchanged 
 --------------
  t
 (1 row)
 
-SELECT oracle.to_date('01.02.2024', 'DD.MM.YYYY') = make_date(2024, 2, 1) AS yyyy_unchanged;
+select oracle.to_date('01.02.2024', 'dd.mm.yyyy') = make_date(2024, 2, 1) as yyyy_unchanged;
  yyyy_unchanged 
 ----------------
  t
 (1 row)
 
--- the default format of the session (orafce.nls_date_format) may use RR as well
-SET orafce.nls_date_format = 'DD-MM-RR';
-SELECT oracle.to_date('01-02-55') = make_date(rr_year(55), 2, 1) AS nls_date_format;
+-- the default format of the session (orafce.nls_date_format) may use rr as well
+set orafce.nls_date_format = 'dd-mm-rr';
+select oracle.to_date('01-02-55') = make_date(rr_year(55), 2, 1) as nls_date_format;
  nls_date_format 
 -----------------
  t
 (1 row)
 
-RESET orafce.nls_date_format;
-DROP FUNCTION rr_year(int);
+reset orafce.nls_date_format;
+drop function rr_year(int);
+select oracle.trunc(current_date, '');
+ERROR:  invalid value for round/trunc format string
+select oracle.round(current_date, '');
+ERROR:  invalid value for round/trunc format string
+select oracle.trunc(current_timestamp, '');
+ERROR:  invalid value for round/trunc format string
+select oracle.round(localtimestamp, '');
+ERROR:  invalid value for round/trunc format string
+select plvdate.set_nonbizday('');
+ERROR:  invalid value for DAY/Day/day
+select plvdate.unset_nonbizday('');
+ERROR:  invalid value for DAY/Day/day
+select plvdate.default_holidays('');
+ERROR:  invalid value for STATE/State/state
