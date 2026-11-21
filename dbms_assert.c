@@ -39,7 +39,7 @@ PG_FUNCTION_INFO_V1(dbms_alert_defered_signal);
 #define ISNOT_QUALIFIED_SQL_NAME_EXCEPTION() \
 	CUSTOM_EXCEPTION(ISNOT_QUALIFIED_SQL_NAME, "string is not qualified SQL name")
 
-#define EMPTY_STR(str)		((VARSIZE_ANY(str) - VARHDRSZ) == 0)
+#define EMPTY_STR(str)		((VARSIZE_ANY_EXHDR) == 0)
 
 static bool check_sql_name(char *cp, int len);
 static bool ParseIdentifierString(char *str, int len);
