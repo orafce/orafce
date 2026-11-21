@@ -958,6 +958,7 @@ cursor_xact_cxt_deletion_callback(void *arg)
 
 	cur->processed = 0;
 	cur->nread = 0;
+	cur->start_read = 0;
 	cur->executed = false;
 	cur->tupdesc = NULL;
 	cur->coltupdesc = NULL;
@@ -1516,6 +1517,16 @@ fetch_rows(CursorData *c, bool exact)
 												  ALLOCSET_DEFAULT_SIZES);
 		else
 			MemoryContextReset(c->tuples_cxt);
+
+		/*
+		 * Clear the state of the previous batch now, in case the fetch fails
+		 * and the error is caught.
+		 */
+		c->tupdesc = NULL;
+		c->tuples = NULL;
+		c->processed = 0;
+		c->nread = 0;
+		c->start_read = 0;
 
 		if (SPI_connect() != SPI_OK_CONNECT)
 			elog(ERROR, "SPI_connact failed");
