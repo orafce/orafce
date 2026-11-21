@@ -916,7 +916,7 @@ dbms_pipe_receive_message(PG_FUNCTION_ARGS)
 				 errmsg("pipe name is NULL"),
 				 errdetail("Pipename may not be NULL.")));
 	else
-		pipe_name = PG_GETARG_TEXT_P(0);
+		pipe_name = PG_GETARG_TEXT_PP(0);
 
 	if (!PG_ARGISNULL(1))
 	{
@@ -1017,7 +1017,7 @@ dbms_pipe_send_message(PG_FUNCTION_ARGS)
 				 errmsg("pipe name is NULL"),
 				 errdetail("Pipename may not be NULL.")));
 	else
-		pipe_name = PG_GETARG_TEXT_P(0);
+		pipe_name = PG_GETARG_TEXT_PP(0);
 
 	output_buffer = check_buffer(output_buffer, LOCALMSGSZ);
 
@@ -1268,7 +1268,7 @@ dbms_pipe_create_pipe(PG_FUNCTION_ARGS)
 				 errmsg("pipe name is NULL"),
 				 errdetail("Pipename may not be NULL.")));
 	else
-		pipe_name = PG_GETARG_TEXT_P(0);
+		pipe_name = PG_GETARG_TEXT_PP(0);
 
 	if (!PG_ARGISNULL(1))
 	{
@@ -1362,7 +1362,7 @@ dbms_pipe_reset_buffer(PG_FUNCTION_ARGS)
 Datum
 dbms_pipe_purge(PG_FUNCTION_ARGS)
 {
-	text	   *pipe_name = PG_GETARG_TEXT_P(0);
+	text	   *pipe_name = PG_GETARG_TEXT_PP(0);
 	float8		endtime;
 	int			cycle = 0;
 	int			timeout = 10;
@@ -1390,7 +1390,7 @@ dbms_pipe_purge(PG_FUNCTION_ARGS)
 Datum
 dbms_pipe_remove_pipe(PG_FUNCTION_ARGS)
 {
-	text	   *pipe_name = PG_GETARG_TEXT_P(0);
+	text	   *pipe_name = PG_GETARG_TEXT_PP(0);
 	float8		endtime;
 	int			cycle = 0;
 	int			timeout = 10;

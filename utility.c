@@ -181,7 +181,7 @@ dbms_utility_format_call_stack0(PG_FUNCTION_ARGS)
 Datum
 dbms_utility_format_call_stack1(PG_FUNCTION_ARGS)
 {
-	text	   *arg = PG_GETARG_TEXT_P(0);
+	text	   *arg = PG_GETARG_TEXT_PP(0);
 	char		mode;
 
 	if ((1 != VARSIZE_ANY_EXHDR(arg)))

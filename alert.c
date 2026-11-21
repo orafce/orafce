@@ -630,7 +630,7 @@ pg_usleep(10000L); \
 Datum
 dbms_alert_register(PG_FUNCTION_ARGS)
 {
-	text	   *name = PG_GETARG_TEXT_P(0);
+	text	   *name = PG_GETARG_TEXT_PP(0);
 	int			cycle = 0;
 	float8		endtime;
 	float8		timeout = 2;
@@ -658,7 +658,7 @@ dbms_alert_register(PG_FUNCTION_ARGS)
 Datum
 dbms_alert_remove(PG_FUNCTION_ARGS)
 {
-	text	   *name = PG_GETARG_TEXT_P(0);
+	text	   *name = PG_GETARG_TEXT_PP(0);
 	int			ev_id;
 	int			cycle = 0;
 	float8		endtime;
@@ -985,7 +985,7 @@ dbms_alert_waitone(PG_FUNCTION_ARGS)
 	else
 		timeout = MAXWAIT;
 
-	name = PG_GETARG_TEXT_P(0);
+	name = PG_GETARG_TEXT_PP(0);
 
 	return _dbms_alert_waitone(name, timeout, fcinfo);
 }
@@ -1001,7 +1001,7 @@ dbms_alert_waitone_maxwait(PG_FUNCTION_ARGS)
 				 errmsg("event name is NULL"),
 				 errdetail("Eventname may not be NULL.")));
 
-	name = PG_GETARG_TEXT_P(0);
+	name = PG_GETARG_TEXT_PP(0);
 
 	return _dbms_alert_waitone(name, MAXWAIT, fcinfo);
 }
@@ -1146,8 +1146,8 @@ dbms_alert_signal(PG_FUNCTION_ARGS)
 				 errmsg("event name is NULL"),
 				 errdetail("Eventname may not be NULL.")));
 
-	event = PG_GETARG_TEXT_P(0);
-	message = (!PG_ARGISNULL(1)) ? PG_GETARG_TEXT_P(1) : NULL;
+	event = PG_GETARG_TEXT_PP(0);
+	message = (!PG_ARGISNULL(1)) ? PG_GETARG_TEXT_PP(1) : NULL;
 
 	if (local_buf_lxid != CURRENT_LXID)
 	{

@@ -269,7 +269,7 @@ PG_FUNCTION_INFO_V1(ora_set_nls_sort);
 Datum
 ora_set_nls_sort(PG_FUNCTION_ARGS)
 {
-	text	   *arg = PG_GETARG_TEXT_P(0);
+	text	   *arg = PG_GETARG_TEXT_PP(0);
 
 	if (def_locale != NULL)
 	{

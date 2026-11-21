@@ -710,8 +710,8 @@ plvstr_rvrs(PG_FUNCTION_ARGS)
 Datum
 plvstr_lpart(PG_FUNCTION_ARGS)
 {
-	text	   *str = PG_GETARG_TEXT_P(0);
-	text	   *div = PG_GETARG_TEXT_P(1);
+	text	   *str = PG_GETARG_TEXT_PP(0);
+	text	   *div = PG_GETARG_TEXT_PP(1);
 	int			start = PG_GETARG_INT32(2);
 	int			nth = PG_GETARG_INT32(3);
 	bool		all_if_notfound = PG_GETARG_BOOL(4);
@@ -749,8 +749,8 @@ plvstr_lpart(PG_FUNCTION_ARGS)
 Datum
 plvstr_rpart(PG_FUNCTION_ARGS)
 {
-	text	   *str = PG_GETARG_TEXT_P(0);
-	text	   *div = PG_GETARG_TEXT_P(1);
+	text	   *str = PG_GETARG_TEXT_PP(0);
+	text	   *div = PG_GETARG_TEXT_PP(1);
 	int			start = PG_GETARG_INT32(2);
 	int			nth = PG_GETARG_INT32(3);
 	bool		all_if_notfound = PG_GETARG_BOOL(4);
@@ -1238,12 +1238,12 @@ plvstr_swap(PG_FUNCTION_ARGS)
 	if (PG_ARGISNULL(0))
 		PG_RETURN_NULL();
 	else
-		string_in = PG_GETARG_TEXT_P(0);
+		string_in = PG_GETARG_TEXT_PP(0);
 
 	if (PG_ARGISNULL(1))
 		PG_RETURN_NULL();
 	else
-		replace_in = PG_GETARG_TEXT_P(1);
+		replace_in = PG_GETARG_TEXT_PP(1);
 
 	if (!PG_ARGISNULL(2))
 		start_in = PG_GETARG_INT32(2);
@@ -1319,7 +1319,7 @@ plvstr_swap(PG_FUNCTION_ARGS)
 Datum
 plvstr_betwn_i(PG_FUNCTION_ARGS)
 {
-	text	   *string_in = PG_GETARG_TEXT_P(0);
+	text	   *string_in = PG_GETARG_TEXT_PP(0);
 	int			start_arg = PG_GETARG_INT32(1);
 	int			end_arg = PG_GETARG_INT32(2);
 	bool		inclusive = PG_GETARG_BOOL(3);
@@ -1383,9 +1383,9 @@ plvstr_betwn_c(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 
 
-	string_in = PG_GETARG_TEXT_P(0);
-	start_in = PG_GETARG_TEXT_P(1);
-	end_in = PG_ARGISNULL(2) ? start_in : PG_GETARG_TEXT_P(2);
+	string_in = PG_GETARG_TEXT_PP(0);
+	start_in = PG_GETARG_TEXT_PP(1);
+	end_in = PG_ARGISNULL(2) ? start_in : PG_GETARG_TEXT_PP(2);
 	startnth_in = PG_GETARG_INT32(3);
 	endnth_in = PG_GETARG_INT32(4);
 	inclusive = PG_GETARG_BOOL(5);

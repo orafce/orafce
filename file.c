@@ -86,7 +86,7 @@ PG_FUNCTION_INFO_V1(utl_file_tmpdir);
 		CUSTOM_EXCEPTION(INVALID_FILEHANDLE, "Used file handle isn't valid.")
 
 #define NON_EMPTY_TEXT(dat) \
-	if (VARSIZE(dat) - VARHDRSZ == 0) \
+	if (VARSIZE_ANY_EXHDR(dat) == 0) \
 		ereport(ERROR, \
 			(errcode(ERRCODE_INVALID_PARAMETER_VALUE), \
 			 errmsg("invalid parameter"), \
@@ -421,7 +421,7 @@ utl_file_fopen(PG_FUNCTION_ARGS)
 	NOT_NULL_ARG(2);
 	NOT_NULL_ARG(3);
 
-	open_mode = PG_GETARG_TEXT_P(2);
+	open_mode = PG_GETARG_TEXT_PP(2);
 
 	NON_EMPTY_TEXT(open_mode);
 
@@ -466,7 +466,7 @@ utl_file_fopen(PG_FUNCTION_ARGS)
 	}
 
 	/* open file */
-	fullname = get_safe_path(PG_GETARG_TEXT_P(0), PG_GETARG_TEXT_P(1));
+	fullname = get_safe_path(PG_GETARG_TEXT_P(0), PG_GETARG_TEXT_PP(1));
 
 	/*
 	 * We cannot use AllocateFile here because those files are automatically
@@ -740,7 +740,7 @@ encode_text(int encoding, text *t, size_t *length)
 static size_t
 do_write(PG_FUNCTION_ARGS, int n, FILE *f, size_t max_linesize, int encoding)
 {
-	text	   *arg = PG_GETARG_TEXT_P(n);
+	text	   *arg = PG_GETARG_TEXT_PP(n);
 	char	   *str;
 	size_t		len;
 
@@ -860,7 +860,7 @@ utl_file_putf(PG_FUNCTION_ARGS)
 	f = get_stream(PG_GETARG_INT32(0), &max_linesize, &encoding);
 
 	NOT_NULL_ARG(1);
-	format = encode_text(encoding, PG_GETARG_TEXT_P(1), &format_length);
+	format = encode_text(encoding, PG_GETARG_TEXT_PP(1), &format_length);
 
 	for (fpt = format; format_length > 0; fpt++, format_length--)
 	{
@@ -1197,7 +1197,7 @@ utl_file_fremove(PG_FUNCTION_ARGS)
 	NOT_NULL_ARG(0);
 	NOT_NULL_ARG(1);
 
-	fullname = get_safe_path(PG_GETARG_TEXT_P(0), PG_GETARG_TEXT_P(1));
+	fullname = get_safe_path(PG_GETARG_TEXT_PP(0), PG_GETARG_TEXT_PP(1));
 
 #ifndef WIN32
 
@@ -1247,8 +1247,8 @@ utl_file_frename(PG_FUNCTION_ARGS)
 	NOT_NULL_ARG(3);
 
 	overwrite = PG_GETARG_IF_EXISTS(4, BOOL, false);
-	srcpath = get_safe_path(PG_GETARG_TEXT_P(0), PG_GETARG_TEXT_P(1));
-	dstpath = get_safe_path(PG_GETARG_TEXT_P(2), PG_GETARG_TEXT_P(3));
+	srcpath = get_safe_path(PG_GETARG_TEXT_PP(0), PG_GETARG_TEXT_PP(1));
+	dstpath = get_safe_path(PG_GETARG_TEXT_PP(2), PG_GETARG_TEXT_PP(3));
 
 #ifndef WIN32
 
@@ -1339,8 +1339,8 @@ utl_file_fcopy(PG_FUNCTION_ARGS)
 	NOT_NULL_ARG(2);
 	NOT_NULL_ARG(3);
 
-	srcpath = get_safe_path(PG_GETARG_TEXT_P(0), PG_GETARG_TEXT_P(1));
-	dstpath = get_safe_path(PG_GETARG_TEXT_P(2), PG_GETARG_TEXT_P(3));
+	srcpath = get_safe_path(PG_GETARG_TEXT_PP(0), PG_GETARG_TEXT_PP(1));
+	dstpath = get_safe_path(PG_GETARG_TEXT_PP(2), PG_GETARG_TEXT_PP(3));
 
 	start_line = PG_GETARG_IF_EXISTS(4, INT32, 1);
 	if (start_line <= 0)
@@ -1508,7 +1508,7 @@ utl_file_fgetattr(PG_FUNCTION_ARGS)
 	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
 		elog(ERROR, "return type must be a row type");
 
-	fullname = get_safe_path(PG_GETARG_TEXT_P(0), PG_GETARG_TEXT_P(1));
+	fullname = get_safe_path(PG_GETARG_TEXT_PP(0), PG_GETARG_TEXT_PP(1));
 
 #ifndef WIN32
 

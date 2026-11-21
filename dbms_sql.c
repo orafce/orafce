@@ -451,7 +451,7 @@ dbms_sql_parse(PG_FUNCTION_ARGS)
 		open_cursor(c, cid);
 	}
 
-	query = text_to_cstring(PG_GETARG_TEXT_P(1));
+	query = text_to_cstring(PG_GETARG_TEXT_PP(1));
 	ptr = query;
 
 	initStringInfo(&sinfo);
@@ -534,7 +534,7 @@ bind_variable(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
 				 errmsg("name of bind variable is NULL")));
 
-	varname = text_to_cstring(PG_GETARG_TEXT_P(1));
+	varname = text_to_cstring(PG_GETARG_TEXT_PP(1));
 	if (*varname == ':')
 		varname += 1;
 
@@ -626,7 +626,7 @@ bind_array(FunctionCallInfo fcinfo, int index1, int index2)
 				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
 				 errmsg("name of bind variable is NULL")));
 
-	varname = text_to_cstring(PG_GETARG_TEXT_P(1));
+	varname = text_to_cstring(PG_GETARG_TEXT_PP(1));
 	if (*varname == ':')
 		varname += 1;
 

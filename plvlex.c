@@ -180,7 +180,7 @@ plvlex_tokens(PG_FUNCTION_ARGS)
 	{
 		MemoryContext oldcontext;
 		List	   *lexems;
-		text	   *src = PG_GETARG_TEXT_P(0);
+		text	   *src = PG_GETARG_TEXT_PP(0);
 		bool		skip_spaces = PG_GETARG_BOOL(1);
 		bool		qnames = PG_GETARG_BOOL(2);
 

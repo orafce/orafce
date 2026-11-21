@@ -200,9 +200,9 @@ plvsubst_string_array(PG_FUNCTION_ARGS)
 	if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
 		PG_RETURN_NULL();
 
-	PG_RETURN_TEXT_P(plvsubst_string(PG_GETARG_TEXT_P(0),
+	PG_RETURN_TEXT_P(plvsubst_string(PG_GETARG_TEXT_PP(0),
 									 PG_GETARG_ARRAYTYPE_P(1),
-									 PG_ARGISNULL(2) ? c_subst : PG_GETARG_TEXT_P(2),
+									 PG_ARGISNULL(2) ? c_subst : PG_GETARG_TEXT_PP(2),
 									 fcinfo));
 }
 
@@ -239,7 +239,7 @@ plvsubst_string_string(PG_FUNCTION_ARGS)
 	else
 		array = DatumGetArrayTypeP(r);
 
-	PG_RETURN_TEXT_P(plvsubst_string(PG_GETARG_TEXT_P(0),
+	PG_RETURN_TEXT_P(plvsubst_string(PG_GETARG_TEXT_PP(0),
 									 array,
 									 PG_GETARG_IF_EXISTS(3, TEXT_P, c_subst),
 									 fcinfo));
@@ -254,7 +254,7 @@ plvsubst_setsubst(PG_FUNCTION_ARGS)
 				 errmsg("substition is NULL"),
 				 errdetail("Substitution keyword may not be NULL.")));
 
-	set_c_subst(PG_GETARG_TEXT_P(0));
+	set_c_subst(PG_GETARG_TEXT_PP(0));
 	PG_RETURN_VOID();
 }
 

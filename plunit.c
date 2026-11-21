@@ -209,7 +209,7 @@ assert_get_message(FunctionCallInfo fcinfo, int nargs, char *message)
 					 errmsg("message is NULL"),
 					 errdetail("Message may not be NULL.")));
 
-		msg = PG_GETARG_TEXT_P(nargs - 1);
+		msg = PG_GETARG_TEXT_PP(nargs - 1);
 		result = text_to_cstring(msg);
 	}
 	else

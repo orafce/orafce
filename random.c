@@ -156,7 +156,7 @@ dbms_random_seed_int(PG_FUNCTION_ARGS)
 Datum
 dbms_random_seed_varchar(PG_FUNCTION_ARGS)
 {
-	text	   *key = PG_GETARG_TEXT_P(0);
+	text	   *key = PG_GETARG_TEXT_PP(0);
 	Datum		seed;
 
 	seed = hash_any((unsigned char *) VARDATA_ANY(key), VARSIZE_ANY_EXHDR(key));
@@ -234,7 +234,7 @@ dbms_random_string(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
 				 errmsg("an argument is NULL")));
 
-	option = text_to_cstring(PG_GETARG_TEXT_P(0));
+	option = text_to_cstring(PG_GETARG_TEXT_PP(0));
 	if (strlen(option) != 1)
 		ereport(ERROR,
 				(errcode(ERRCODE_STRING_DATA_RIGHT_TRUNCATION),
