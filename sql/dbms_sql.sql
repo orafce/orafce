@@ -633,3 +633,25 @@ begin
 
   call dbms_sql.close_cursor(c);
 end $$;
+
+do $$
+declare
+  c int := dbms_sql.open_cursor();
+  n int;
+begin
+  call dbms_sql.parse(c, 'select i from generate_series(1, 3) g(i)');
+  call dbms_sql.define_column(c, 1, 0);
+
+  begin
+    -- the portal is created inside this subtransaction ...
+    n := dbms_sql.execute(c);
+    raise exception 'abort the subtransaction';
+  exception when others then
+    -- ... and dropped when it is rolled back
+    raise notice 'caught: %', sqlerrm;
+  end;
+
+  -- passes the freed portal to spi_cursor_close()
+  call dbms_sql.close_cursor(c);
+  raise notice 'cursor closed';
+end $$;

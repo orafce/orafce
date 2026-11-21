@@ -987,6 +987,42 @@ register_cursor_xact_cxt_callback(CursorData *c)
 	MemoryContextSwitchTo(oldcxt);
 }
 
+
+/*
+ * The portal opened by execute() is a regular named cursor of the session,
+ * so it can be dropped without dbms_sql knowing about it, e.g. by SQL CLOSE
+ * or by the rollback of the subtransaction that opened it.  PortalDrop()
+ * deletes the portal's memory context just before it frees the portal, so a
+ * callback on that context lets us forget the portal while the pointer is
+ * still valid.
+ */
+static void
+cursor_portal_drop_callback(void *arg)
+{
+	Portal		portal = (Portal) arg;
+	int			i;
+
+	for (i = 0; i < MAX_CURSORS; i++)
+	{
+		if (cursors[i].portal == portal)
+			cursors[i].portal = NULL;
+	}
+}
+
+static void
+register_cursor_portal_callback(Portal portal)
+{
+	MemoryContextCallback *mcb;
+
+	mcb = MemoryContextAllocZero(portal->portalContext,
+								 sizeof(MemoryContextCallback));
+
+	mcb->func = cursor_portal_drop_callback;
+	mcb->arg = portal;
+
+	MemoryContextRegisterResetCallback(portal->portalContext, mcb);
+}
+
 static uint64
 execute(CursorData *c)
 {
@@ -1045,6 +1081,7 @@ execute(CursorData *c)
 		int			i;
 		MemoryContext oldcxt;
 		uint64		batch_rows = 0;
+		Portal		portal;
 
 		oldcxt = MemoryContextSwitchTo(c->cursor_xact_cxt);
 
@@ -1140,7 +1177,7 @@ execute(CursorData *c)
 		if (SPI_connect() != SPI_OK_CONNECT)
 			elog(ERROR, "SPI_connact failed");
 
-		c->portal = SPI_cursor_open_with_args(c->cursorname,
+		portal = SPI_cursor_open_with_args(c->cursorname,
 											  c->parsed_query,
 											  (int) c->nvariables,
 											  types,
@@ -1150,11 +1187,18 @@ execute(CursorData *c)
 											  0);
 
 		/* internal error */
-		if (c->portal == NULL)
+		if (portal == NULL)
 			elog(ERROR,
 				 "could not open cursor for query \"%s\": %s",
 				 c->parsed_query,
 				 SPI_result_code_string(SPI_result));
+
+		/*
+		 * Register the callback before remembering the portal, so that even
+		 * a failure here can't leave us with a pointer to a dropped portal.
+		 */
+		register_cursor_portal_callback(portal);
+		c->portal = portal;
 
 		SPI_finish();
 
