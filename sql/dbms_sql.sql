@@ -655,3 +655,30 @@ begin
   call dbms_sql.close_cursor(c);
   raise notice 'cursor closed';
 end $$;
+
+begin;
+
+select dbms_sql.open_cursor() as c \gset
+call dbms_sql.parse(:c, 'select i from generate_series(1, 3) g(i)');
+call dbms_sql.define_column(:c, 1, 0);
+select dbms_sql.execute(:c);
+
+-- the portal used by dbms_sql is visible as a regular cursor
+select name as portal from pg_cursors
+ where name = '__orafce_dbms_sql_cursor_' || :c \gset
+
+-- drop it behind dbms_sql's back; the portal struct is freed
+close :"portal";
+
+savepoint s;
+-- uses the freed portal (unpatched: crash)
+select dbms_sql.fetch_rows(:c);
+rollback to s;
+
+-- execute() closes the previous portal first
+select dbms_sql.execute(:c);
+select dbms_sql.fetch_rows(:c);
+call dbms_sql.close_cursor(:c);
+
+commit;
+
