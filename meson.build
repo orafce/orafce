@@ -1,4 +1,4 @@
-project('orafce', ['c'], version: '4.17.1')
+project('orafce', ['c'], version: '4.17.2')
 
 pg_config = find_program('pg_config')
 
