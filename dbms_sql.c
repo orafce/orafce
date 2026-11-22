@@ -1178,13 +1178,13 @@ execute(CursorData *c)
 			elog(ERROR, "SPI_connact failed");
 
 		portal = SPI_cursor_open_with_args(c->cursorname,
-											  c->parsed_query,
-											  (int) c->nvariables,
-											  types,
-											  values,
-											  nulls,
-											  false,
-											  0);
+										   c->parsed_query,
+										   (int) c->nvariables,
+										   types,
+										   values,
+										   nulls,
+										   false,
+										   0);
 
 		/* internal error */
 		if (portal == NULL)
@@ -1194,8 +1194,8 @@ execute(CursorData *c)
 				 SPI_result_code_string(SPI_result));
 
 		/*
-		 * Register the callback before remembering the portal, so that even
-		 * a failure here can't leave us with a pointer to a dropped portal.
+		 * Register the callback before remembering the portal, so that even a
+		 * failure here can't leave us with a pointer to a dropped portal.
 		 */
 		register_cursor_portal_callback(portal);
 		c->portal = portal;
@@ -1825,8 +1825,8 @@ cast_value(CastCacheData *ccast, Datum value, bool isnull)
 					break;
 
 				default:
-					  elog(ERROR, "unexpected number of cast function arguments: %d",
-						    ccast->finfo.fn_nargs);
+					elog(ERROR, "unexpected number of cast function arguments: %d",
+						 ccast->finfo.fn_nargs);
 			}
 		}
 		else if (ccast->path == COERCION_PATH_RELABELTYPE)

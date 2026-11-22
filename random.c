@@ -186,8 +186,7 @@ random_string(const char *charset, size_t chrset_size, int len)
 	char	   *ptr;
 
 	/*
-	 * Oracle returns NULL for this cases, we can
-	 * return empty string.
+	 * Oracle returns NULL for this cases, we can return empty string.
 	 */
 	if (len < 0)
 		len = 0;

@@ -1160,8 +1160,8 @@ dbms_pipe_list_pipes(PG_FUNCTION_ARGS)
 
 	/*
 	 * The function returns SETOF record, so there is no expected tuple
-	 * descriptor when it is called without a column definition list, e.g.
-	 * in the select list.
+	 * descriptor when it is called without a column definition list, e.g. in
+	 * the select list.
 	 */
 	if (rsi->expectedDesc == NULL)
 		ereport(ERROR,

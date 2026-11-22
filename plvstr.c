@@ -207,10 +207,10 @@ ora_instr_mb(text *txt, text *pattern, int start, int nth)
 	c_len_pat = pg_mbstrlen_with_len(str_pat, b_len_pat);
 
 	/*
-	 * When the pattern is an empty string (in Oracle's concept NULL,
-	 * then result should be NULL too. But this can break some some
-	 * existing applications, so return 0 instead can be probably the
-	 * the less bad solution.
+	 * When the pattern is an empty string (in Oracle's concept NULL, then
+	 * result should be NULL too. But this can break some some existing
+	 * applications, so return 0 instead can be probably the the less bad
+	 * solution.
 	 */
 	if (b_len_txt == 0 || b_len_pat == 0)
 		return 0;
@@ -272,10 +272,10 @@ ora_instr(text *txt, text *pattern, int start, int nth)
 	len_pat = VARSIZE_ANY_EXHDR(pattern);
 
 	/*
-	 * When the pattern is an empty string (in Oracle's concept NULL,
-	 * then result should be NULL too. But this can break some some
-	 * existing applications, so return 0 instead can be probably the
-	 * the less bad solution.
+	 * When the pattern is an empty string (in Oracle's concept NULL, then
+	 * result should be NULL too. But this can break some some existing
+	 * applications, so return 0 instead can be probably the the less bad
+	 * solution.
 	 */
 	if (len_pat == 0 || len_txt == 0)
 		return 0;
