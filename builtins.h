@@ -343,4 +343,9 @@ extern PGDLLEXPORT Datum dbms_sql_describe_columns(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum dbms_sql_describe_columns_f(PG_FUNCTION_ARGS);
 extern PGDLLEXPORT Datum dbms_sql_debug_cursor(PG_FUNCTION_ARGS);
 
+/* from utl_raw.c */
+extern PGDLLEXPORT Datum orafce_utl_raw_bit_and(PG_FUNCTION_ARGS);
+extern PGDLLEXPORT Datum orafce_utl_raw_bit_or(PG_FUNCTION_ARGS);
+extern PGDLLEXPORT Datum orafce_utl_raw_bit_xor(PG_FUNCTION_ARGS);
+
 #endif
